@@ -172,14 +172,141 @@ Comprehensive code coverage analysis shows 100% statement coverage for the servi
 
 ---
 
+
+
 ## Appendix A: Code Quality Metrics
 
-We will use these two metrics to keep our Construction Phase lean and rational.
+### Overview
 
-### Cyclomatic Complexity (CC)
-**Definition:** Measures the number of independent execution paths in our functions.  
-* **Target:** Flag any controller in `scholarshipController.js` with a $CC > 10$ for refactoring.
+To evaluate and improve the quality of our codebase, we used automated software metrics integrated into our development workflow. These metrics helped identify maintainability issues and guided refactoring efforts.
 
-### Efferent Couplings (Ce)
-**Definition:** Measures how many external modules a file depends on.  
-* **Target:** Reduce coupling in the `main.js` entry point to ensure the frontend stays lightweight for legacy devices.
+We used **SonarCloud**, integrated into **GitHub Actions**, to ensure continuous code quality evaluation.
+
+---
+
+## Metric 1: Cognitive Complexity
+
+### Definition
+
+Cognitive Complexity measures how difficult code is to understand. It increases with:
+
+- nested conditions  
+- multiple decision branches  
+- complex control flow  
+
+Unlike Cyclomatic Complexity, it focuses on **human readability**, making it more suitable for maintainability analysis.
+
+---
+
+### Initial Findings
+
+SonarCloud identified several files with high complexity:
+
+| File | Cognitive Complexity |
+|------|----------------------|
+| category.controller.ts | 22 |
+| post.validation.ts | 21 |
+| post.controller.ts | 20 |
+
+These files contained:
+
+- nested `if` and `switch` statements  
+- repeated validation logic  
+- duplicated error handling  
+
+---
+
+### Refactoring Actions
+
+To reduce complexity, we:
+
+- extracted helper functions  
+- centralized error handling  
+- separated responsibilities in controllers  
+- removed nested branching logic  
+
+---
+
+### Results
+
+| File | Before | After |
+|------|--------|-------|
+| category.controller.ts | 22 | 8 |
+| post.validation.ts | 21 | 15 |
+| post.controller.ts | 20 | 13 |
+
+👉 This indicates that complex logic was successfully simplified and modularized.
+
+---
+
+## Metric 2: Code Duplication
+
+### Definition
+
+Code duplication measures repeated code across the system.
+
+High duplication leads to:
+
+- harder maintenance  
+- inconsistent updates  
+- increased bug risk  
+
+---
+
+### Initial Findings
+
+Initial SonarCloud analysis showed:
+
+| Metric | Value |
+|--------|------|
+| Code Duplication | 26.8% |
+
+However, this result was misleading because:
+
+- auto-generated **coverage files** were included  
+- these files artificially inflated duplication  
+
+---
+
+### Refactoring Actions
+
+We addressed duplication by:
+
+- creating reusable validation helpers  
+- centralizing controller error handling  
+- reusing pagination and parsing logic  
+
+---
+
+### Results
+
+| Before | After |
+|--------|-------|
+| 26.8% | 4.8% |
+
+👉 This reflects a significant improvement in maintainability.
+
+---
+
+## Additional Observation: Coupling (Madge)
+
+We briefly analyzed module dependencies using **Madge**.
+
+Results showed:
+
+- most files had **0–1 dependencies**  
+- the system is already **loosely coupled**  
+
+👉 Therefore, coupling was not a major issue and did not require refactoring.
+
+---
+
+## Conclusion
+
+The use of software metrics allowed us to:
+
+- identify complexity hotspots  
+- reduce duplication significantly  
+- improve code readability and maintainability  
+
+These improvements were achieved without changing system functionality, demonstrating effective refactoring practices.
