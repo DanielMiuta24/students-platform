@@ -2,7 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { likeController } from '../../../modules/like/like.controller';
 import { likeService } from '../../../modules/like/like.service';
 import { LIKE_ERROR } from '../../../modules/like/like.constants';
-import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
+import { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
+import { createMockAuthRequest, createMockResponse, createMockNext, createMockLike } from '../../helpers';
+import { expectErrorResponse } from '../../helpers';
 
 jest.mock('../../../modules/like/like.service');
 
@@ -12,32 +14,15 @@ describe('LikeController', () => {
   let mockNext: NextFunction;
 
   beforeEach(() => {
-    mockRequest = {
-      body: {},
-      params: {},
-      user: { id: 'user123', email: 'test@example.com', type: 'Student' },
-    };
-    mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-    };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
-  });
-
-  afterEach(() => {
+    mockRequest = createMockAuthRequest();
+    mockResponse = createMockResponse();
+    mockNext = createMockNext();
     jest.clearAllMocks();
   });
 
   describe('like', () => {
     it('should create like successfully and return 201', async () => {
-      const mockLike = {
-        _id: { toString: () => 'like123' },
-        user: 'user123',
-        likeable: 'post123',
-        likeableType: 'Post',
-        createdAt: new Date(),
-      };
+      const mockLike = createMockLike();
 
       mockRequest.body = { likeableType: 'Post', likeableId: 'post123' };
       (likeService.like as jest.Mock).mockResolvedValue(mockLike);
@@ -76,10 +61,7 @@ describe('LikeController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Entity not found',
-      });
+      expectErrorResponse(mockResponse, 404, 'Entity not found');
     });
 
     it('should return 409 when already liked', async () => {
@@ -93,10 +75,7 @@ describe('LikeController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(409);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'You have already liked this',
-      });
+      expectErrorResponse(mockResponse, 409, 'You have already liked this');
     });
   });
 
@@ -133,10 +112,7 @@ describe('LikeController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Like not found',
-      });
+      expectErrorResponse(mockResponse, 404, 'Like not found');
     });
   });
 
@@ -172,8 +148,8 @@ describe('LikeController', () => {
   describe('getLikesByEntity', () => {
     it('should return likes for an entity', async () => {
       const mockLikes = [
-        { _id: { toString: () => 'like1' }, user: 'user1', likeable: 'post123', likeableType: 'Post', createdAt: new Date() },
-        { _id: { toString: () => 'like2' }, user: 'user2', likeable: 'post123', likeableType: 'Post', createdAt: new Date() },
+        createMockLike({ _id: { toString: () => 'like1' }, user: 'user1' }),
+        createMockLike({ _id: { toString: () => 'like2' }, user: 'user2' }),
       ];
 
       mockRequest.params = { likeableType: 'Post', likeableId: 'post123' };
@@ -199,8 +175,8 @@ describe('LikeController', () => {
   describe('getUserLikes', () => {
     it('should return all likes by authenticated user', async () => {
       const mockLikes = [
-        { _id: { toString: () => 'like1' }, user: 'user123', likeable: 'post1', likeableType: 'Post', createdAt: new Date() },
-        { _id: { toString: () => 'like2' }, user: 'user123', likeable: 'comment1', likeableType: 'Comment', createdAt: new Date() },
+        createMockLike({ _id: { toString: () => 'like1' }, likeable: 'post1' }),
+        createMockLike({ _id: { toString: () => 'like2' }, likeable: 'comment1', likeableType: 'Comment' }),
       ];
 
       (likeService.getLikesByUser as jest.Mock).mockResolvedValue(mockLikes);

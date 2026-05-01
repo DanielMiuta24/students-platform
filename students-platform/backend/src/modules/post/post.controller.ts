@@ -104,7 +104,7 @@ class PostController {
 
       return res.status(PostController.HTTP_STATUS.OK).json({
         message: 'Post updated successfully',
-        post: PostMapper.toSafePost(updatedPost),
+        post: PostMapper.toSafePost(updatedPost!),
       });
     } catch (err: unknown) {
       return this.handleError(err, res, next);

@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { categoryController } from '../../../modules/category/category.controller';
 import { categoryService } from '../../../modules/category/category.service';
 import { CATEGORY_ERROR } from '../../../modules/category/category.constants';
+import { createMockRequest, createMockResponse, createMockNext, createMockCategory } from '../../helpers';
+import { expectErrorResponse } from '../../helpers';
 
 jest.mock('../../../modules/category/category.service');
 
@@ -11,19 +13,9 @@ describe('CategoryController', () => {
   let mockNext: NextFunction;
 
   beforeEach(() => {
-    mockRequest = {
-      body: {},
-      params: {},
-    };
-    mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-    };
-    mockNext = jest.fn();
-    jest.clearAllMocks();
-  });
-
-  afterEach(() => {
+    mockRequest = createMockRequest();
+    mockResponse = createMockResponse();
+    mockNext = createMockNext();
     jest.clearAllMocks();
   });
 
@@ -34,12 +26,7 @@ describe('CategoryController', () => {
         description: 'Tech posts',
       };
 
-      const mockCategory = {
-        _id: 'cat123',
-        ...mockCategoryData,
-        slug: 'technology',
-        isActive: true,
-      };
+      const mockCategory = createMockCategory(mockCategoryData);
 
       mockRequest.body = mockCategoryData;
       (categoryService.createCategory as jest.Mock).mockResolvedValue(mockCategory);
@@ -71,10 +58,7 @@ describe('CategoryController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(409);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Category with this name already exists',
-      });
+      expectErrorResponse(mockResponse, 409, 'Category with this name already exists');
     });
 
     it('should call next with error for unexpected errors', async () => {
@@ -94,12 +78,7 @@ describe('CategoryController', () => {
 
   describe('getById', () => {
     it('should return category when found', async () => {
-      const mockCategory = {
-        _id: 'cat123',
-        name: 'Technology',
-        slug: 'technology',
-        isActive: true,
-      };
+      const mockCategory = createMockCategory();
 
       mockRequest.params = { id: 'cat123' };
       (categoryService.getCategoryById as jest.Mock).mockResolvedValue(mockCategory);
@@ -131,21 +110,13 @@ describe('CategoryController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Category not found',
-      });
+      expectErrorResponse(mockResponse, 404, 'Category not found');
     });
   });
 
   describe('getBySlug', () => {
     it('should return category when found by slug', async () => {
-      const mockCategory = {
-        _id: 'cat123',
-        name: 'Technology',
-        slug: 'technology',
-        isActive: true,
-      };
+      const mockCategory = createMockCategory();
 
       mockRequest.params = { slug: 'technology' };
       (categoryService.getCategoryBySlug as jest.Mock).mockResolvedValue(mockCategory);
@@ -182,12 +153,10 @@ describe('CategoryController', () => {
         description: 'Updated description',
       };
 
-      const mockUpdatedCategory = {
-        _id: 'cat123',
+      const mockUpdatedCategory = createMockCategory({
         ...mockUpdateData,
         slug: 'updated-technology',
-        isActive: true,
-      };
+      });
 
       mockRequest.params = { id: 'cat123' };
       mockRequest.body = mockUpdateData;
@@ -221,10 +190,7 @@ describe('CategoryController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Category not found',
-      });
+      expectErrorResponse(mockResponse, 404, 'Category not found');
     });
 
     it('should return 409 when updated name already exists', async () => {
@@ -246,8 +212,8 @@ describe('CategoryController', () => {
   describe('getAll', () => {
     it('should return all categories', async () => {
       const mockCategories = [
-        { _id: 'cat1', name: 'Technology', slug: 'technology', isActive: true },
-        { _id: 'cat2', name: 'Science', slug: 'science', isActive: true },
+        createMockCategory({ _id: 'cat1', name: 'Technology', slug: 'technology' }),
+        createMockCategory({ _id: 'cat2', name: 'Science', slug: 'science' }),
       ];
 
       (categoryService.getAllCategories as jest.Mock).mockResolvedValue(mockCategories);

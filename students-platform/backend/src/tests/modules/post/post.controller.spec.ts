@@ -2,7 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { postController } from '../../../modules/post/post.controller';
 import { postService } from '../../../modules/post/post.service';
 import { POST_ERROR } from '../../../modules/post/post.constants';
-import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
+import { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
+import { createMockRequest, createMockAuthRequest, createMockResponse, createMockNext, createMockPost, createMockFeedResult } from '../../helpers';
+import { expectErrorResponse } from '../../helpers';
 
 jest.mock('../../../modules/post/post.service');
 
@@ -12,37 +14,15 @@ describe('PostController', () => {
   let mockNext: NextFunction;
 
   beforeEach(() => {
-    mockRequest = {
-      body: {},
-      params: {},
-      query: {},
-      user: { id: 'user123', email: 'test@example.com', type: 'Student' },
-    };
-    mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-    };
-    mockNext = jest.fn();
+    mockRequest = createMockAuthRequest();
+    mockResponse = createMockResponse();
+    mockNext = createMockNext();
     jest.clearAllMocks();
   });
 
   describe('createPost', () => {
     it('should create post successfully and return 201', async () => {
-      const mockPost = {
-        _id: { toString: () => 'post123' },
-        title: 'Test Post',
-        content: 'Test content',
-        author: 'user123',
-        category: 'cat123',
-        status: 'published',
-        visibility: 'public',
-        likeCount: 0,
-        commentCount: 0,
-        viewCount: 0,
-        images: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const mockPost = createMockPost();
 
       mockRequest.body = {
         title: 'Test Post',
@@ -90,30 +70,13 @@ describe('PostController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Category not found or inactive',
-      });
+      expectErrorResponse(mockResponse, 404, 'Category not found or inactive');
     });
   });
 
   describe('getPostById', () => {
     it('should return post successfully', async () => {
-      const mockPost = {
-        _id: { toString: () => 'post123' },
-        title: 'Test Post',
-        content: 'Test content',
-        author: 'user123',
-        category: 'cat123',
-        status: 'published',
-        visibility: 'public',
-        likeCount: 5,
-        commentCount: 3,
-        viewCount: 100,
-        images: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const mockPost = createMockPost({ likeCount: 5, commentCount: 3, viewCount: 100 });
 
       mockRequest.params = { postId: 'post123' };
       mockRequest.query = {};
@@ -136,21 +99,7 @@ describe('PostController', () => {
     });
 
     it('should increment view count when requested', async () => {
-      const mockPost = {
-        _id: { toString: () => 'post123' },
-        title: 'Test Post',
-        content: 'Test content',
-        author: 'user123',
-        category: 'cat123',
-        status: 'published',
-        visibility: 'public',
-        likeCount: 5,
-        commentCount: 3,
-        viewCount: 100,
-        images: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const mockPost = createMockPost({ viewCount: 100 });
 
       mockRequest.params = { postId: 'post123' };
       mockRequest.query = { incrementView: 'true' };
@@ -177,30 +126,13 @@ describe('PostController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Post not found',
-      });
+      expectErrorResponse(mockResponse, 404, 'Post not found');
     });
   });
 
   describe('updatePost', () => {
     it('should update post successfully', async () => {
-      const mockPost = {
-        _id: { toString: () => 'post123' },
-        title: 'Updated Post',
-        content: 'Updated content',
-        author: 'user123',
-        category: 'cat123',
-        status: 'published',
-        visibility: 'public',
-        likeCount: 5,
-        commentCount: 3,
-        viewCount: 100,
-        images: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const mockPost = createMockPost({ title: 'Updated Post', content: 'Updated content' });
 
       mockRequest.params = { postId: 'post123' };
       mockRequest.body = { title: 'Updated Post', content: 'Updated content' };
@@ -240,10 +172,7 @@ describe('PostController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Post not found',
-      });
+      expectErrorResponse(mockResponse, 404, 'Post not found');
     });
 
     it('should return 403 when user is not authorized', async () => {
@@ -259,10 +188,7 @@ describe('PostController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(403);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'You are not authorized to update this post',
-      });
+      expectErrorResponse(mockResponse, 403, 'You are not authorized to update this post');
     });
 
     it('should return 404 when category not found', async () => {
@@ -278,35 +204,13 @@ describe('PostController', () => {
         mockNext
       );
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Category not found or inactive',
-      });
+      expectErrorResponse(mockResponse, 404, 'Category not found or inactive');
     });
   });
 
   describe('getFeed', () => {
     it('should return feed successfully', async () => {
-      const mockResult = {
-        posts: [
-          {
-            id: 'post1',
-            title: 'Post 1',
-            content: 'Content 1',
-            author: 'user1',
-            category: 'cat1',
-            status: 'published',
-            visibility: 'public',
-            likeCount: 5,
-            commentCount: 3,
-            viewCount: 100,
-            images: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ],
-        hasMore: false,
-      };
+      const mockResult = createMockFeedResult();
 
       mockRequest.query = { limit: '10' };
       (postService.getFeed as jest.Mock).mockResolvedValue(mockResult);
@@ -328,26 +232,7 @@ describe('PostController', () => {
 
   describe('getPostsByCategory', () => {
     it('should return posts by category', async () => {
-      const mockResult = {
-        posts: [
-          {
-            id: 'post1',
-            title: 'Post 1',
-            content: 'Content 1',
-            author: 'user1',
-            category: 'cat123',
-            status: 'published',
-            visibility: 'public',
-            likeCount: 5,
-            commentCount: 3,
-            viewCount: 100,
-            images: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ],
-        hasMore: false,
-      };
+      const mockResult = createMockFeedResult();
 
       mockRequest.params = { categoryId: 'cat123' };
       mockRequest.query = { limit: '10' };
@@ -371,26 +256,7 @@ describe('PostController', () => {
 
   describe('getPostsByAuthor', () => {
     it('should return posts by author', async () => {
-      const mockResult = {
-        posts: [
-          {
-            id: 'post1',
-            title: 'Post 1',
-            content: 'Content 1',
-            author: 'user123',
-            category: 'cat1',
-            status: 'published',
-            visibility: 'public',
-            likeCount: 5,
-            commentCount: 3,
-            viewCount: 100,
-            images: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ],
-        hasMore: false,
-      };
+      const mockResult = createMockFeedResult();
 
       mockRequest.params = { authorId: 'user123' };
       mockRequest.query = { limit: '10' };
@@ -414,26 +280,7 @@ describe('PostController', () => {
 
   describe('getScoredFeed', () => {
     it('should return scored feed with default limit', async () => {
-      const mockResult = {
-        posts: [
-          {
-            id: 'post1',
-            title: 'Post 1',
-            content: 'Content 1',
-            author: 'user1',
-            category: 'cat1',
-            status: 'published',
-            visibility: 'public',
-            likeCount: 5,
-            commentCount: 3,
-            viewCount: 100,
-            images: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            score: 150,
-          },
-        ],
-      };
+      const mockResult = createMockFeedResult();
 
       mockRequest.query = {};
       (postService.getScoredFeed as jest.Mock).mockResolvedValue(mockResult);
@@ -453,26 +300,7 @@ describe('PostController', () => {
     });
 
     it('should return scored feed with preferred categories', async () => {
-      const mockResult = {
-        posts: [
-          {
-            id: 'post1',
-            title: 'Post 1',
-            content: 'Content 1',
-            author: 'user1',
-            category: 'cat1',
-            status: 'published',
-            visibility: 'public',
-            likeCount: 5,
-            commentCount: 3,
-            viewCount: 100,
-            images: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            score: 200,
-          },
-        ],
-      };
+      const mockResult = createMockFeedResult();
 
       mockRequest.query = {
         limit: '20',
@@ -495,9 +323,7 @@ describe('PostController', () => {
     });
 
     it('should handle invalid limit gracefully', async () => {
-      const mockResult = {
-        posts: [],
-      };
+      const mockResult = createMockFeedResult();
 
       mockRequest.query = { limit: 'invalid' };
       (postService.getScoredFeed as jest.Mock).mockResolvedValue(mockResult);
