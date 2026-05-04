@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { postController } from '../controllers/post.controller';
-import { authMiddleware } from '../../shared/middleware/auth.middleware';
-import { busboyUploadMiddleware } from '../image/middleware';
-import { UPLOAD_VALIDATION } from '../../shared/services/upload';
+import { authMiddleware } from '../../../shared/middleware/auth.middleware';
+import { busboyUploadMiddleware } from '../../image/middleware';
+import { UPLOAD_VALIDATION } from '../../image/services';
 import {
   validateCreatePost,
   validateUpdatePost,

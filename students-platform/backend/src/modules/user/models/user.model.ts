@@ -11,7 +11,7 @@ import {
   type UserType,
   PROVIDERS,
   type Provider,
-} from '../../shared/types/domain';
+} from '../../../shared/types/domain';
 
 const UserSchema = new Schema(
   {
