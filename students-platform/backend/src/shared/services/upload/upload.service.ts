@@ -2,6 +2,7 @@ import { cloudinary } from '../../../config/cloudinary.config';
 import type { UploadedFile, UploadResult, CloudinaryUploadOptions } from './upload.types';
 import { UPLOAD_ERROR } from './upload.constants';
 import { CloudinaryUploadOptionsBuilder } from './cloudinary-upload-options.builder';
+import { imageService } from '../../../modules/image';
 
 export class UploadService {
   async uploadImage(
@@ -55,11 +56,15 @@ export class UploadService {
     return Promise.all(uploadPromises);
   }
 
-  async uploadImagesForPost(files: UploadedFile[]): Promise<UploadResult[]> {
+  async uploadImagesForPost(files: UploadedFile[], userId: string): Promise<UploadResult[]> {
     const options = new CloudinaryUploadOptionsBuilder()
       .withPostImageDefaults()
       .build();
-    return this.uploadImages(files, options);
+    const uploadedImages = await this.uploadImages(files, options);
+
+    await imageService.createImagesFromUploads(userId, uploadedImages, 'posts');
+
+    return uploadedImages;
   }
 
   async uploadImageForAvatar(file: UploadedFile): Promise<UploadResult> {

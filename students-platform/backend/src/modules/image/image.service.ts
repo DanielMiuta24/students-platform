@@ -1,59 +1,28 @@
 import { ImageModel, type ImageDoc } from './image.model';
+import { ImageCreateBuilder } from './builders';
 
 export class ImageService {
-  async createImage(
+  async createImagesFromUploads(
     ownerId: string,
-    url: string,
-    publicId: string,
-    width: number,
-    height: number,
-    format: string,
-    size: number,
-    folder: string
-  ): Promise<ImageDoc> {
-    const image = new ImageModel({
-      owner: ownerId,
-      url,
-      publicId,
-      width,
-      height,
-      format,
-      size,
-      folder,
-    });
-    return image.save();
-  }
-
-  async createImages(
-    ownerId: string,
-    images: Array<{
+    uploads: Array<{
       url: string;
       publicId: string;
       width: number;
       height: number;
       format: string;
       size: number;
-      folder: string;
-    }>
+    }>,
+    folder: string
   ): Promise<ImageDoc[]> {
-    const imagePromises = images.map((img) =>
-      this.createImage(
-        ownerId,
-        img.url,
-        img.publicId,
-        img.width,
-        img.height,
-        img.format,
-        img.size,
-        img.folder
+    const imageDocs = uploads.map(upload =>
+      new ImageModel(
+        new ImageCreateBuilder()
+          .fromUploadResult(ownerId, upload, folder)
+          .build()
       )
     );
-    return Promise.all(imagePromises);
-  }
 
-  async validateImageOwnership(url: string, ownerId: string): Promise<boolean> {
-    const image = await ImageModel.findOne({ url, owner: ownerId });
-    return !!image;
+    return ImageModel.insertMany(imageDocs);
   }
 
   async validateImagesOwnership(urls: string[], ownerId: string): Promise<boolean> {
@@ -62,18 +31,6 @@ export class ImageService {
       owner: ownerId,
     });
     return count === urls.length;
-  }
-
-  async getUserImages(ownerId: string, limit: number = 50): Promise<ImageDoc[]> {
-    return ImageModel.find({ owner: ownerId })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .exec();
-  }
-
-  async deleteImage(publicId: string, ownerId: string): Promise<boolean> {
-    const result = await ImageModel.deleteOne({ publicId, owner: ownerId });
-    return result.deletedCount > 0;
   }
 }
 
