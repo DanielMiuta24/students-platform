@@ -1,4 +1,4 @@
-export const UPLOAD_VALIDATION = {
+export const IMAGE_VALIDATION = {
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
   MAX_FILES_PER_REQUEST: 3,
   ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
@@ -9,7 +9,7 @@ export const UPLOAD_VALIDATION = {
   MAX_HEIGHT: 4096,
 } as const;
 
-export const UPLOAD_ERROR = {
+export const IMAGE_ERROR = {
   NO_FILES: 'NO_FILES_PROVIDED',
   FILE_TOO_LARGE: 'FILE_TOO_LARGE',
   INVALID_FILE_TYPE: 'INVALID_FILE_TYPE',

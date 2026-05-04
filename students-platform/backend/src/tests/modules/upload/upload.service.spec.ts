@@ -1,7 +1,7 @@
-import { uploadService } from '../../../shared/services/upload/upload.service';
-import { CloudinaryUploadOptionsBuilder } from '../../../shared/services/upload/cloudinary-upload-options.builder';
+import { imageService } from '../../../modules/image/services/image.service';
+import { CloudinaryUploadOptionsBuilder } from '../../../modules/image/services/cloudinary-upload-options.builder';
 import { Readable, Writable } from 'stream';
-import type { UploadedFile } from '../../../shared/services/upload/upload.types';
+import type { UploadedFile } from '../../../modules/image/services/image.types';
 import { cloudinary } from '../../../config/cloudinary.config';
 
 jest.mock('../../../config/cloudinary.config', () => ({
@@ -55,7 +55,7 @@ describe('UploadService', () => {
         .withPostImageDefaults()
         .build();
 
-      const result = await uploadService.uploadImage(mockFile, options);
+      const result = await imageService.uploadImage(mockFile, options);
 
       expect(result).toEqual({
         url: mockCloudinaryResult.secure_url,
@@ -104,7 +104,7 @@ describe('UploadService', () => {
         .withPostImageDefaults()
         .build();
 
-      await expect(uploadService.uploadImage(mockFile, options)).rejects.toThrow(
+      await expect(imageService.uploadImage(mockFile, options)).rejects.toThrow(
         'CLOUDINARY_ERROR'
       );
     });
@@ -157,7 +157,7 @@ describe('UploadService', () => {
         .withPostImageDefaults()
         .build();
 
-      const results = await uploadService.uploadImages(mockFiles, options);
+      const results = await imageService.uploadImages(mockFiles, options);
 
       expect(results).toHaveLength(2);
       expect(results[0].url).toBe(mockCloudinaryResult.secure_url);
@@ -169,7 +169,7 @@ describe('UploadService', () => {
     it('should delete image successfully', async () => {
       (cloudinary.uploader.destroy as jest.Mock).mockResolvedValue({ result: 'ok' });
 
-      await uploadService.deleteImage('posts/test123');
+      await imageService.deleteImage('posts/test123');
 
       expect(cloudinary.uploader.destroy).toHaveBeenCalledWith('posts/test123');
     });
@@ -179,7 +179,7 @@ describe('UploadService', () => {
         new Error('Deletion failed')
       );
 
-      await expect(uploadService.deleteImage('posts/test123')).rejects.toThrow(
+      await expect(imageService.deleteImage('posts/test123')).rejects.toThrow(
         'CLOUDINARY_ERROR'
       );
     });

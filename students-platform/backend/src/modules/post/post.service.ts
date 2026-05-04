@@ -13,41 +13,10 @@ import { PostQueryBuilder, PostCreateBuilder, PostUpdateBuilder } from './builde
 import { PostMapper } from './mappers';
 import { CategoryModel } from '../category/category.model';
 import { PostScorer } from './post.scorer';
-import { uploadService, type UploadedFile } from '../../shared/services/upload';
-import { imageService } from '../image';
+import { imageService, type UploadedFile } from '../image/services';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
-
-  private async handlePostImages(
-    userId: string,
-    files?: UploadedFile[],
-    existingImages?: Array<{ url: string; alt?: string }>
-  ): Promise<Array<{ url: string; alt: string }>> {
-    if (files && files.length > 0) {
-      const uploadedImages = await uploadService.uploadImagesForPost(files, userId);
-      return uploadedImages.map(img => ({
-        url: img.url,
-        alt: ''
-      }));
-    }
-
-    if (existingImages && existingImages.length > 0) {
-      const urls = existingImages.map(img => img.url);
-      const isValid = await imageService.validateImagesOwnership(urls, userId);
-
-      if (!isValid) {
-        throw new Error(POST_ERROR.INVALID_IMAGES);
-      }
-
-      return existingImages.map(img => ({
-        url: img.url,
-        alt: img.alt || ''
-      }));
-    }
-
-    return [];
-  }
 
   async createPost(data: CreatePostDTO, files?: UploadedFile[]): Promise<PostDoc> {
     const category = await CategoryModel.findById(data.category);
@@ -55,11 +24,19 @@ export class PostService {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    const imageUrls = await this.handlePostImages(
-      data.authorId,
-      files,
-      data.images
-    );
+    let imageUrls: Array<{ url: string; alt: string }> = [];
+
+    if (files && files.length > 0) {
+      const uploadedImages = await imageService.uploadImagesForPost(files, data.authorId);
+      imageUrls = uploadedImages.map(img => ({ url: img.url, alt: '' }));
+    } else if (data.images && data.images.length > 0) {
+      const urls = data.images.map(img => img.url);
+      const isValid = await imageService.validateImagesOwnership(urls, data.authorId);
+      if (!isValid) {
+        throw new Error(POST_ERROR.INVALID_IMAGES);
+      }
+      imageUrls = data.images.map(img => ({ url: img.url, alt: img.alt || '' }));
+    }
 
     const postData = new PostCreateBuilder()
       .fromDTO({ ...data, images: imageUrls })
@@ -96,11 +73,19 @@ export class PostService {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    const imageUrls = await this.handlePostImages(
-      authorId,
-      files,
-      data.images
-    );
+    let imageUrls: Array<{ url: string; alt: string }> = [];
+
+    if (files && files.length > 0) {
+      const uploadedImages = await imageService.uploadImagesForPost(files, authorId);
+      imageUrls = uploadedImages.map(img => ({ url: img.url, alt: '' }));
+    } else if (data.images && data.images.length > 0) {
+      const urls = data.images.map(img => img.url);
+      const isValid = await imageService.validateImagesOwnership(urls, authorId);
+      if (!isValid) {
+        throw new Error(POST_ERROR.INVALID_IMAGES);
+      }
+      imageUrls = data.images.map(img => ({ url: img.url, alt: img.alt || '' }));
+    }
 
     const updateData = new PostUpdateBuilder()
       .fromDTO({ ...data, images: imageUrls.length > 0 ? imageUrls : undefined })

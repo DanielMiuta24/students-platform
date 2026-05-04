@@ -1,10 +1,11 @@
 import { cloudinary } from '../../../config/cloudinary.config';
-import type { UploadedFile, UploadResult, CloudinaryUploadOptions } from './upload.types';
-import { UPLOAD_ERROR } from './upload.constants';
+import type { UploadedFile, UploadResult, CloudinaryUploadOptions } from './image.types';
+import { IMAGE_ERROR } from './image.constants';
 import { CloudinaryUploadOptionsBuilder } from './cloudinary-upload-options.builder';
-import { imageService } from '../../../modules/image';
+import { ImageModel } from '../image.model';
+import { ImageCreateBuilder } from '../builders';
 
-export class UploadService {
+export class ImageService {
   async uploadImage(
     file: UploadedFile,
     options: CloudinaryUploadOptions
@@ -20,12 +21,12 @@ export class UploadService {
         },
         (error, result) => {
           if (error) {
-            reject(new Error(UPLOAD_ERROR.CLOUDINARY_ERROR));
+            reject(new Error(IMAGE_ERROR.CLOUDINARY_ERROR));
             return;
           }
 
           if (!result) {
-            reject(new Error(UPLOAD_ERROR.UPLOAD_FAILED));
+            reject(new Error(IMAGE_ERROR.UPLOAD_FAILED));
             return;
           }
 
@@ -43,7 +44,7 @@ export class UploadService {
       file.stream.pipe(uploadStream);
 
       file.stream.on('error', (error) => {
-        reject(new Error(UPLOAD_ERROR.UPLOAD_FAILED));
+        reject(new Error(IMAGE_ERROR.UPLOAD_FAILED));
       });
     });
   }
@@ -62,7 +63,14 @@ export class UploadService {
       .build();
     const uploadedImages = await this.uploadImages(files, options);
 
-    await imageService.createImagesFromUploads(userId, uploadedImages, 'posts');
+    const imageDocs = uploadedImages.map(upload =>
+      new ImageModel(
+        new ImageCreateBuilder()
+          .fromUploadResult(userId, upload, 'posts')
+          .build()
+      )
+    );
+    await ImageModel.insertMany(imageDocs);
 
     return uploadedImages;
   }
@@ -78,9 +86,17 @@ export class UploadService {
     try {
       await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-      throw new Error(UPLOAD_ERROR.CLOUDINARY_ERROR);
+      throw new Error(IMAGE_ERROR.CLOUDINARY_ERROR);
     }
+  }
+
+  async validateImagesOwnership(urls: string[], userId: string): Promise<boolean> {
+    const count = await ImageModel.countDocuments({
+      url: { $in: urls },
+      owner: userId,
+    });
+    return count === urls.length;
   }
 }
 
-export const uploadService = new UploadService();
+export const imageService = new ImageService();

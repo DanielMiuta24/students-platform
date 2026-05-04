@@ -1,2 +1,3 @@
 export * from './image.model';
-export * from './image.service';
+export * from './services';
+export * from './builders';

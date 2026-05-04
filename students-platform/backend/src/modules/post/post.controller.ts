@@ -4,7 +4,7 @@ import { postService } from './post.service';
 import { parseCursorParams } from './post.validation';
 import { PostMapper } from './mappers';
 import { POST_ERROR, POST_VALIDATION } from './post.constants';
-import type { UploadRequest } from '../../shared/services/upload';
+import type { UploadRequest } from '../image/services';
 
 class PostController {
   private static readonly HTTP_STATUS = {
