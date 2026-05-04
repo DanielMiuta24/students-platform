@@ -1,5 +1,5 @@
-import { isLexicalContent, isPlainTextContent, type PostContent, type LexicalEditorState } from './post-content.types';
-import { POST_VALIDATION } from './post.constants';
+import { isLexicalContent, isPlainTextContent, type PostContent, type LexicalEditorState } from '../types/post-content.types';
+import { POST_VALIDATION } from '../constants/post.constants';
 
 /**
  * Validates post content (plain text or Lexical JSON)

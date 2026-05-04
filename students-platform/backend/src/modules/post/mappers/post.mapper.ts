@@ -1,6 +1,6 @@
-import type { PostDoc } from '../post.model';
-import type { SafePost } from '../post.types';
-import type { PostContent } from '../post-content.types';
+import type { PostDoc } from '../models/post.model';
+import type { SafePost } from '../types/post.types';
+import type { PostContent } from '../types/post-content.types';
 
 /**
  * Mapper for converting PostDoc to SafePost (API response format)

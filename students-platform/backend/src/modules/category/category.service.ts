@@ -1,7 +1,7 @@
 import { CategoryModel, type CategoryDoc } from './category.model';
 import type { CreateCategoryDTO, UpdateCategoryDTO } from './category.types';
 import { CATEGORY_ERROR } from './category.constants';
-import { PostModel } from '../post/post.model';
+import { PostModel } from '../post/models/post.model';
 import { CategoryCreateBuilder, CategoryUpdateBuilder } from './builders';
 
 export class CategoryService {

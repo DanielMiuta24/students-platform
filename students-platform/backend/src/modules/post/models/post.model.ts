@@ -6,8 +6,8 @@ import {
   type Model,
   type Types,
 } from 'mongoose';
-import { POST_STATUS, POST_VISIBILITY } from '../../shared/constants';
-import type { PostContent } from './post-content.types';
+import { POST_STATUS, POST_VISIBILITY } from '../../../shared/constants';
+import type { PostContent } from '../types/post-content.types';
 
 export type RichText = PostContent;
 

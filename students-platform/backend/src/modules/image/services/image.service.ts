@@ -1,7 +1,7 @@
 import { cloudinary } from '../../../config/cloudinary.config';
 import type { UploadedFile, UploadResult, CloudinaryUploadOptions } from './image.types';
 import { IMAGE_ERROR } from './image.constants';
-import { CloudinaryUploadOptionsBuilder } from './cloudinary-upload-options.builder';
+import { CloudinaryUploadOptionsBuilder } from '../builders';
 import { ImageModel } from '../image.model';
 import { ImageCreateBuilder } from '../builders';
 

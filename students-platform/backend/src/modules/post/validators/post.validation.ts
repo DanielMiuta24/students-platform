@@ -1,7 +1,7 @@
 import { body, param } from 'express-validator';
-import { handleValidationErrors } from '../../shared/middleware/validation.middleware';
-import { POST_STATUS, POST_VISIBILITY } from '../../shared/constants';
-import { POST_VALIDATION } from './post.constants';
+import { handleValidationErrors } from '../../../shared/middleware/validation.middleware';
+import { POST_STATUS, POST_VISIBILITY } from '../../../shared/constants';
+import { POST_VALIDATION } from '../constants/post.constants';
 import { ContentValidator } from './post-content.validator';
 
 const VALID_STATUSES = Object.values(POST_STATUS);

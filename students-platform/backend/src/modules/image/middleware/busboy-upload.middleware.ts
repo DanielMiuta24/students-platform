@@ -1,8 +1,8 @@
 import type { Response, NextFunction } from 'express';
 import Busboy from 'busboy';
 import { Readable } from 'stream';
-import type { UploadedFile, UploadRequest } from '../services/upload/upload.types';
-import { UPLOAD_VALIDATION } from '../services/upload/upload.constants';
+import type { UploadedFile, UploadRequest } from '../services/image.types';
+import { IMAGE_VALIDATION } from '../services/image.constants';
 
 export interface BusboyUploadOptions {
   maxFiles?: number;
@@ -12,9 +12,9 @@ export interface BusboyUploadOptions {
 }
 
 export const busboyUploadMiddleware = (options?: BusboyUploadOptions) => {
-  const maxFiles = options?.maxFiles ?? UPLOAD_VALIDATION.MAX_FILES_PER_REQUEST;
-  const maxFileSize = options?.maxFileSize ?? UPLOAD_VALIDATION.MAX_FILE_SIZE;
-  const allowedMimeTypes = options?.allowedMimeTypes ?? UPLOAD_VALIDATION.ALLOWED_MIME_TYPES;
+  const maxFiles = options?.maxFiles ?? IMAGE_VALIDATION.MAX_FILES_PER_REQUEST;
+  const maxFileSize = options?.maxFileSize ?? IMAGE_VALIDATION.MAX_FILE_SIZE;
+  const allowedMimeTypes = options?.allowedMimeTypes ?? IMAGE_VALIDATION.ALLOWED_MIME_TYPES;
   const filesRequired = options?.filesRequired ?? false;
 
   return (req: UploadRequest, res: Response, next: NextFunction): void => {

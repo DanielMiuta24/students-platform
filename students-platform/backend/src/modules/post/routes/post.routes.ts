@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { postController } from './post.controller';
+import { postController } from '../controllers/post.controller';
 import { authMiddleware } from '../../shared/middleware/auth.middleware';
-import { busboyUploadMiddleware } from '../../shared/middleware/busboy-upload.middleware';
+import { busboyUploadMiddleware } from '../image/middleware';
 import { UPLOAD_VALIDATION } from '../../shared/services/upload';
 import {
   validateCreatePost,
@@ -9,7 +9,7 @@ import {
   validatePostId,
   validateCategoryIdParam,
   validateAuthorId,
-} from './post.validation';
+} from '../validators/post.validation';
 
 const router = Router();
 

@@ -1,10 +1,10 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
-import { postService } from './post.service';
-import { parseCursorParams } from './post.validation';
-import { PostMapper } from './mappers';
-import { POST_ERROR, POST_VALIDATION } from './post.constants';
-import type { UploadRequest } from '../image/services';
+import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
+import { postService } from '../services/post.service';
+import { parseCursorParams } from '../validators/post.validation';
+import { PostMapper } from '../mappers';
+import { POST_ERROR, POST_VALIDATION } from '../constants/post.constants';
+import type { UploadRequest } from '../../image/services';
 
 class PostController {
   private static readonly HTTP_STATUS = {

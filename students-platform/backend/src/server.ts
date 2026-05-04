@@ -6,7 +6,7 @@ import userRoutes from './modules/user/user.routes';
 import universityRoutes from './modules/university/university.routes';
 import scholarshipRoutes from './modules/scholarship/scholarship.routes';
 import categoryRoutes from './modules/category/category.routes';
-import postRoutes from './modules/post/post.routes';
+import postRoutes from './modules/post/routes/post.routes';
 import cookieParser from 'cookie-parser';
 
 const app = express();

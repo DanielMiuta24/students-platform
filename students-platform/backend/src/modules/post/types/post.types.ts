@@ -1,4 +1,4 @@
-import type { PostDoc } from './post.model';
+import type { PostDoc } from '../models/post.model';
 import type { PostStatus, PostVisibility } from '../../shared/constants';
 import type { PostContent } from './post-content.types';
 

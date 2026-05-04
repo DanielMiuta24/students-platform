@@ -1,10 +1,10 @@
 import { CategoryModel } from '../../../modules/category/category.model';
-import { PostModel } from '../../../modules/post/post.model';
+import { PostModel } from '../../../modules/post/models/post.model';
 import { categoryService } from '../../../modules/category/category.service';
 import { CATEGORY_ERROR } from '../../../modules/category/category.constants';
 
 jest.mock('../../../modules/category/category.model');
-jest.mock('../../../modules/post/post.model');
+jest.mock('../../../modules/post/models/post.model');
 
 describe('CategoryService', () => {
   beforeEach(() => {

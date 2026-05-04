@@ -1,9 +1,9 @@
 import { commentService } from '../../../modules/comment/comment.service';
 import { CommentModel } from '../../../modules/comment/comment.model';
-import { PostModel } from '../../../modules/post/post.model';
+import { PostModel } from '../../../modules/post/models/post.model';
 
 jest.mock('../../../modules/comment/comment.model');
-jest.mock('../../../modules/post/post.model');
+jest.mock('../../../modules/post/models/post.model');
 
 describe('CommentService', () => {
   beforeEach(() => {

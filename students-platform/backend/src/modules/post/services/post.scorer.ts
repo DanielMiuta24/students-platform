@@ -1,4 +1,4 @@
-import type { PostDoc } from './post.model';
+import type { PostDoc } from '../models/post.model';
 
 export class PostScorer {
   static calculateScore(post: PostDoc, preferredCategories: string[]): number {

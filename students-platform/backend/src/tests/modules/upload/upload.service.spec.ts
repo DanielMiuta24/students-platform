@@ -1,5 +1,5 @@
 import { imageService } from '../../../modules/image/services/image.service';
-import { CloudinaryUploadOptionsBuilder } from '../../../modules/image/services/cloudinary-upload-options.builder';
+import { CloudinaryUploadOptionsBuilder } from '../../../modules/image/builders';
 import { Readable, Writable } from 'stream';
 import type { UploadedFile } from '../../../modules/image/services/image.types';
 import { cloudinary } from '../../../config/cloudinary.config';

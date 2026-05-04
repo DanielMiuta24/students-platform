@@ -1,5 +1,5 @@
 import { CommentModel, type CommentDoc } from './comment.model';
-import { PostModel } from '../post/post.model';
+import { PostModel } from '../post/models/post.model';
 
 export interface CreateCommentDTO {
   postId: string;

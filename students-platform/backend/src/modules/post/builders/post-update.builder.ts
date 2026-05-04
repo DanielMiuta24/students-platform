@@ -1,6 +1,6 @@
-import type { UpdatePostDTO } from '../post.types';
+import type { UpdatePostDTO } from '../types/post.types';
 import type { PostStatus, PostVisibility } from '../../../shared/constants';
-import type { PostContent } from '../post-content.types';
+import type { PostContent } from '../types/post-content.types';
 
 /**
  * Builder pattern for constructing post update data

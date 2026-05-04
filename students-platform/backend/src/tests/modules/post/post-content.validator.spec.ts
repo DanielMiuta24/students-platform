@@ -1,5 +1,5 @@
-import { ContentValidator } from '../../../modules/post/post-content.validator';
-import { isLexicalContent, isPlainTextContent, type LexicalEditorState } from '../../../modules/post/post-content.types';
+import { ContentValidator } from '../../../modules/post/validators/post-content.validator';
+import { isLexicalContent, isPlainTextContent, type LexicalEditorState } from '../../../modules/post/types/post-content.types';
 
 describe('ContentValidator', () => {
   describe('Plain Text Validation', () => {

@@ -1,6 +1,6 @@
-import type { CreatePostDTO } from '../post.types';
+import type { CreatePostDTO } from '../types/post.types';
 import type { PostStatus, PostVisibility } from '../../../shared/constants';
-import type { PostContent } from '../post-content.types';
+import type { PostContent } from '../types/post-content.types';
 import { POST_STATUS, POST_VISIBILITY } from '../../../shared/constants';
 
 /**

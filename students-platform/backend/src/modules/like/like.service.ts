@@ -1,7 +1,7 @@
 import { LikeModel, type LikeDoc } from './like.model';
 import type { CreateLikeDTO, LikeQueryDTO } from './like.types';
 import { LIKE_ERROR } from './like.constants';
-import { PostModel } from '../post/post.model';
+import { PostModel } from '../post/models/post.model';
 import { CommentModel } from '../comment/comment.model';
 import { LikeBuilder } from './builders';
 

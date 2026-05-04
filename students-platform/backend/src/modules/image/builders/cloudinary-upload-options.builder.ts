@@ -1,5 +1,5 @@
-import type { CloudinaryUploadOptions } from './image.types';
-import { CLOUDINARY_FOLDERS, IMAGE_TRANSFORMATION_PRESETS } from './image.constants';
+import type { CloudinaryUploadOptions } from '../services/image.types';
+import { CLOUDINARY_FOLDERS, IMAGE_TRANSFORMATION_PRESETS } from '../services/image.constants';
 
 export class CloudinaryUploadOptionsBuilder {
   private options: CloudinaryUploadOptions = {

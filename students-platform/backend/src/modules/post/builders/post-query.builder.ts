@@ -1,4 +1,4 @@
-import type { GetPostsDTO } from '../post.types';
+import type { GetPostsDTO } from '../types/post.types';
 
 /**
  * Builder pattern for constructing MongoDB query filters

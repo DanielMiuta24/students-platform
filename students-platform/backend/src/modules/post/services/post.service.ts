@@ -1,4 +1,4 @@
-import { PostModel, type PostDoc } from './post.model';
+import { PostModel, type PostDoc } from '../models/post.model';
 import type {
   CreatePostDTO,
   UpdatePostDTO,
@@ -7,13 +7,13 @@ import type {
   GetScoredFeedDTO,
   ScoredFeedResult,
   ScoredPost
-} from './post.types';
-import { POST_ERROR, POST_VALIDATION } from './post.constants';
-import { PostQueryBuilder, PostCreateBuilder, PostUpdateBuilder } from './builders';
-import { PostMapper } from './mappers';
-import { CategoryModel } from '../category/category.model';
+} from '../types/post.types';
+import { POST_ERROR, POST_VALIDATION } from '../constants/post.constants';
+import { PostQueryBuilder, PostCreateBuilder, PostUpdateBuilder } from '../builders';
+import { PostMapper } from '../mappers';
+import { CategoryModel } from '../../category/category.model';
 import { PostScorer } from './post.scorer';
-import { imageService, type UploadedFile } from '../image/services';
+import { imageService, type UploadedFile, type UploadResult } from '../../image/services';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
@@ -28,7 +28,7 @@ export class PostService {
 
     if (files && files.length > 0) {
       const uploadedImages = await imageService.uploadImagesForPost(files, data.authorId);
-      imageUrls = uploadedImages.map(img => ({ url: img.url, alt: '' }));
+      imageUrls = uploadedImages.map((img: UploadResult) => ({ url: img.url, alt: '' }));
     } else if (data.images && data.images.length > 0) {
       const urls = data.images.map(img => img.url);
       const isValid = await imageService.validateImagesOwnership(urls, data.authorId);
@@ -77,7 +77,7 @@ export class PostService {
 
     if (files && files.length > 0) {
       const uploadedImages = await imageService.uploadImagesForPost(files, authorId);
-      imageUrls = uploadedImages.map(img => ({ url: img.url, alt: '' }));
+      imageUrls = uploadedImages.map((img: UploadResult) => ({ url: img.url, alt: '' }));
     } else if (data.images && data.images.length > 0) {
       const urls = data.images.map(img => img.url);
       const isValid = await imageService.validateImagesOwnership(urls, authorId);

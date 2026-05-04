@@ -1,11 +1,11 @@
 import { LikeModel } from '../../../modules/like/like.model';
-import { PostModel } from '../../../modules/post/post.model';
+import { PostModel } from '../../../modules/post/models/post.model';
 import { CommentModel } from '../../../modules/comment/comment.model';
 import { likeService } from '../../../modules/like/like.service';
 import { LIKE_ERROR } from '../../../modules/like/like.constants';
 
 jest.mock('../../../modules/like/like.model');
-jest.mock('../../../modules/post/post.model');
+jest.mock('../../../modules/post/models/post.model');
 jest.mock('../../../modules/comment/comment.model');
 
 describe('LikeService', () => {
