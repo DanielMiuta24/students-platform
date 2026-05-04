@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { postController } from '../controllers/post.controller';
 import { authMiddleware } from '../../../shared/middleware/auth.middleware';
 import { busboyUploadMiddleware } from '../../image/middleware';
-import { UPLOAD_VALIDATION } from '../../image/services';
+import { IMAGE_VALIDATION } from '../../image/services';
 import {
   validateCreatePost,
   validateUpdatePost,
@@ -39,9 +39,9 @@ router.post(
   '/',
   authMiddleware,
   busboyUploadMiddleware({
-    maxFiles: UPLOAD_VALIDATION.MAX_FILES_PER_REQUEST,
-    maxFileSize: UPLOAD_VALIDATION.MAX_FILE_SIZE,
-    allowedMimeTypes: [...UPLOAD_VALIDATION.ALLOWED_MIME_TYPES],
+    maxFiles: IMAGE_VALIDATION.MAX_FILES_PER_REQUEST,
+    maxFileSize: IMAGE_VALIDATION.MAX_FILE_SIZE,
+    allowedMimeTypes: [...IMAGE_VALIDATION.ALLOWED_MIME_TYPES],
     filesRequired: false,
   }),
   validateCreatePost,
@@ -53,9 +53,9 @@ router.put(
   authMiddleware,
   validatePostId,
   busboyUploadMiddleware({
-    maxFiles: UPLOAD_VALIDATION.MAX_FILES_PER_REQUEST,
-    maxFileSize: UPLOAD_VALIDATION.MAX_FILE_SIZE,
-    allowedMimeTypes: [...UPLOAD_VALIDATION.ALLOWED_MIME_TYPES],
+    maxFiles: IMAGE_VALIDATION.MAX_FILES_PER_REQUEST,
+    maxFileSize: IMAGE_VALIDATION.MAX_FILE_SIZE,
+    allowedMimeTypes: [...IMAGE_VALIDATION.ALLOWED_MIME_TYPES],
     filesRequired: false,
   }),
   validateUpdatePost,
