@@ -17,6 +17,7 @@ const PostSchema = new Schema(
       type: typeof Schema.Types.ObjectId; ref: 'User';
     },
     title: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true },
     content: { type: Schema.Types.Mixed as unknown as RichText, required: true },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: false } as {
       type: typeof Schema.Types.ObjectId; ref: 'Category';
@@ -34,10 +35,8 @@ const PostSchema = new Schema(
       required: true
     },
     images: {
-      type: [{
-        url: { type: String, required: true },
-        alt: { type: String, default: '' }
-      }]
+      type: [{ type: Schema.Types.ObjectId, ref: 'Image' }],
+      default: [],
     },
     likeCount: { type: Number, default: 0, min: 0 },
     commentCount: { type: Number, default: 0, min: 0 },
@@ -49,6 +48,9 @@ const PostSchema = new Schema(
 
 export type Post = InferSchemaType<typeof PostSchema>;
 export type PostDoc = HydratedDocument<Post>;
+
+// Index for slug lookups
+PostSchema.index({ slug: 1 });
 
 // Index for public feed queries (status + visibility + _id for cursor pagination)
 PostSchema.index({ status: 1, visibility: 1, _id: -1 });

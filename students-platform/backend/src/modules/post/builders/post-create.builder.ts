@@ -2,6 +2,7 @@ import type { CreatePostDTO } from '../types/post.types';
 import type { PostStatus, PostVisibility } from '../../../shared/constants';
 import type { PostContent } from '../types/post-content.types';
 import { POST_STATUS, POST_VISIBILITY } from '../../../shared/constants';
+import { toSlug } from '../../../shared/utils/slug';
 
 /**
  * Builder pattern for constructing post creation data
@@ -21,6 +22,11 @@ export class PostCreateBuilder {
 
   setTitle(title: string): this {
     this.data.title = title.trim();
+    return this;
+  }
+
+  setSlug(title: string): this {
+    this.data.slug = toSlug(title.substring(0, 100)) + '-' + Date.now();
     return this;
   }
 
@@ -53,6 +59,7 @@ export class PostCreateBuilder {
     return this
       .setAuthor(dto.authorId)
       .setTitle(dto.title)
+      .setSlug(dto.title)
       .setContent(dto.content)
       .setCategory(dto.category)
       .setStatus(dto.status)

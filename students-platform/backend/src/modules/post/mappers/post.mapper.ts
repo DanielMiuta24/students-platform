@@ -1,6 +1,7 @@
 import type { PostDoc } from '../models/post.model';
-import type { SafePost } from '../types/post.types';
+import type { SafePost, ImageMetadata } from '../types/post.types';
 import type { PostContent } from '../types/post-content.types';
+import type { ImageDoc } from '../../image/image.model';
 
 /**
  * Mapper for converting PostDoc to SafePost (API response format)
@@ -15,11 +16,12 @@ export class PostMapper {
       id: this.extractId(post._id),
       author: this.extractId(post.author),
       title: post.title,
+      slug: post.slug,
       content: post.content as PostContent,
       category: post.category ? this.extractId(post.category) : undefined,
       status: post.status,
       visibility: post.visibility,
-      images: post.images || [],
+      images: this.mapImages(post.images),
       likeCount: post.likeCount,
       commentCount: post.commentCount,
       viewCount: post.viewCount,
@@ -44,5 +46,19 @@ export class PostMapper {
     if (value.toString) return value.toString();
     if (value._id) return value._id.toString();
     return '';
+  }
+
+  private static mapImages(images: any[]): ImageMetadata[] {
+    if (!images || images.length === 0) return [];
+
+    return images.map(img => {
+      if (typeof img === 'object' && img.url) {
+        return {
+          url: img.url,
+          publicId: img.publicId,
+        };
+      }
+      return { url: '', publicId: '' };
+    }).filter(img => img.url !== '');
   }
 }

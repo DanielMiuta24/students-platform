@@ -49,10 +49,6 @@ const validateImageList = (images: any[]): boolean => {
     } catch {
       throw new Error('Each image must have a valid URL');
     }
-
-    if (img.alt && typeof img.alt === 'string' && img.alt.length > POST_VALIDATION.ALT_TEXT_MAX_LENGTH) {
-      throw new Error(`Image alt text must not exceed ${POST_VALIDATION.ALT_TEXT_MAX_LENGTH} characters`);
-    }
   }
 
   return true;

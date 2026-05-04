@@ -1,6 +1,7 @@
 import type { UpdatePostDTO } from '../types/post.types';
 import type { PostStatus, PostVisibility } from '../../../shared/constants';
 import type { PostContent } from '../types/post-content.types';
+import { toSlug } from '../../../shared/utils/slug';
 
 /**
  * Builder pattern for constructing post update data
@@ -11,6 +12,11 @@ export class PostUpdateBuilder {
 
   setTitle(title: string): this {
     this.data.title = title.trim();
+    return this;
+  }
+
+  setSlug(title: string): this {
+    this.data.slug = toSlug(title.substring(0, 100)) + '-' + Date.now();
     return this;
   }
 
@@ -29,8 +35,10 @@ export class PostUpdateBuilder {
     return this;
   }
 
-  setVisibility(visibility: PostVisibility): this {
-    this.data.visibility = visibility;
+  setVisibility(visibility?: PostVisibility): this {
+    if (visibility !== undefined) {
+      this.data.visibility = visibility;
+    }
     return this;
   }
 
@@ -43,6 +51,7 @@ export class PostUpdateBuilder {
 
   fromDTO(dto: UpdatePostDTO): this {
     this.setTitle(dto.title)
+      .setSlug(dto.title)
       .setContent(dto.content)
       .setCategory(dto.category)
       .setStatus(dto.status)
