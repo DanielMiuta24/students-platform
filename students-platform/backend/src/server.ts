@@ -2,11 +2,11 @@ import express from "express";
 import cors from "cors";
 import { db } from "./config/db";
 import { env } from "./config/env";
-import userRoutes from './modules/user/routes';
+import { userRoutes } from './modules/user/routes';
 import { universityRoutes } from './modules/university';
 import { scholarshipRoutes } from './modules/scholarship';
 import { categoryRoutes } from './modules/category';
-import postRoutes from './modules/post/routes';
+import { postRoutes } from './modules/post/routes';
 import cookieParser from 'cookie-parser';
 
 const app = express();

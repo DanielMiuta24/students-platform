@@ -1,1 +1,1 @@
-export * from './like.routes';
+export { default as likeRoutes } from './like.routes';

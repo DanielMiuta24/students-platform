@@ -1,1 +1,1 @@
-export * from './post.routes';
+export { default as postRoutes } from './post.routes';

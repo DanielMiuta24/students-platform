@@ -1,1 +1,1 @@
-export * from './message.routes';
+export { default as messageRoutes } from './message.routes';
