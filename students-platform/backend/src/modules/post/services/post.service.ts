@@ -24,19 +24,7 @@ export class PostService {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    let imageUrls: Array<{ url: string; alt: string }> = [];
-
-    if (files && files.length > 0) {
-      const uploadedImages = await imageService.uploadImagesForPost(files, data.authorId);
-      imageUrls = uploadedImages.map((img: UploadResult) => ({ url: img.url, alt: '' }));
-    } else if (data.images && data.images.length > 0) {
-      const urls = data.images.map(img => img.url);
-      const isValid = await imageService.validateImagesOwnership(urls, data.authorId);
-      if (!isValid) {
-        throw new Error(POST_ERROR.INVALID_IMAGES);
-      }
-      imageUrls = data.images.map(img => ({ url: img.url, alt: img.alt || '' }));
-    }
+    const imageUrls = await this.handleImages(files, data.images, data.authorId);
 
     const postData = new PostCreateBuilder()
       .fromDTO({ ...data, images: imageUrls })
@@ -73,19 +61,7 @@ export class PostService {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    let imageUrls: Array<{ url: string; alt: string }> = [];
-
-    if (files && files.length > 0) {
-      const uploadedImages = await imageService.uploadImagesForPost(files, authorId);
-      imageUrls = uploadedImages.map((img: UploadResult) => ({ url: img.url, alt: '' }));
-    } else if (data.images && data.images.length > 0) {
-      const urls = data.images.map(img => img.url);
-      const isValid = await imageService.validateImagesOwnership(urls, authorId);
-      if (!isValid) {
-        throw new Error(POST_ERROR.INVALID_IMAGES);
-      }
-      imageUrls = data.images.map(img => ({ url: img.url, alt: img.alt || '' }));
-    }
+    const imageUrls = await this.handleImages(files, data.images, authorId);
 
     const updateData = new PostUpdateBuilder()
       .fromDTO({ ...data, images: imageUrls.length > 0 ? imageUrls : undefined })
@@ -145,6 +121,28 @@ export class PostService {
       postId,
       { $inc: { viewCount: 1 } }
     );
+  }
+
+  private async handleImages(
+    files: UploadedFile[] | undefined,
+    existingImages: Array<{ url: string; alt?: string }> | undefined,
+    userId: string
+  ): Promise<Array<{ url: string; alt: string }>> {
+    if (files && files.length > 0) {
+      const uploadedImages = await imageService.uploadImagesForPost(files, userId);
+      return uploadedImages.map((img: UploadResult) => ({ url: img.url, alt: '' }));
+    }
+
+    if (existingImages && existingImages.length > 0) {
+      const urls = existingImages.map(img => img.url);
+      const isValid = await imageService.validateImagesOwnership(urls, userId);
+      if (!isValid) {
+        throw new Error(POST_ERROR.INVALID_IMAGES);
+      }
+      return existingImages.map(img => ({ url: img.url, alt: img.alt || '' }));
+    }
+
+    return [];
   }
 
   private buildCursorResult(posts: PostDoc[], limit: number): CursorPostsResult {
