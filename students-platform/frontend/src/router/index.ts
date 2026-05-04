@@ -6,7 +6,7 @@ import Dashboard from '../pages/Dashboard.vue';
 import Community from '../pages/Community.vue';
 import Universities from '../pages/Universities.vue';
 import Scholarships from '../pages/Scholarships.vue';
-import ThreadList from '../components/ThreadList.vue';
+import ThreadList from '../pages/ThreadList.vue';
 import UserProfile from '../pages/UserProfile.vue';
 import Messages from '../pages/Messages.vue';
 import EditProfile from '../pages/EditProfile.vue';
