@@ -3,7 +3,6 @@ import { universityController } from './university.controller';
 
 const router = Router();
 
-
-router.get('/universities', universityController.search);
+router.get('/', universityController.search);
 
 export default router;

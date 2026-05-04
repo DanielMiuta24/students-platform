@@ -43,7 +43,7 @@ describe('PostController', () => {
         content: 'Test content',
         category: 'cat123',
         authorId: 'user123',
-      });
+      }, undefined);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith({
         message: 'Post created successfully',
@@ -147,7 +147,8 @@ describe('PostController', () => {
       expect(postService.updatePost).toHaveBeenCalledWith(
         'post123',
         { title: 'Updated Post', content: 'Updated content' },
-        'user123'
+        'user123',
+        undefined
       );
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({

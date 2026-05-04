@@ -4,6 +4,7 @@ import { postService } from './post.service';
 import { parseCursorParams } from './post.validation';
 import { PostMapper } from './mappers';
 import { POST_ERROR, POST_VALIDATION } from './post.constants';
+import type { UploadRequest } from '../../shared/services/upload';
 
 class PostController {
   private static readonly HTTP_STATUS = {
@@ -45,15 +46,18 @@ class PostController {
   }
 
   createPost = async (
-    req: AuthenticatedRequest,
+    req: AuthenticatedRequest & UploadRequest,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const post = await postService.createPost({
-        ...req.body,
-        authorId: req.user!.id,
-      });
+      const post = await postService.createPost(
+        {
+          ...req.body,
+          authorId: req.user!.id,
+        },
+        req.files
+      );
 
       return res.status(PostController.HTTP_STATUS.CREATED).json({
         message: 'Post created successfully',
@@ -91,7 +95,7 @@ class PostController {
   };
 
   updatePost = async (
-    req: AuthenticatedRequest,
+    req: AuthenticatedRequest & UploadRequest,
     res: Response,
     next: NextFunction
   ) => {
@@ -99,7 +103,8 @@ class PostController {
       const updatedPost = await postService.updatePost(
         req.params.postId,
         req.body,
-        req.user!.id
+        req.user!.id,
+        req.files
       );
 
       return res.status(PostController.HTTP_STATUS.OK).json({

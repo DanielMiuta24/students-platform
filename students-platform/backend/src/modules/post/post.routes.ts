@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { postController } from './post.controller';
 import { authMiddleware } from '../../shared/middleware/auth.middleware';
+import { busboyUploadMiddleware } from '../../shared/middleware/busboy-upload.middleware';
+import { UPLOAD_VALIDATION } from '../../shared/services/upload';
 import {
   validateCreatePost,
   validateUpdatePost,
@@ -11,50 +13,51 @@ import {
 
 const router = Router();
 
-// Public routes
-
-// Get feed with cursor pagination (public posts only)
 router.get('/feed', postController.getFeed);
 
-// Get scored feed with algorithm
 router.get('/feed/scored', postController.getScoredFeed);
 
-// Get posts by category
 router.get(
   '/category/:categoryId',
   validateCategoryIdParam,
   postController.getPostsByCategory
 );
 
-// Get posts by author
 router.get(
   '/author/:authorId',
   validateAuthorId,
   postController.getPostsByAuthor
 );
 
-// Get post by ID (must be last to avoid route conflicts)
 router.get(
   '/:postId',
   validatePostId,
   postController.getPostById
 );
 
-// Protected routes (require authentication)
-
-// Create post
 router.post(
   '/',
   authMiddleware,
+  busboyUploadMiddleware({
+    maxFiles: UPLOAD_VALIDATION.MAX_FILES_PER_REQUEST,
+    maxFileSize: UPLOAD_VALIDATION.MAX_FILE_SIZE,
+    allowedMimeTypes: [...UPLOAD_VALIDATION.ALLOWED_MIME_TYPES],
+    filesRequired: false,
+  }),
   validateCreatePost,
   postController.createPost
 );
 
-// Update post
 router.put(
   '/:postId',
   authMiddleware,
   validatePostId,
+  busboyUploadMiddleware({
+    maxFiles: UPLOAD_VALIDATION.MAX_FILES_PER_REQUEST,
+    maxFileSize: UPLOAD_VALIDATION.MAX_FILE_SIZE,
+    allowedMimeTypes: [...UPLOAD_VALIDATION.ALLOWED_MIME_TYPES],
+    filesRequired: false,
+  }),
   validateUpdatePost,
   postController.updatePost
 );

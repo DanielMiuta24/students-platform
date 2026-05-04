@@ -13,19 +13,29 @@ import { PostQueryBuilder, PostCreateBuilder, PostUpdateBuilder } from './builde
 import { PostMapper } from './mappers';
 import { CategoryModel } from '../category/category.model';
 import { PostScorer } from './post.scorer';
+import { uploadService, type UploadedFile } from '../../shared/services/upload';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
 
-  async createPost(data: CreatePostDTO): Promise<PostDoc> {
+  async createPost(data: CreatePostDTO, files?: UploadedFile[]): Promise<PostDoc> {
 
     const category = await CategoryModel.findById(data.category);
     if (!category || !category.isActive) {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
+    let imageUrls: { url: string; alt: string }[] = [];
+    if (files && files.length > 0) {
+      const uploadedImages = await uploadService.uploadImagesForPost(files);
+      imageUrls = uploadedImages.map(img => ({
+        url: img.url,
+        alt: ''
+      }));
+    }
+
     const postData = new PostCreateBuilder()
-      .fromDTO(data)
+      .fromDTO({ ...data, images: imageUrls })
       .build();
 
     const post = new PostModel(postData);
@@ -39,7 +49,7 @@ export class PostService {
       .exec();
   }
 
-  async updatePost(postId: string, data: UpdatePostDTO, authorId: string): Promise<PostDoc | null> {
+  async updatePost(postId: string, data: UpdatePostDTO, authorId: string, files?: UploadedFile[]): Promise<PostDoc | null> {
     const existingPost = await PostModel.findById(postId);
 
     if (!existingPost) {
@@ -59,8 +69,17 @@ export class PostService {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
+    let imageUrls: { url: string; alt: string }[] | undefined;
+    if (files && files.length > 0) {
+      const uploadedImages = await uploadService.uploadImagesForPost(files);
+      imageUrls = uploadedImages.map(img => ({
+        url: img.url,
+        alt: ''
+      }));
+    }
+
     const updateData = new PostUpdateBuilder()
-      .fromDTO(data)
+      .fromDTO(imageUrls ? { ...data, images: imageUrls } : data)
       .build();
 
     const post = await PostModel.findByIdAndUpdate(
