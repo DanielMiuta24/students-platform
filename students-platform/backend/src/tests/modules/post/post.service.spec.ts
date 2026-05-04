@@ -1,10 +1,10 @@
-import { PostService } from '../../../modules/post/post.service';
-import { PostModel } from '../../../modules/post/post.model';
-import { CategoryModel } from '../../../modules/category/category.model';
-import { POST_ERROR } from '../../../modules/post/post.constants';
+import { PostService } from '../../../modules/post/services/post.service';
+import { PostModel } from '../../../modules/post/models/post.model';
+import { CategoryModel } from '../../../modules/category/models';
+import { POST_ERROR } from '../../../modules/post/constants/post.constants';
 
-jest.mock('../../../modules/post/post.model');
-jest.mock('../../../modules/category/category.model');
+jest.mock('../../../modules/post/models/post.model');
+jest.mock('../../../modules/category/models');
 
 describe('PostService', () => {
   let postService: PostService;

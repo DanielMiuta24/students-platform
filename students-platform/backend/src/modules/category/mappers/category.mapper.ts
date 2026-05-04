@@ -1,5 +1,5 @@
-import type { CategoryDoc } from '../category.model';
-import type { SafeCategory } from '../category.types';
+import type { CategoryDoc } from '../models';
+import type { SafeCategory } from '../types';
 
 /**
  * Mapper for converting CategoryDoc to SafeCategory (API response format)

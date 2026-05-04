@@ -1,5 +1,5 @@
-import type { LikeableType } from '../like.model';
-import type { CreateLikeDTO, LikeQueryDTO } from '../like.types';
+import type { LikeableType } from '../models';
+import type { CreateLikeDTO, LikeQueryDTO } from '../types';
 
 export class LikeBuilder {
   private data: any = {};

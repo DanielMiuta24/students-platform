@@ -1,4 +1,4 @@
-import { universityService } from '../../../modules/university/university.service';
+import { universityService } from '../../../modules/university/services';
 
 const API_BASE_URL = process.env.UNIVERSITY_API_URL;
 

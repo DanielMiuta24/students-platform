@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
-import { universityController } from '../../../modules/university/university.controller';
-import { universityService } from '../../../modules/university/university.service';
+import { universityController } from '../../../modules/university/controllers';
+import { universityService } from '../../../modules/university/services';
 
-jest.mock('../../../modules/university/university.service', () => ({
+jest.mock('../../../modules/university/services', () => ({
   universityService: {
     searchUniversities: jest.fn(),
   },

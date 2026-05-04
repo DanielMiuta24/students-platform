@@ -2,7 +2,7 @@ import {
   validateCommentContent,
   validateObjectId,
   parsePaginationParams,
-} from '../../../modules/comment/comment.validation';
+} from '../../../modules/comment/validators';
 
 describe('Comment Validation', () => {
   describe('validateCommentContent', () => {

@@ -1,5 +1,5 @@
-import { PostScorer } from '../../../modules/post/post.scorer';
-import type { PostDoc } from '../../../modules/post/post.model';
+import { PostScorer } from '../../../modules/post/services/post.scorer';
+import type { PostDoc } from '../../../modules/post/models/post.model';
 
 describe('PostScorer', () => {
   describe('calculateScore', () => {

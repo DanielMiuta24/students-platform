@@ -1,4 +1,4 @@
-import { validateSearchParams, parsePage } from '../../../modules/university/university.validation';
+import { validateSearchParams, parsePage } from '../../../modules/university/validators';
 
 describe('University Validation', () => {
   describe('validateSearchParams', () => {

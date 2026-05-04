@@ -1,5 +1,6 @@
-import type { CreatePostDTO } from '../post.types';
+import type { CreatePostDTO } from '../types/post.types';
 import type { PostStatus, PostVisibility } from '../../../shared/constants';
+import type { PostContent } from '../types/post-content.types';
 import { POST_STATUS, POST_VISIBILITY } from '../../../shared/constants';
 
 /**
@@ -23,7 +24,7 @@ export class PostCreateBuilder {
     return this;
   }
 
-  setContent(content: string | Record<string, unknown>): this {
+  setContent(content: PostContent): this {
     this.data.content = content;
     return this;
   }

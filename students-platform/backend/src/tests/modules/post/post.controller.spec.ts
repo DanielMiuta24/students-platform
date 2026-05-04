@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { postController } from '../../../modules/post/post.controller';
-import { postService } from '../../../modules/post/post.service';
-import { POST_ERROR } from '../../../modules/post/post.constants';
+import { postController } from '../../../modules/post/controllers/post.controller';
+import { postService } from '../../../modules/post/services/post.service';
+import { POST_ERROR } from '../../../modules/post/constants/post.constants';
 import { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
 import { createMockRequest, createMockAuthRequest, createMockResponse, createMockNext, createMockPost, createMockFeedResult } from '../../helpers';
 import { expectErrorResponse } from '../../helpers';
 
-jest.mock('../../../modules/post/post.service');
+jest.mock('../../../modules/post/services/post.service');
 
 describe('PostController', () => {
   let mockRequest: Partial<Request | AuthenticatedRequest>;
@@ -43,7 +43,7 @@ describe('PostController', () => {
         content: 'Test content',
         category: 'cat123',
         authorId: 'user123',
-      });
+      }, undefined);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith({
         message: 'Post created successfully',
@@ -147,7 +147,8 @@ describe('PostController', () => {
       expect(postService.updatePost).toHaveBeenCalledWith(
         'post123',
         { title: 'Updated Post', content: 'Updated content' },
-        'user123'
+        'user123',
+        undefined
       );
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({

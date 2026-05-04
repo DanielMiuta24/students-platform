@@ -1,9 +1,9 @@
-import { commentController } from '../../../modules/comment/comment.controller';
-import { commentService } from '../../../modules/comment/comment.service';
+import { commentController } from '../../../modules/comment/controllers';
+import { commentService } from '../../../modules/comment/services';
 import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
 
-jest.mock('../../../modules/comment/comment.service');
+jest.mock('../../../modules/comment/services');
 
 describe('CommentController', () => {
   let mockRequest: Partial<Request | AuthenticatedRequest>;

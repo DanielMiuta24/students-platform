@@ -1,5 +1,6 @@
-import type { PostDoc } from '../post.model';
-import type { SafePost } from '../post.types';
+import type { PostDoc } from '../models/post.model';
+import type { SafePost } from '../types/post.types';
+import type { PostContent } from '../types/post-content.types';
 
 /**
  * Mapper for converting PostDoc to SafePost (API response format)
@@ -14,7 +15,7 @@ export class PostMapper {
       id: this.extractId(post._id),
       author: this.extractId(post.author),
       title: post.title,
-      content: post.content as string | Record<string, unknown>,
+      content: post.content as PostContent,
       category: post.category ? this.extractId(post.category) : undefined,
       status: post.status,
       visibility: post.visibility,

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { categoryController } from '../../../modules/category/category.controller';
-import { categoryService } from '../../../modules/category/category.service';
-import { CATEGORY_ERROR } from '../../../modules/category/category.constants';
+import { categoryController } from '../../../modules/category/controllers';
+import { categoryService } from '../../../modules/category/services';
+import { CATEGORY_ERROR } from '../../../modules/category/constants';
 import { createMockRequest, createMockResponse, createMockNext, createMockCategory } from '../../helpers';
 import { expectErrorResponse } from '../../helpers';
 
-jest.mock('../../../modules/category/category.service');
+jest.mock('../../../modules/category/services');
 
 describe('CategoryController', () => {
   let mockRequest: Partial<Request>;

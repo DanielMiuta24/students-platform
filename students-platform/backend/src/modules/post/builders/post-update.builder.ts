@@ -1,5 +1,6 @@
-import type { UpdatePostDTO } from '../post.types';
+import type { UpdatePostDTO } from '../types/post.types';
 import type { PostStatus, PostVisibility } from '../../../shared/constants';
+import type { PostContent } from '../types/post-content.types';
 
 /**
  * Builder pattern for constructing post update data
@@ -13,7 +14,7 @@ export class PostUpdateBuilder {
     return this;
   }
 
-  setContent(content: string | Record<string, unknown>): this {
+  setContent(content: PostContent): this {
     this.data.content = content;
     return this;
   }

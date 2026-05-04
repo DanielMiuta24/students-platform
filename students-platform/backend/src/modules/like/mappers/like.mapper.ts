@@ -1,5 +1,5 @@
-import type { LikeDoc } from '../like.model';
-import type { SafeLike } from '../like.types';
+import type { LikeDoc } from '../models';
+import type { SafeLike } from '../types';
 
 export class LikeMapper {
   static toSafeLike(like: LikeDoc): SafeLike {

@@ -12,4 +12,7 @@ export const env = {
   COS_USER_ID: process.env.COS_USER_ID ?? '',
   COS_API_TOKEN: process.env.COS_API_TOKEN ?? '',
   UNIVERSITY_API_URL: process.env.UNIVERSITY_API_URL ?? 'http://universities.hipolabs.com/search',
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ?? '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ?? '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? '',
 };
