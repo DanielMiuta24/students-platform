@@ -27,6 +27,10 @@ class PostController {
       status: 404,
       message: 'Category not found or inactive',
     },
+    [POST_ERROR.INVALID_IMAGES]: {
+      status: 403,
+      message: 'One or more images do not belong to you',
+    },
   };
 
   private handleError(err: unknown, res: Response, next: NextFunction): Response | void {

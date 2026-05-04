@@ -7,9 +7,9 @@ import {
   type Types,
 } from 'mongoose';
 import { POST_STATUS, POST_VISIBILITY } from '../../shared/constants';
+import type { PostContent } from './post-content.types';
 
-
-export type RichText = string | Record<string, unknown>;
+export type RichText = PostContent;
 
 const PostSchema = new Schema(
   {

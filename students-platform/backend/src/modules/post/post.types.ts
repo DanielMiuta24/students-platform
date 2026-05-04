@@ -1,10 +1,11 @@
 import type { PostDoc } from './post.model';
 import type { PostStatus, PostVisibility } from '../../shared/constants';
+import type { PostContent } from './post-content.types';
 
 export interface CreatePostDTO {
   authorId: string;
   title: string;
-  content: string | Record<string, unknown>;
+  content: PostContent;
   category: string;
   status?: PostStatus;
   visibility?: PostVisibility;
@@ -13,7 +14,7 @@ export interface CreatePostDTO {
 
 export interface UpdatePostDTO {
   title: string;
-  content: string | Record<string, unknown>;
+  content: PostContent;
   category: string;
   status: PostStatus;
   visibility: PostVisibility;
@@ -40,7 +41,7 @@ export interface SafePost {
   id: string;
   author: string;
   title: string;
-  content: string | Record<string, unknown>;
+  content: PostContent;
   category?: string;
   status: PostStatus;
   visibility: PostVisibility;

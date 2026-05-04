@@ -14,6 +14,7 @@ import { PostMapper } from './mappers';
 import { CategoryModel } from '../category/category.model';
 import { PostScorer } from './post.scorer';
 import { uploadService, type UploadedFile } from '../../shared/services/upload';
+import { imageService } from '../image';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
@@ -26,11 +27,38 @@ export class PostService {
     }
 
     let imageUrls: { url: string; alt: string }[] = [];
+
     if (files && files.length > 0) {
       const uploadedImages = await uploadService.uploadImagesForPost(files);
+
+      await imageService.createImages(
+        data.authorId,
+        uploadedImages.map(img => ({
+          url: img.url,
+          publicId: img.publicId,
+          width: img.width,
+          height: img.height,
+          format: img.format,
+          size: img.size,
+          folder: 'posts',
+        }))
+      );
+
       imageUrls = uploadedImages.map(img => ({
         url: img.url,
         alt: ''
+      }));
+    } else if (data.images && data.images.length > 0) {
+      const urls = data.images.map(img => img.url);
+      const isValid = await imageService.validateImagesOwnership(urls, data.authorId);
+
+      if (!isValid) {
+        throw new Error(POST_ERROR.INVALID_IMAGES);
+      }
+
+      imageUrls = data.images.map(img => ({
+        url: img.url,
+        alt: img.alt || ''
       }));
     }
 
@@ -70,11 +98,38 @@ export class PostService {
     }
 
     let imageUrls: { url: string; alt: string }[] | undefined;
+
     if (files && files.length > 0) {
       const uploadedImages = await uploadService.uploadImagesForPost(files);
+
+      await imageService.createImages(
+        authorId,
+        uploadedImages.map(img => ({
+          url: img.url,
+          publicId: img.publicId,
+          width: img.width,
+          height: img.height,
+          format: img.format,
+          size: img.size,
+          folder: 'posts',
+        }))
+      );
+
       imageUrls = uploadedImages.map(img => ({
         url: img.url,
         alt: ''
+      }));
+    } else if (data.images && data.images.length > 0) {
+      const urls = data.images.map(img => img.url);
+      const isValid = await imageService.validateImagesOwnership(urls, authorId);
+
+      if (!isValid) {
+        throw new Error(POST_ERROR.INVALID_IMAGES);
+      }
+
+      imageUrls = data.images.map(img => ({
+        url: img.url,
+        alt: img.alt || ''
       }));
     }
 

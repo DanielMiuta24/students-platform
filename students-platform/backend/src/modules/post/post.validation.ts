@@ -2,6 +2,7 @@ import { body, param } from 'express-validator';
 import { handleValidationErrors } from '../../shared/middleware/validation.middleware';
 import { POST_STATUS, POST_VISIBILITY } from '../../shared/constants';
 import { POST_VALIDATION } from './post.constants';
+import { ContentValidator } from './post-content.validator';
 
 const VALID_STATUSES = Object.values(POST_STATUS);
 const VALID_VISIBILITIES = Object.values(POST_VISIBILITY);
@@ -24,18 +25,10 @@ export const parseCursorParams = (
 };
 
 const validateContentLength = (value: unknown): boolean => {
-  let length: number;
+  const validation = ContentValidator.validate(value);
 
-  if (typeof value === 'string') {
-    length = value.trim().length;
-  } else if (typeof value === 'object' && value !== null) {
-    length = JSON.stringify(value).length;
-  } else {
-    throw new Error('Content must be a string or object');
-  }
-
-  if (length === 0 || length > POST_VALIDATION.CONTENT_MAX_LENGTH) {
-    throw new Error(`Content must not exceed ${POST_VALIDATION.CONTENT_MAX_LENGTH} characters`);
+  if (!validation.valid) {
+    throw new Error(validation.error || 'Invalid content');
   }
 
   return true;
