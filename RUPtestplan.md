@@ -282,7 +282,7 @@ We addressed duplication by:
 
 | Before | After |
 |--------|-------|
-| 26.8% | 4.8% |
+| 26.8% | 4.8% |3.5
 
 👉 This reflects a significant improvement in maintainability.
 
