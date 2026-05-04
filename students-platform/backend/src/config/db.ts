@@ -22,10 +22,7 @@ export class Database {
     }
 
     try {
-      await mongoose.connect(env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+      await mongoose.connect(env.MONGO_URI);
       this.isConnected = true;
       console.log(' Connected to MongoDB Atlas');
     } catch (error) {
