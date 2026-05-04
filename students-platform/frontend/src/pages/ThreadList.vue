@@ -45,52 +45,10 @@
 
     <!-- Create Post -->
     <div class="max-w-6xl mx-auto px-4 mb-10">
-      <div class="bg-white rounded-xl shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-blue-900 mb-5">Create a Post</h2>
-
-        <form @submit.prevent="createPost">
-          <input
-            v-model="newPostTitle"
-            placeholder="Enter post title"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-
-          <textarea
-            v-model="newPostDescription"
-            placeholder="Share your question or experience..."
-            rows="4"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          ></textarea>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <select
-              v-model="newPostCategory"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Choose category</option>
-              <option>Scholarships</option>
-              <option>Universities</option>
-              <option>Study Abroad</option>
-              <option>Visa</option>
-              <option>Student Life</option>
-              <option>Applications</option>
-            </select>
-
-            <input
-              v-model="newPostTags"
-              placeholder="Tags, e.g. Germany, DAAD, Nursing"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg transition duration-200"
-          >
-            Post
-          </button>
-        </form>
+      <div v-if="redirecting" class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded">
+        <p class="font-semibold">Redirecting to your profile...</p>
       </div>
+      <CreatePostForm @success="handlePostSuccess" @error="handlePostError" />
     </div>
 
     <!-- Threads -->
@@ -213,6 +171,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import CreatePostForm from '../components/CreatePostForm.vue';
+import { useSessionStore } from '../store/session';
 
 interface Thread {
   id: number;
@@ -234,6 +194,10 @@ interface Thread {
 
 export default defineComponent({
   name: 'ThreadList',
+
+  components: {
+    CreatePostForm,
+  },
 
   data() {
     return {
@@ -306,51 +270,31 @@ export default defineComponent({
       selectedCategory: 'All',
       searchQuery: '',
 
-      newPostTitle: '',
-      newPostDescription: '',
-      newPostCategory: '',
-      newPostTags: '',
       newComment: '',
+      redirecting: false,
     };
   },
 
   methods: {
-    createPost() {
-      if (!this.newPostTitle || !this.newPostDescription || !this.newPostCategory) {
-        alert('Please fill in the title, description, and category.');
-        return;
+    handlePostSuccess(post: any) {
+      console.log('[ThreadList] Post created successfully:', post);
+
+      const sessionStore = useSessionStore();
+      const userId = sessionStore.user?.id;
+
+      if (userId) {
+        this.redirecting = true;
+        setTimeout(() => {
+          this.$router.push({
+            name: 'UserProfile',
+            params: { id: userId }
+          });
+        }, 2000);
       }
+    },
 
-      const typedTags = this.newPostTags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter((tag) => tag !== '');
-
-      const newPost: Thread = {
-        id: Date.now(),
-        title: this.newPostTitle,
-        description: this.newPostDescription,
-        category: this.newPostCategory,
-        user: {
-          id: Math.floor(Math.random() * 1000),
-          name: 'New User',
-          profilePicture: 'https://via.placeholder.com/150',
-          title: 'New Member',
-        },
-        tags: typedTags.length ? typedTags : [this.newPostCategory],
-        likes: 0,
-        comments: [],
-        showComments: false,
-        communityId: 0
-      };
-
-      this.threads.unshift(newPost);
-      this.filterThreads();
-
-      this.newPostTitle = '';
-      this.newPostDescription = '';
-      this.newPostCategory = '';
-      this.newPostTags = '';
+    handlePostError(error: any) {
+      console.error('[ThreadList] Post creation failed:', error);
     },
 
     filterThreads() {
