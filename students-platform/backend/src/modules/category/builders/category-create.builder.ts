@@ -1,4 +1,4 @@
-import type { CreateCategoryDTO } from '../category.types';
+import type { CreateCategoryDTO } from '../types';
 import { toSlug } from '../../../shared/utils/slug';
 
 export class CategoryCreateBuilder {

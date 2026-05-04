@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ScholarshipService } from '../../../modules/scholarship/scholarship.service';
+import { ScholarshipService } from '../../../modules/scholarship/services';
 import { env } from '../../../config/env';
 
 jest.mock('axios');

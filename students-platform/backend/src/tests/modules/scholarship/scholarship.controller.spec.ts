@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { scholarshipController } from '../../../modules/scholarship/scholarship.controller';
+import { scholarshipController } from '../../../modules/scholarship/controllers';
 
 describe('ScholarshipController', () => {
   let mockRequest: Partial<Request>;

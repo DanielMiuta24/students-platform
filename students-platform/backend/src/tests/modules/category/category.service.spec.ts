@@ -1,10 +1,10 @@
-import { CategoryModel } from '../../../modules/category/category.model';
-import { PostModel } from '../../../modules/post/models/post.model';
-import { categoryService } from '../../../modules/category/category.service';
-import { CATEGORY_ERROR } from '../../../modules/category/category.constants';
+import { CategoryModel } from '../../../modules/category/models';
+import { PostModel } from '../../../modules/post/models';
+import { categoryService } from '../../../modules/category/services';
+import { CATEGORY_ERROR } from '../../../modules/category/constants';
 
-jest.mock('../../../modules/category/category.model');
-jest.mock('../../../modules/post/models/post.model');
+jest.mock('../../../modules/category/models');
+jest.mock('../../../modules/post/models');
 
 describe('CategoryService', () => {
   beforeEach(() => {

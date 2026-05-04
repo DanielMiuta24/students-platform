@@ -1,12 +1,12 @@
-import { LikeModel } from '../../../modules/like/like.model';
-import { PostModel } from '../../../modules/post/models/post.model';
-import { CommentModel } from '../../../modules/comment/comment.model';
-import { likeService } from '../../../modules/like/like.service';
-import { LIKE_ERROR } from '../../../modules/like/like.constants';
+import { LikeModel } from '../../../modules/like/models';
+import { PostModel } from '../../../modules/post/models';
+import { CommentModel } from '../../../modules/comment/models';
+import { likeService } from '../../../modules/like/services';
+import { LIKE_ERROR } from '../../../modules/like/constants';
 
-jest.mock('../../../modules/like/like.model');
-jest.mock('../../../modules/post/models/post.model');
-jest.mock('../../../modules/comment/comment.model');
+jest.mock('../../../modules/like/models');
+jest.mock('../../../modules/post/models');
+jest.mock('../../../modules/comment/models');
 
 describe('LikeService', () => {
   beforeEach(() => {

@@ -1,9 +1,9 @@
-import { commentService } from '../../../modules/comment/comment.service';
-import { CommentModel } from '../../../modules/comment/comment.model';
-import { PostModel } from '../../../modules/post/models/post.model';
+import { commentService } from '../../../modules/comment/services';
+import { CommentModel } from '../../../modules/comment/models';
+import { PostModel } from '../../../modules/post/models';
 
-jest.mock('../../../modules/comment/comment.model');
-jest.mock('../../../modules/post/models/post.model');
+jest.mock('../../../modules/comment/models');
+jest.mock('../../../modules/post/models');
 
 describe('CommentService', () => {
   beforeEach(() => {

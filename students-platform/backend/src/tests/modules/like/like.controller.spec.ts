@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { likeController } from '../../../modules/like/like.controller';
-import { likeService } from '../../../modules/like/like.service';
-import { LIKE_ERROR } from '../../../modules/like/like.constants';
+import { likeController } from '../../../modules/like/controllers';
+import { likeService } from '../../../modules/like/services';
+import { LIKE_ERROR } from '../../../modules/like/constants';
 import { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
 import { createMockAuthRequest, createMockResponse, createMockNext, createMockLike } from '../../helpers';
 import { expectErrorResponse } from '../../helpers';
 
-jest.mock('../../../modules/like/like.service');
+jest.mock('../../../modules/like/services');
 
 describe('LikeController', () => {
   let mockRequest: Partial<AuthenticatedRequest>;

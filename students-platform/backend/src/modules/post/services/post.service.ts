@@ -11,7 +11,7 @@ import type {
 import { POST_ERROR, POST_VALIDATION } from '../constants/post.constants';
 import { PostQueryBuilder, PostCreateBuilder, PostUpdateBuilder } from '../builders';
 import { PostMapper } from '../mappers';
-import { CategoryModel } from '../../category/category.model';
+import { CategoryModel } from '../../category/models';
 import { PostScorer } from './post.scorer';
 import { imageService, type UploadedFile, type UploadResult } from '../../image/services';
 
