@@ -24,10 +24,11 @@ export class PostService {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    const imageUrls = await this.handleImages(files, data.images, data.authorId);
+    const imageIds = await this.handleImages(files, data.images, data.authorId);
 
     const postData = new PostCreateBuilder()
-      .fromDTO({ ...data, images: imageUrls })
+      .fromDTO(data)
+      .setImages(imageIds as any)
       .build();
 
     const post = new PostModel(postData);
@@ -38,6 +39,15 @@ export class PostService {
     return PostModel.findById(postId)
       .populate('author', 'name username avatar email')
       .populate('category', 'name slug')
+      .populate('images')
+      .exec();
+  }
+
+  async getPostBySlug(slug: string): Promise<PostDoc | null> {
+    return PostModel.findOne({ slug })
+      .populate('author', 'name username avatar email')
+      .populate('category', 'name slug')
+      .populate('images')
       .exec();
   }
 
@@ -61,10 +71,11 @@ export class PostService {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    const imageUrls = await this.handleImages(files, data.images, authorId);
+    const imageIds = await this.handleImages(files, data.images, authorId);
 
     const updateData = new PostUpdateBuilder()
-      .fromDTO({ ...data, images: imageUrls.length > 0 ? imageUrls : undefined })
+      .fromDTO(data)
+      .setImages(imageIds.length > 0 ? (imageIds as any) : undefined)
       .build();
 
     const post = await PostModel.findByIdAndUpdate(
@@ -74,6 +85,7 @@ export class PostService {
     )
       .populate('author', 'name username avatar email')
       .populate('category', 'name slug')
+      .populate('images')
       .exec();
 
     return post;
@@ -91,6 +103,7 @@ export class PostService {
     const posts = await PostModel.find(query)
       .populate('author', 'name username avatar email')
       .populate('category', 'name slug')
+      .populate('images')
       .sort({ _id: -1 })
       .limit(limit + 1)
       .exec();
@@ -127,10 +140,10 @@ export class PostService {
     files: UploadedFile[] | undefined,
     existingImages: Array<{ url: string; alt?: string }> | undefined,
     userId: string
-  ): Promise<Array<{ url: string; alt: string }>> {
+  ): Promise<string[]> {
     if (files && files.length > 0) {
       const uploadedImages = await imageService.uploadImagesForPost(files, userId);
-      return uploadedImages.map((img: UploadResult) => ({ url: img.url, alt: '' }));
+      return uploadedImages.map((img: UploadResult) => img.imageId);
     }
 
     if (existingImages && existingImages.length > 0) {
@@ -139,7 +152,8 @@ export class PostService {
       if (!isValid) {
         throw new Error(POST_ERROR.INVALID_IMAGES);
       }
-      return existingImages.map(img => ({ url: img.url, alt: img.alt || '' }));
+      const imageIds = await imageService.getImageIdsByUrls(urls);
+      return imageIds;
     }
 
     return [];
@@ -169,6 +183,7 @@ export class PostService {
     })
       .populate('author', 'name username avatar email')
       .populate('category', 'name slug')
+      .populate('images')
       .limit(limit * 3)
       .exec();
 

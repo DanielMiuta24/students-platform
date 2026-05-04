@@ -98,6 +98,32 @@ class PostController {
     }
   };
 
+  getPostBySlug = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { slug } = req.params;
+      const post = await postService.getPostBySlug(slug);
+
+      if (!post) {
+        return res.status(PostController.HTTP_STATUS.NOT_FOUND).json({ message: 'Post not found' });
+      }
+
+      if (req.query.incrementView === 'true') {
+        await postService.incrementViewCount(post._id.toString());
+        post.viewCount += 1;
+      }
+
+      return res.status(PostController.HTTP_STATUS.OK).json({
+        post: PostMapper.toSafePost(post),
+      });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
   updatePost = async (
     req: AuthenticatedRequest & UploadRequest,
     res: Response,

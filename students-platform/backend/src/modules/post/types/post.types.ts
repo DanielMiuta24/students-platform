@@ -17,7 +17,7 @@ export interface UpdatePostDTO {
   content: PostContent;
   category: string;
   status: PostStatus;
-  visibility: PostVisibility;
+  visibility?: PostVisibility;
   images?: ImageMetadata[];
 }
 
@@ -41,6 +41,7 @@ export interface SafePost {
   id: string;
   author: string;
   title: string;
+  slug: string;
   content: PostContent;
   category?: string;
   status: PostStatus;

@@ -30,6 +30,11 @@ router.get(
 );
 
 router.get(
+  '/slug/:slug',
+  postController.getPostBySlug
+);
+
+router.get(
   '/:postId',
   validatePostId,
   postController.getPostById
