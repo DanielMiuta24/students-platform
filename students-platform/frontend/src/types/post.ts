@@ -15,6 +15,14 @@ export interface ImageMetadata {
   storageKey?: string;
 }
 
+export interface SafeAuthor {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatar?: string;
+}
+
 export interface CreatePostPayload {
   title: string;
   content: string | LexicalEditorState;
@@ -35,11 +43,11 @@ export interface UpdatePostPayload {
 
 export interface SafePost {
   id: string;
-  author: string;
+  author: string | SafeAuthor;
   title: string;
   slug: string;
   content: string | LexicalEditorState;
-  category?: string;
+  category?: string | { id: string; name: string; slug: string };
   status: PostStatus;
   visibility: PostVisibility;
   images: ImageMetadata[];
