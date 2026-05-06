@@ -57,22 +57,23 @@ export class ImageService {
     return Promise.all(uploadPromises);
   }
 
-  async uploadImagesForPost(files: UploadedFile[], userId: string): Promise<UploadResult[]> {
+  async uploadImagesForPost(files: UploadedFile[], userId: string): Promise<Array<UploadResult & { imageId: string }>> {
     const options = new CloudinaryUploadOptionsBuilder()
       .withPostImageDefaults()
       .build();
     const uploadedImages = await this.uploadImages(files, options);
 
-    const imageDocs = uploadedImages.map(upload =>
-      new ImageModel(
-        new ImageCreateBuilder()
-          .fromUploadResult(userId, upload, 'posts')
-          .build()
-      )
+    const imageData = uploadedImages.map(upload =>
+      new ImageCreateBuilder()
+        .fromUploadResult(userId, upload, 'posts')
+        .build()
     );
-    await ImageModel.insertMany(imageDocs);
+    const savedDocs = await ImageModel.insertMany(imageData);
 
-    return uploadedImages;
+    return uploadedImages.map((upload, index) => ({
+      ...upload,
+      imageId: savedDocs[index]._id.toString()
+    }));
   }
 
   async uploadImageForAvatar(file: UploadedFile): Promise<UploadResult> {
@@ -90,12 +91,22 @@ export class ImageService {
     }
   }
 
+  async deleteImageFromDb(imageId: string): Promise<void> {
+    await ImageModel.findByIdAndDelete(imageId);
+  }
+
   async validateImagesOwnership(urls: string[], userId: string): Promise<boolean> {
     const count = await ImageModel.countDocuments({
       url: { $in: urls },
       owner: userId,
     });
     return count === urls.length;
+  }
+
+  async getImageIdsByUrls(urls: string[]): Promise<string[]> {
+    const images = await ImageModel.find({ url: { $in: urls } }).select('_id url').exec();
+    const urlToIdMap = new Map(images.map(img => [img.url, img._id.toString()]));
+    return urls.map(url => urlToIdMap.get(url)!).filter(Boolean);
   }
 }
 

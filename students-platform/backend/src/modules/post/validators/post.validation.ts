@@ -77,16 +77,32 @@ const validateImages = () =>
     .isArray().withMessage('Images must be an array')
     .custom(validateImageList);
 
+const validateStatus = () =>
+  body('status')
+    .notEmpty().withMessage('Status is required')
+    .isIn(VALID_STATUSES).withMessage(`Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`);
+
+const validateOptionalStatus = () =>
+  body('status')
+    .optional()
+    .isIn(VALID_STATUSES).withMessage(`Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`);
+
+const validateVisibilityField = () =>
+  body('visibility')
+    .notEmpty().withMessage('Visibility is required')
+    .isIn(VALID_VISIBILITIES).withMessage(`Invalid visibility. Must be one of: ${VALID_VISIBILITIES.join(', ')}`);
+
+const validateOptionalVisibility = () =>
+  body('visibility')
+    .optional()
+    .isIn(VALID_VISIBILITIES).withMessage(`Invalid visibility. Must be one of: ${VALID_VISIBILITIES.join(', ')}`);
+
 export const validateCreatePost = [
   validateTitle(),
   validateContent(),
   validateCategory(),
-  body('status')
-    .optional()
-    .isIn(VALID_STATUSES).withMessage(`Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`),
-  body('visibility')
-    .optional()
-    .isIn(VALID_VISIBILITIES).withMessage(`Invalid visibility. Must be one of: ${VALID_VISIBILITIES.join(', ')}`),
+  validateOptionalStatus(),
+  validateOptionalVisibility(),
   validateImages(),
   handleValidationErrors,
 ];
@@ -95,12 +111,8 @@ export const validateUpdatePost = [
   validateTitle(),
   validateContent(),
   validateCategory(),
-  body('status')
-    .notEmpty().withMessage('Status is required')
-    .isIn(VALID_STATUSES).withMessage(`Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`),
-  body('visibility')
-    .notEmpty().withMessage('Visibility is required')
-    .isIn(VALID_VISIBILITIES).withMessage(`Invalid visibility. Must be one of: ${VALID_VISIBILITIES.join(', ')}`),
+  validateStatus(),
+  validateVisibilityField(),
   validateImages(),
   handleValidationErrors,
 ];
@@ -117,5 +129,10 @@ export const validateCategoryIdParam = [
 
 export const validateAuthorId = [
   param('authorId').isMongoId().withMessage('Invalid author ID'),
+  handleValidationErrors,
+];
+
+export const validateVisibility = [
+  validateVisibilityField(),
   handleValidationErrors,
 ];

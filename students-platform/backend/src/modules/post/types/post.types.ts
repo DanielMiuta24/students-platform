@@ -37,9 +37,17 @@ export interface GetPostsDTO {
   authorId?: string;
 }
 
+export interface SafeAuthor {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatar?: string;
+}
+
 export interface SafePost {
   id: string;
-  author: string;
+  author: string | SafeAuthor;
   title: string;
   slug: string;
   content: PostContent;

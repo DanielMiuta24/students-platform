@@ -9,6 +9,7 @@ import {
   validatePostId,
   validateCategoryIdParam,
   validateAuthorId,
+  validateVisibility,
 } from '../validators/post.validation';
 
 const router = Router();
@@ -65,6 +66,21 @@ router.put(
   }),
   validateUpdatePost,
   postController.updatePost
+);
+
+router.patch(
+  '/:postId/visibility',
+  authMiddleware,
+  validatePostId,
+  validateVisibility,
+  postController.updateVisibility
+);
+
+router.delete(
+  '/:postId',
+  authMiddleware,
+  validatePostId,
+  postController.deletePost
 );
 
 export default router;

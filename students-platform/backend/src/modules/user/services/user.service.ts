@@ -16,8 +16,11 @@ export interface LoginDTO {
 
 export interface getProfile{
     user_id:string;
+}
 
- }
+export interface getUserByUsername{
+    username:string;
+}
 
 
 
@@ -78,7 +81,14 @@ export class UserService {
                 throw new Error('USER_NOT_FOUND');
               }
            return user;
+    }
 
+    async getUserByUsername({ username }: getUserByUsername): Promise<UserDoc> {
+          const user = await User.findOne({ username: username.toLowerCase() });
+             if (!user) {
+                throw new Error('USER_NOT_FOUND');
+              }
+           return user;
     }
 
 

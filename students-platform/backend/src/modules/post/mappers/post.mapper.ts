@@ -1,5 +1,5 @@
 import type { PostDoc } from '../models/post.model';
-import type { SafePost, ImageMetadata } from '../types/post.types';
+import type { SafePost, ImageMetadata, SafeAuthor } from '../types/post.types';
 import type { PostContent } from '../types/post-content.types';
 import type { ImageDoc } from '../../image/image.model';
 
@@ -14,7 +14,7 @@ export class PostMapper {
   static toSafePost(post: PostDoc): SafePost {
     return {
       id: this.extractId(post._id),
-      author: this.extractId(post.author),
+      author: this.mapAuthor(post.author),
       title: post.title,
       slug: post.slug,
       content: post.content as PostContent,
@@ -38,13 +38,42 @@ export class PostMapper {
   }
 
   /**
+   * Maps author - returns full object if populated, or just ID
+   */
+  private static mapAuthor(value: any): string | SafeAuthor {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+
+    // Check if author is populated with user data
+    if (value._id && (value.name || value.username)) {
+      return {
+        id: value._id.toString(),
+        name: value.name || '',
+        username: value.username || '',
+        email: value.email || '',
+        avatar: value.avatar || '',
+      };
+    }
+
+    // Just an ObjectId
+    if (value._id) return value._id.toString();
+    if (typeof value.toString === 'function' && value.constructor.name === 'ObjectId') {
+      return value.toString();
+    }
+
+    return '';
+  }
+
+  /**
    * Extracts string ID from ObjectId or populated document
    */
   private static extractId(value: any): string {
     if (!value) return '';
     if (typeof value === 'string') return value;
-    if (value.toString) return value.toString();
     if (value._id) return value._id.toString();
+    if (typeof value.toString === 'function' && value.constructor.name === 'ObjectId') {
+      return value.toString();
+    }
     return '';
   }
 

@@ -30,7 +30,7 @@ const routes = [
   { path: '/universities', component: Universities },
   { path: '/scholarships', component: Scholarships },
   { path: '/threads', component: ThreadList, name: 'Threads',meta: { requiresAuth: true } },
-  { path: '/profile/:id', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
+  { path: '/profile/:username', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
   { 
     path: '/messages/:id?', 
     component: Messages, 

@@ -108,6 +108,7 @@ export class PostService {
       .limit(limit + 1)
       .exec();
 
+
     return this.buildCursorResult(posts, limit);
   }
 
@@ -198,6 +199,62 @@ export class PostService {
     return {
       posts: scoredPosts.slice(0, limit)
     };
+  }
+
+  async deletePost(postId: string, authorId: string): Promise<void> {
+    const post = await PostModel.findById(postId).populate('images');
+
+    if (!post) {
+      throw new Error(POST_ERROR.NOT_FOUND);
+    }
+
+    const postAuthorId = typeof post.author === 'string'
+      ? post.author
+      : post.author!.toString();
+
+    if (postAuthorId !== authorId) {
+      throw new Error(POST_ERROR.UNAUTHORIZED);
+    }
+
+    if (post.images && post.images.length > 0) {
+      for (const image of post.images) {
+        const imageDoc = typeof image === 'string' ? null : image;
+        if (imageDoc && 'publicId' in imageDoc) {
+          await imageService.deleteImage(imageDoc.publicId);
+          await imageService.deleteImageFromDb(imageDoc._id.toString());
+        }
+      }
+    }
+
+    await PostModel.findByIdAndDelete(postId);
+  }
+
+  async updateVisibility(postId: string, visibility: 'public' | 'private', authorId: string): Promise<PostDoc> {
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+      throw new Error(POST_ERROR.NOT_FOUND);
+    }
+
+    const postAuthorId = typeof post.author === 'string'
+      ? post.author
+      : post.author!.toString();
+
+    if (postAuthorId !== authorId) {
+      throw new Error(POST_ERROR.UNAUTHORIZED);
+    }
+
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      postId,
+      { visibility },
+      { new: true, runValidators: true }
+    )
+      .populate('author', 'name username avatar email')
+      .populate('category', 'name slug')
+      .populate('images')
+      .exec();
+
+    return updatedPost!;
   }
 }
 

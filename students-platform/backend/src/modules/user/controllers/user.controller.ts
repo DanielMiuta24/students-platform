@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { userService,getProfile,RegisterDTO,LoginDTO} from '../services';
+import { userService,getProfile,getUserByUsername,RegisterDTO,LoginDTO} from '../services';
 import type { UserDoc } from '../models';
 import { env } from '../../../config/env';
 import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
@@ -134,6 +134,34 @@ class UserController {
           } catch (err: any) {
             if (err.message === 'USER_NOT_FOUND') {
               return res.status(401).json({ message: 'User not found' });
+            }
+            return next(err);
+          }
+        };
+
+    getUserByUsername = async (
+          req: Request,
+          res: Response,
+          next: NextFunction
+        ) => {
+          try {
+            const { username } = req.params;
+
+            if (!username) {
+              return res.status(400).json({ message: 'Username is required' });
+            }
+
+            const payload: getUserByUsername = {
+                  username,
+            };
+
+            const user = await userService.getUserByUsername(payload);
+            const safeUser = userService.toSafeUser(user);
+
+            return res.status(200).json(safeUser);
+          } catch (err: any) {
+            if (err.message === 'USER_NOT_FOUND') {
+              return res.status(404).json({ message: 'User not found' });
             }
             return next(err);
           }

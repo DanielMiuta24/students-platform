@@ -233,6 +233,43 @@ class PostController {
       return this.handleError(err, res, next);
     }
   };
+
+  deletePost = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await postService.deletePost(req.params.postId, req.user!.id);
+
+      return res.status(PostController.HTTP_STATUS.OK).json({
+        message: 'Post deleted successfully',
+      });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  updateVisibility = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const updatedPost = await postService.updateVisibility(
+        req.params.postId,
+        req.body.visibility,
+        req.user!.id
+      );
+
+      return res.status(PostController.HTTP_STATUS.OK).json({
+        message: 'Post visibility updated successfully',
+        post: PostMapper.toSafePost(updatedPost),
+      });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
 }
 
 export const postController = new PostController();
