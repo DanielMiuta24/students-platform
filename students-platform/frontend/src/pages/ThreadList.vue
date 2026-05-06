@@ -15,8 +15,13 @@
   </p>
 </div>
 
-    <!-- Search + Category Filter -->
+    <!-- Create Post -->
     <div class="max-w-6xl mx-auto px-4 mb-8">
+      <CreatePostForm @success="handlePostSuccess" @error="handlePostError" />
+    </div>
+
+    <!-- Search + Category Filter -->
+    <div class="max-w-6xl mx-auto px-4 mb-10">
       <div class="bg-white rounded-xl shadow-lg p-6">
         <input
           v-model="searchQuery"
@@ -25,30 +30,8 @@
           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
         />
 
-        <div class="flex flex-wrap gap-3">
-          <button
-            v-for="category in categories"
-            :key="category"
-            @click="selectCategory(category)"
-            :class="[
-              'px-4 py-2 rounded-full font-semibold transition',
-              selectedCategory === category
-                ? 'bg-blue-600 text-white'
-                : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-            ]"
-          >
-            {{ category }}
-          </button>
-        </div>
+        <CategoryFilter @change="handleCategoryChange" />
       </div>
-    </div>
-
-    <!-- Create Post -->
-    <div class="max-w-6xl mx-auto px-4 mb-10">
-      <div v-if="redirecting" class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded">
-        <p class="font-semibold">Redirecting to your profile...</p>
-      </div>
-      <CreatePostForm @success="handlePostSuccess" @error="handlePostError" />
     </div>
 
     <!-- Threads -->
@@ -172,6 +155,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import CreatePostForm from '../components/CreatePostForm.vue';
+import CategoryFilter from '../components/CategoryFilter.vue';
 import { useSessionStore } from '../store/session';
 
 interface Thread {
@@ -197,6 +181,7 @@ export default defineComponent({
 
   components: {
     CreatePostForm,
+    CategoryFilter,
   },
 
   data() {
@@ -257,44 +242,26 @@ export default defineComponent({
 
       filteredThreads: [] as Thread[],
 
-      categories: [
-        'All',
-        'Scholarships',
-        'Universities',
-        'Study Abroad',
-        'Visa',
-        'Student Life',
-        'Applications',
-      ],
-
-      selectedCategory: 'All',
+      selectedCategory: null as string | null,
       searchQuery: '',
 
       newComment: '',
-      redirecting: false,
     };
   },
 
   methods: {
     handlePostSuccess(post: any) {
       console.log('[ThreadList] Post created successfully:', post);
-
-      const sessionStore = useSessionStore();
-      const userId = sessionStore.user?.id;
-
-      if (userId) {
-        this.redirecting = true;
-        setTimeout(() => {
-          this.$router.push({
-            name: 'UserProfile',
-            params: { id: userId }
-          });
-        }, 2000);
-      }
+      // Post created successfully - form will reset automatically
     },
 
     handlePostError(error: any) {
       console.error('[ThreadList] Post creation failed:', error);
+    },
+
+    handleCategoryChange(categoryId: string | null) {
+      this.selectedCategory = categoryId;
+      this.filterThreads();
     },
 
     filterThreads() {
@@ -308,16 +275,11 @@ export default defineComponent({
           thread.tags.some((tag) => tag.toLowerCase().includes(query));
 
         const matchesCategory =
-          this.selectedCategory === 'All' ||
+          this.selectedCategory === null ||
           thread.category === this.selectedCategory;
 
         return matchesSearch && matchesCategory;
       });
-    },
-
-    selectCategory(category: string) {
-      this.selectedCategory = category;
-      this.filterThreads();
     },
 
     likeThread(thread: Thread) {

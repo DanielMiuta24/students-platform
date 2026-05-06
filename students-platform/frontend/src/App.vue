@@ -1,7 +1,9 @@
 <template>
   <div id="app">
-    <Navbar />
-    <main>
+    <div class="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
+      <Navbar />
+    </div>
+    <main class="pt-16">
       <router-view />
     </main>
     <Footer />
@@ -22,5 +24,4 @@ export default {
 </script>
 
 <style>
-/* Global styles are handled by Tailwind now */
 </style>

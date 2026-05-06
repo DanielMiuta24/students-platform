@@ -1,25 +1,65 @@
 <template>
-  <div class="bg-white rounded-xl shadow-lg p-8">
-    <h2 class="text-2xl font-bold text-blue-900 mb-5">Create a Post</h2>
-
-    <!-- Success Message -->
-    <div v-if="successMessage" class="success-banner">
-      <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-      </svg>
-      {{ successMessage }}
+  <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div
+      v-if="!isExpanded"
+      class="p-4 flex items-center gap-4 hover:bg-gray-50 transition"
+    >
+      <img
+        :src="userAvatar"
+        :alt="userName"
+        @click="navigateToProfile"
+        class="w-12 h-12 rounded-full object-cover border-2 border-blue-100 hover:border-blue-300 transition cursor-pointer"
+      />
+      <div
+        @click="isExpanded = true"
+        class="flex-1 bg-gray-100 hover:bg-gray-200 transition rounded-full px-4 py-3 text-gray-500 cursor-pointer"
+      >
+        What's on your mind, {{ userFirstName }}?
+      </div>
     </div>
 
-    <!-- Error Message -->
-    <div v-if="generalError" class="error-banner">
-      <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-      </svg>
-      {{ generalError }}
-    </div>
+    <div v-else class="relative">
+      <div class="p-4 flex items-center justify-between border-b border-gray-200">
+        <div class="flex items-center gap-3">
+          <img
+            :src="userAvatar"
+            :alt="userName"
+            @click="navigateToProfile"
+            class="w-12 h-12 rounded-full object-cover border-2 border-blue-100 hover:border-blue-300 transition cursor-pointer"
+          />
+          <h3
+            @click="navigateToProfile"
+            class="font-bold text-gray-900 hover:text-blue-600 transition cursor-pointer"
+          >
+            {{ userName }}
+          </h3>
+        </div>
+        <button
+          @click="handleClose"
+          class="text-gray-400 hover:text-gray-600 transition"
+          type="button"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-6">
+        <div v-if="successMessage" class="success-banner">
+          <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          {{ successMessage }}
+        </div>
 
-    <form @submit.prevent="handlePublish">
-      <!-- Title Field -->
+        <div v-if="generalError" class="error-banner">
+          <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          {{ generalError }}
+        </div>
+
+        <form @submit.prevent="handlePublish">
       <div class="form-field">
         <label for="title" class="field-label">
           Title <span class="required">*</span>
@@ -40,21 +80,19 @@
         </div>
       </div>
 
-      <!-- Rich Text Content -->
       <div class="form-field">
         <label for="content" class="field-label">
           Content <span class="required">*</span>
         </label>
         <RichTextEditor
           v-model="postContent"
-          placeholder="Share your thoughts, questions, or experiences..."
+          placeholder="What's on your mind?"
           :max-length="POST_VALIDATION.CONTENT_MAX_LENGTH"
           :error="errors.content"
           @change="validateContent"
         />
       </div>
 
-      <!-- Category Field -->
       <div class="form-field">
         <label for="category" class="field-label">
           Category <span class="required">*</span>
@@ -83,7 +121,6 @@
         </div>
       </div>
 
-      <!-- Image Upload -->
       <div class="form-field">
         <ImageUpload
           v-model="postImages"
@@ -93,7 +130,6 @@
         <div v-if="errors.images" class="field-error">{{ errors.images }}</div>
       </div>
 
-      <!-- Visibility Field -->
       <div class="form-field">
         <label for="visibility" class="field-label">
           Visibility
@@ -108,7 +144,6 @@
         </select>
       </div>
 
-      <!-- Action Buttons -->
       <div class="action-buttons">
         <button
           type="button"
@@ -130,11 +165,14 @@
         </button>
       </div>
     </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import RichTextEditor from './RichTextEditor.vue';
 import ImageUpload, { type ImageUpload as ImageUploadType } from './ImageUpload.vue';
 import { createPost } from '../api/post';
@@ -142,6 +180,8 @@ import { getActiveCategories } from '../api/category';
 import type { Category } from '../types/category';
 import type { LexicalEditorState } from '../types/lexical';
 import { POST_VALIDATION, POST_STATUS, POST_VISIBILITY } from '../types/post';
+import { useSessionStore } from '../store/session';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface FormErrors {
   title: string;
@@ -161,19 +201,37 @@ export default defineComponent({
   emits: ['success', 'error'],
 
   setup(_, { emit }) {
-    // Form fields
+    const session = useSessionStore();
+    const router = useRouter();
+
+    const isExpanded = ref(false);
+
+    const userName = computed(() => session.user?.name || 'User');
+    const userFirstName = computed(() => userName.value.split(' ')[0]);
+    const userAvatar = computed(() => getAvatarUrl(userName.value, session.user?.avatar));
+    const userProfileUrl = computed(() => {
+      if (session.user?.username) {
+        return `/profile/${session.user.username}`;
+      }
+      return '#';
+    });
+
+    const navigateToProfile = () => {
+      if (session.user?.username) {
+        router.push(`/profile/${session.user.username}`);
+      }
+    };
+
     const postTitle = ref('');
     const postContent = ref<LexicalEditorState | null>(null);
     const postCategory = ref('');
     const postImages = ref<ImageUploadType[]>([]);
     const postVisibility = ref<'public' | 'private'>('public');
 
-    // Categories
     const categories = ref<Category[]>([]);
     const loadingCategories = ref(false);
     const categoryError = ref('');
 
-    // Validation
     const errors = ref<FormErrors>({
       title: '',
       content: '',
@@ -181,14 +239,12 @@ export default defineComponent({
       images: '',
     });
 
-    // UI State
     const isSubmitting = ref(false);
     const isPublishing = ref(false);
     const isDraftSaving = ref(false);
     const generalError = ref('');
     const successMessage = ref('');
 
-    // Fetch categories on mount
     onMounted(async () => {
       await fetchCategories();
     });
@@ -274,7 +330,6 @@ export default defineComponent({
     };
 
     const getTextFromLexicalState = (state: LexicalEditorState): string => {
-      // Extract text content from Lexical state
       const extractText = (node: any): string => {
         if (node.type === 'text') {
           return node.text || '';
@@ -297,7 +352,6 @@ export default defineComponent({
       formData.append('status', status);
       formData.append('visibility', postVisibility.value);
 
-      // Append images
       postImages.value.forEach((image) => {
         formData.append('images', image.file);
       });
@@ -317,16 +371,21 @@ export default defineComponent({
         category: '',
         images: '',
       };
+      isExpanded.value = false;
+    };
+
+    const handleClose = () => {
+      isExpanded.value = false;
+      generalError.value = '';
+      successMessage.value = '';
     };
 
     const handlePublish = async () => {
       console.log('[CreatePostForm] Attempting to publish post...');
 
-      // Clear previous messages
       generalError.value = '';
       successMessage.value = '';
 
-      // Validate form
       if (!validateForm()) {
         console.log('[CreatePostForm] Validation failed');
         generalError.value = 'Please fix the errors before publishing';
@@ -363,11 +422,9 @@ export default defineComponent({
     const handleSaveDraft = async () => {
       console.log('[CreatePostForm] Saving as draft...');
 
-      // Clear previous messages
       generalError.value = '';
       successMessage.value = '';
 
-      // Use same validation as publish
       if (!validateForm()) {
         console.log('[CreatePostForm] Validation failed');
         generalError.value = 'Please fix the errors before saving draft';
@@ -409,7 +466,12 @@ export default defineComponent({
     };
 
     return {
-      // Data
+      isExpanded,
+      userName,
+      userFirstName,
+      userAvatar,
+      userProfileUrl,
+
       postTitle,
       postContent,
       postCategory,
@@ -426,13 +488,14 @@ export default defineComponent({
       successMessage,
       POST_VALIDATION,
 
-      // Methods
       validateTitle,
       validateContent,
       validateCategory,
       handlePublish,
       handleSaveDraft,
       handleImageError,
+      handleClose,
+      navigateToProfile,
     };
   },
 });
