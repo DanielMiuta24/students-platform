@@ -12,9 +12,16 @@ export interface LikeQueryDTO {
   likeableType?: LikeableType;
 }
 
+export interface SafeUser {
+  id: string;
+  name: string;
+  username: string;
+  avatar?: string;
+}
+
 export interface SafeLike {
   id: string;
-  user: string;
+  user: string | SafeUser;
   likeable: string;
   likeableType: LikeableType;
   createdAt: Date;

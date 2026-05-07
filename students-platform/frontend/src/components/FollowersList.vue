@@ -1,0 +1,152 @@
+<template>
+  <section class="bg-white rounded-2xl shadow-lg p-6">
+    <h2 class="text-xl font-bold text-blue-900 mb-4">
+      {{ title }}
+    </h2>
+
+    <div class="mb-4">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search followers..."
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      />
+    </div>
+
+    <div v-if="loading" class="text-center py-4">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+    </div>
+
+    <div v-else-if="filteredFollowers.length" class="space-y-4">
+      <div
+        v-for="follower in filteredFollowers"
+        :key="follower.id"
+        class="flex items-center gap-3 p-2 rounded-lg transition"
+      >
+        <img
+          :src="getAvatarUrl(follower.name, follower.avatar)"
+          :alt="follower.name"
+          class="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition"
+          @click="navigateToProfile(follower.username)"
+        />
+        <div class="flex-1 cursor-pointer" @click="navigateToProfile(follower.username)">
+          <p class="font-semibold text-blue-900 hover:text-blue-600 transition">
+            {{ follower.name }}
+          </p>
+          <p v-if="showUsername" class="text-xs text-gray-500">@{{ follower.username }}</p>
+        </div>
+        <button
+          v-if="showFollowButton"
+          @click.stop="handleFollowToggle(follower)"
+          :disabled="actionLoading[follower.id]"
+          :class="getButtonClass(follower)"
+          class="px-4 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+        >
+          {{ actionLoading[follower.id] ? 'Loading...' : getButtonText(follower) }}
+        </button>
+      </div>
+    </div>
+
+    <p v-else-if="searchQuery && !filteredFollowers.length" class="text-gray-500 text-sm">
+      No followers found matching "{{ searchQuery }}"
+    </p>
+
+    <p v-else class="text-gray-500 text-sm">
+      {{ emptyMessage }}
+    </p>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { getAvatarUrl } from '../utils/avatar';
+import { followUser, unfollowUser } from '../api/follow';
+import type { SafeFollow } from '../api/follow';
+
+interface Props {
+  followers: SafeFollow[];
+  loading?: boolean;
+  title?: string;
+  emptyMessage?: string;
+  showUsername?: boolean;
+  showFollowButton?: boolean;
+  currentUserId?: string;
+  currentUserFollowing?: string[];
+  friends?: string[];
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  loading: false,
+  title: 'Followers',
+  emptyMessage: 'No followers yet',
+  showUsername: false,
+  showFollowButton: true,
+  currentUserFollowing: () => [],
+  friends: () => [],
+});
+
+const emit = defineEmits<{
+  (e: 'refresh'): void;
+}>();
+
+const router = useRouter();
+const searchQuery = ref('');
+const actionLoading = ref<Record<string, boolean>>({});
+
+const filteredFollowers = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return props.followers;
+  }
+
+  const query = searchQuery.value.toLowerCase();
+  return props.followers.filter(follower =>
+    follower.name.toLowerCase().includes(query) ||
+    follower.username.toLowerCase().includes(query)
+  );
+});
+
+const isFollowing = (userId: string) => {
+  return props.currentUserFollowing.includes(userId);
+};
+
+const isFriend = (userId: string) => {
+  return props.friends.includes(userId);
+};
+
+const getButtonText = (follower: SafeFollow) => {
+  if (follower.id === props.currentUserId) return '';
+  if (isFriend(follower.id)) return 'Friends';
+  if (isFollowing(follower.id)) return 'Following';
+  return 'Follow Back';
+};
+
+const getButtonClass = (follower: SafeFollow) => {
+  if (follower.id === props.currentUserId) return 'hidden';
+  if (isFriend(follower.id)) return 'bg-gray-200 text-gray-700 hover:bg-gray-300';
+  if (isFollowing(follower.id)) return 'bg-blue-100 text-blue-700 hover:bg-blue-200';
+  return 'bg-blue-600 text-white hover:bg-blue-700';
+};
+
+const navigateToProfile = (username: string) => {
+  router.push(`/profile/${username}`);
+};
+
+const handleFollowToggle = async (follower: SafeFollow) => {
+  if (follower.id === props.currentUserId) return;
+
+  try {
+    actionLoading.value[follower.id] = true;
+
+    if (isFollowing(follower.id)) {
+      await unfollowUser(follower.id);
+    } else {
+      await followUser(follower.id);
+    }
+
+    emit('refresh');
+  } finally {
+    actionLoading.value[follower.id] = false;
+  }
+};
+</script>

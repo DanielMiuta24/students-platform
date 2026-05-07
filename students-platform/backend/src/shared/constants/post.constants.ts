@@ -15,6 +15,7 @@ export type PostStatus = typeof POST_STATUS[keyof typeof POST_STATUS];
 export const POST_VISIBILITY = {
   PUBLIC: 'public',
   PRIVATE: 'private',
+  FRIENDS: 'friends',
 } as const;
 
 export type PostVisibility = typeof POST_VISIBILITY[keyof typeof POST_VISIBILITY];

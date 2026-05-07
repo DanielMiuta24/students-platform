@@ -62,7 +62,6 @@ const fetchCategories = async () => {
   try {
     categories.value = await getActiveCategories();
   } catch (err: any) {
-    console.error('[CategoryFilter] Failed to load categories:', err);
     error.value = 'Failed to load categories';
   } finally {
     loading.value = false;

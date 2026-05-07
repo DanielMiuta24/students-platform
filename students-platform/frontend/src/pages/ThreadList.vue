@@ -252,7 +252,8 @@ export default defineComponent({
   methods: {
     handlePostSuccess(post: any) {
       console.log('[ThreadList] Post created successfully:', post);
-      // Post created successfully - form will reset automatically
+      // Reload the page to show the new post
+      window.location.reload();
     },
 
     handlePostError(error: any) {

@@ -145,7 +145,9 @@ class CommentController {
         return res.status(404).json({ message: 'Comment not found' });
       }
 
-      if (!commentService.verifyCommentOwnership(comment, req.user!.id)) {
+      const canDelete = await commentService.canDeleteComment(comment, req.user!.id);
+
+      if (!canDelete) {
         return res.status(403).json({ message: 'You are not authorized to delete this comment' });
       }
 

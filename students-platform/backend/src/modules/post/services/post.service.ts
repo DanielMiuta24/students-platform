@@ -14,6 +14,8 @@ import { PostMapper } from '../mappers';
 import { CategoryModel } from '../../category/models';
 import { PostScorer } from './post.scorer';
 import { imageService, type UploadedFile, type UploadResult } from '../../image/services';
+import { CommentModel } from '../../comment/models';
+import { LikeModel } from '../../like/models';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
@@ -37,7 +39,7 @@ export class PostService {
 
   async getPostById(postId: string): Promise<PostDoc | null> {
     return PostModel.findById(postId)
-      .populate('author', 'name username avatar email')
+      .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
       .populate('images')
       .exec();
@@ -45,7 +47,7 @@ export class PostService {
 
   async getPostBySlug(slug: string): Promise<PostDoc | null> {
     return PostModel.findOne({ slug })
-      .populate('author', 'name username avatar email')
+      .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
       .populate('images')
       .exec();
@@ -83,7 +85,7 @@ export class PostService {
       updateData,
       { new: true, runValidators: true }
     )
-      .populate('author', 'name username avatar email')
+      .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
       .populate('images')
       .exec();
@@ -101,7 +103,7 @@ export class PostService {
       .build();
 
     const posts = await PostModel.find(query)
-      .populate('author', 'name username avatar email')
+      .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
       .populate('images')
       .sort({ _id: -1 })
@@ -182,7 +184,7 @@ export class PostService {
       status: 'published',
       visibility: 'public'
     })
-      .populate('author', 'name username avatar email')
+      .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
       .populate('images')
       .limit(limit * 3)
@@ -215,6 +217,24 @@ export class PostService {
     if (postAuthorId !== authorId) {
       throw new Error(POST_ERROR.UNAUTHORIZED);
     }
+
+    // Get all comments (including replies) for this post to delete their likes
+    const comments = await CommentModel.find({ post: postId }).select('_id');
+    const commentIds = comments.map(c => c._id);
+
+    // Delete all likes for comments and replies
+    if (commentIds.length > 0) {
+      await LikeModel.deleteMany({
+        likeable: { $in: commentIds },
+        likeableType: 'Comment'
+      });
+    }
+
+    // Delete all likes for the post itself
+    await LikeModel.deleteMany({ likeable: postId, likeableType: 'Post' });
+
+    // Delete all comments and replies associated with this post
+    await CommentModel.deleteMany({ post: postId });
 
     if (post.images && post.images.length > 0) {
       for (const image of post.images) {
@@ -249,7 +269,7 @@ export class PostService {
       { visibility },
       { new: true, runValidators: true }
     )
-      .populate('author', 'name username avatar email')
+      .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
       .populate('images')
       .exec();

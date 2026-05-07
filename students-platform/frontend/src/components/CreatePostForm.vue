@@ -66,6 +66,7 @@
         </label>
         <input
           id="title"
+          ref="titleInput"
           v-model="postTitle"
           type="text"
           placeholder="Enter a compelling title for your post"
@@ -140,6 +141,7 @@
           class="form-input"
         >
           <option value="public">Public - Everyone can see</option>
+          <option value="friends">Friends - Only your friends can see</option>
           <option value="private">Private - Only you can see</option>
         </select>
       </div>
@@ -205,6 +207,7 @@ export default defineComponent({
     const router = useRouter();
 
     const isExpanded = ref(false);
+    const titleInput = ref<HTMLInputElement | null>(null);
 
     const userName = computed(() => session.user?.name || 'User');
     const userFirstName = computed(() => userName.value.split(' ')[0]);
@@ -226,7 +229,7 @@ export default defineComponent({
     const postContent = ref<LexicalEditorState | null>(null);
     const postCategory = ref('');
     const postImages = ref<ImageUploadType[]>([]);
-    const postVisibility = ref<'public' | 'private'>('public');
+    const postVisibility = ref<'public' | 'private' | 'friends'>('public');
 
     const categories = ref<Category[]>([]);
     const loadingCategories = ref(false);
@@ -254,11 +257,8 @@ export default defineComponent({
       categoryError.value = '';
 
       try {
-        console.log('[CreatePostForm] Fetching categories...');
         categories.value = await getActiveCategories();
-        console.log('[CreatePostForm] Categories loaded:', categories.value.length);
       } catch (error: any) {
-        console.error('[CreatePostForm] Failed to load categories:', error);
         categoryError.value = 'Failed to load categories. Please refresh the page.';
       } finally {
         loadingCategories.value = false;
@@ -380,14 +380,18 @@ export default defineComponent({
       successMessage.value = '';
     };
 
-    const handlePublish = async () => {
-      console.log('[CreatePostForm] Attempting to publish post...');
+    const focusForm = () => {
+      isExpanded.value = true;
+      setTimeout(() => {
+        titleInput.value?.focus();
+      }, 100);
+    };
 
+    const handlePublish = async () => {
       generalError.value = '';
       successMessage.value = '';
 
       if (!validateForm()) {
-        console.log('[CreatePostForm] Validation failed');
         generalError.value = 'Please fix the errors before publishing';
         return;
       }
@@ -397,11 +401,9 @@ export default defineComponent({
 
       try {
         const formData = buildFormData('published');
-        console.log('[CreatePostForm] Submitting post...');
 
         const post = await createPost(formData);
 
-        console.log('[CreatePostForm] Post published successfully:', post.id);
         successMessage.value = 'Post published successfully!';
         emit('success', post);
 
@@ -410,7 +412,6 @@ export default defineComponent({
           successMessage.value = '';
         }, 2000);
       } catch (error: any) {
-        console.error('[CreatePostForm] Failed to publish post:', error);
         generalError.value = error.message || 'Failed to publish post. Please try again.';
         emit('error', error);
       } finally {
@@ -420,13 +421,10 @@ export default defineComponent({
     };
 
     const handleSaveDraft = async () => {
-      console.log('[CreatePostForm] Saving as draft...');
-
       generalError.value = '';
       successMessage.value = '';
 
       if (!validateForm()) {
-        console.log('[CreatePostForm] Validation failed');
         generalError.value = 'Please fix the errors before saving draft';
         return;
       }
@@ -436,11 +434,9 @@ export default defineComponent({
 
       try {
         const formData = buildFormData('draft');
-        console.log('[CreatePostForm] Submitting draft...');
 
         const post = await createPost(formData);
 
-        console.log('[CreatePostForm] Draft saved successfully:', post.id);
         successMessage.value = 'Draft saved successfully!';
         emit('success', post);
 
@@ -449,7 +445,6 @@ export default defineComponent({
           successMessage.value = '';
         }, 2000);
       } catch (error: any) {
-        console.error('[CreatePostForm] Failed to save draft:', error);
         generalError.value = error.message || 'Failed to save draft. Please try again.';
         emit('error', error);
       } finally {
@@ -467,6 +462,7 @@ export default defineComponent({
 
     return {
       isExpanded,
+      titleInput,
       userName,
       userFirstName,
       userAvatar,
@@ -495,6 +491,7 @@ export default defineComponent({
       handleSaveDraft,
       handleImageError,
       handleClose,
+      focusForm,
       navigateToProfile,
     };
   },

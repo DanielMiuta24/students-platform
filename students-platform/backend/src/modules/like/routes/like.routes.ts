@@ -27,13 +27,14 @@ router.get(
   likeController.checkLikeStatus
 );
 
+// This must come before /:likeableType/:likeableId to avoid route conflicts
+router.get('/user/me', authMiddleware, likeController.getUserLikes);
+
 router.get(
   '/:likeableType/:likeableId',
   validateLikeableTypeParam,
   validateLikeableIdParam,
   likeController.getLikesByEntity
 );
-
-router.get('/user/me', authMiddleware, likeController.getUserLikes);
 
 export default router;
