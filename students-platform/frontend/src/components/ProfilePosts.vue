@@ -111,10 +111,16 @@ import type { SafePost } from '../types/post';
 interface Props {
   userId: string;
   categoryId?: string | null;
+  visibilityFilter?: 'all' | 'public' | 'private' | 'friends';
+  isFriend?: boolean;
 }
 
 const props = defineProps<Props>();
 const router = useRouter();
+
+const emit = defineEmits<{
+  (e: 'focusCreatePost'): void;
+}>();
 
 const {
   posts,
@@ -128,6 +134,9 @@ const {
   updatePost,
   removePost,
   setCategory,
+  setVisibility,
+  setUserId,
+  setIsFriend,
 } = useProfilePosts(props.userId);
 
 const showToast = ref(false);
@@ -150,9 +159,24 @@ onMounted(async () => {
   await fetchPosts(true);
 });
 
+watch(() => props.userId, async (newUserId) => {
+  setUserId(newUserId);
+  await fetchPosts(true);
+});
+
 watch(() => props.categoryId, (newCategoryId) => {
   setCategory(newCategoryId || null);
-});
+}, { immediate: true });
+
+watch(() => props.visibilityFilter, (newVisibility) => {
+  if (newVisibility) {
+    setVisibility(newVisibility);
+  }
+}, { immediate: true });
+
+watch(() => props.isFriend, (newIsFriend) => {
+  setIsFriend(newIsFriend || false);
+}, { immediate: true });
 
 const handlePostUpdate = (updatedPost: SafePost) => {
   updatePost(updatedPost);
@@ -167,6 +191,6 @@ const handlePostDelete = (postId: string) => {
 };
 
 const createPost = () => {
-  router.push('/threads');
+  emit('focusCreatePost');
 };
 </script>

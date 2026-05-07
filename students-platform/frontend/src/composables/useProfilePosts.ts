@@ -1,10 +1,13 @@
-import { ref, computed } from 'vue';
+import { ref, computed, toRef } from 'vue';
 import { getPostsByAuthor } from '../api/post';
-import type { SafePost, CursorPostsResult } from '../types/post';
+import type { SafePost, CursorPostsResult, PostVisibility } from '../types/post';
 import { useSessionStore } from '../store/session';
+
+type VisibilityFilter = 'all' | 'public' | 'private' | 'friends';
 
 export const useProfilePosts = (profileUserId: string) => {
   const session = useSessionStore();
+  const currentUserId = ref(profileUserId);
 
   const posts = ref<SafePost[]>([]);
   const loading = ref(false);
@@ -12,9 +15,11 @@ export const useProfilePosts = (profileUserId: string) => {
   const nextCursor = ref<string | null>(null);
   const hasMore = ref(false);
   const selectedCategoryId = ref<string | null>(null);
+  const selectedVisibility = ref<VisibilityFilter>('all');
+  const isFriend = ref(false);
 
   const isOwner = computed(() => {
-    return session.user?.id === profileUserId;
+    return session.user?.id === currentUserId.value;
   });
 
   const visiblePosts = computed(() => {
@@ -23,9 +28,18 @@ export const useProfilePosts = (profileUserId: string) => {
     if (isOwner.value) {
       filtered = filtered.filter((post) => post.status === 'published');
     } else {
-      filtered = filtered.filter(
-        (post) => post.status === 'published' && post.visibility === 'public'
-      );
+      // For non-owners, show public posts and friends-only posts if they're friends
+      filtered = filtered.filter((post) => {
+        if (post.status !== 'published') return false;
+        if (post.visibility === 'public') return true;
+        if (post.visibility === 'friends' && isFriend.value) return true;
+        return false;
+      });
+    }
+
+    // Apply visibility filter (only for owners)
+    if (isOwner.value && selectedVisibility.value !== 'all') {
+      filtered = filtered.filter((post) => post.visibility === selectedVisibility.value);
     }
 
     if (selectedCategoryId.value) {
@@ -49,7 +63,7 @@ export const useProfilePosts = (profileUserId: string) => {
       error.value = null;
 
       const cursor = reset ? undefined : nextCursor.value || undefined;
-      const result: CursorPostsResult = await getPostsByAuthor(profileUserId, cursor, 10);
+      const result: CursorPostsResult = await getPostsByAuthor(currentUserId.value, cursor, 10);
 
       if (reset) {
         posts.value = result.posts;
@@ -90,6 +104,18 @@ export const useProfilePosts = (profileUserId: string) => {
     selectedCategoryId.value = categoryId;
   };
 
+  const setVisibility = (visibility: VisibilityFilter) => {
+    selectedVisibility.value = visibility;
+  };
+
+  const setUserId = (newUserId: string) => {
+    currentUserId.value = newUserId;
+  };
+
+  const setIsFriend = (friendStatus: boolean) => {
+    isFriend.value = friendStatus;
+  };
+
   return {
     posts: visiblePosts,
     loading,
@@ -102,5 +128,8 @@ export const useProfilePosts = (profileUserId: string) => {
     removePost,
     updatePost,
     setCategory,
+    setVisibility,
+    setUserId,
+    setIsFriend,
   };
 };

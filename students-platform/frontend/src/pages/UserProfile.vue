@@ -47,8 +47,9 @@
                 <p class="text-gray-600 mt-2">{{ user.bio }}</p>
 
                 <div class="flex gap-5 mt-4 text-sm text-gray-600">
-                  <span><strong class="text-blue-900">{{ user.followers }}</strong> followers</span>
-                  <span><strong class="text-blue-900">{{ user.following }}</strong> following</span>
+                  <span><strong class="text-blue-900">{{ followersCount }}</strong> followers</span>
+                  <span><strong class="text-blue-900">{{ followingCount }}</strong> following</span>
+                  <span><strong class="text-blue-900">{{ friendsCount }}</strong> friends</span>
                 </div>
               </div>
             </div>
@@ -63,8 +64,14 @@
             </div>
 
             <div v-else class="flex gap-3">
-              <button @click="toggleFollow" :class="followButtonClass">
-                {{ isFollowing ? 'Following' : 'Follow' }}
+              <button
+                @click="handleFollowToggle"
+                @mouseenter="followButtonHovered = true"
+                @mouseleave="followButtonHovered = false"
+                :disabled="isFollowLoading"
+                :class="followButtonClass"
+              >
+                {{ isFollowLoading ? 'Loading...' : followButtonText }}
               </button>
 
               <button
@@ -79,15 +86,32 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
           <main class="space-y-8">
-            <CreatePostForm v-if="isOwnProfile" @success="handlePostSuccess" @error="handlePostError" />
+            <CreatePostForm
+              v-if="isOwnProfile"
+              ref="createPostFormRef"
+              @success="handlePostSuccess"
+              @error="handlePostError"
+            />
 
             <section class="bg-white rounded-2xl shadow-lg p-6">
               <h2 class="text-xl font-bold text-blue-900 mb-4">Filter by Category</h2>
               <CategoryFilter @change="handleCategoryChange" />
             </section>
 
+            <section v-if="isOwnProfile" class="bg-white rounded-2xl shadow-lg p-6">
+              <h2 class="text-xl font-bold text-blue-900 mb-4">Filter by Visibility</h2>
+              <VisibilityFilter @change="handleVisibilityChange" />
+            </section>
+
             <section v-if="profileUserId">
-              <ProfilePosts :user-id="profileUserId" :category-id="selectedCategoryId" />
+              <ProfilePosts
+                :key="postsRefreshKey"
+                :user-id="profileUserId"
+                :category-id="selectedCategoryId"
+                :visibility-filter="selectedVisibility"
+                :is-friend="isFollowing && followsBack"
+                @focus-create-post="handleFocusCreatePost"
+              />
             </section>
             <section v-else class="bg-white rounded-2xl shadow-lg p-8">
               <p class="text-gray-600">Please log in to view posts.</p>
@@ -114,43 +138,36 @@
               </p>
             </section>
 
-            <section v-if="isOwnProfile" class="bg-white rounded-2xl shadow-lg p-6">
-              <h2 class="text-xl font-bold text-blue-900 mb-4">My Friends</h2>
+            <FriendsList
+              :friends="friends"
+              :loading="friendsLoading"
+              :title="isOwnProfile ? 'My Friends' : 'Friends'"
+              empty-message="No friends yet"
+              :show-follow-button="true"
+              @refresh="handleListsRefresh"
+            />
 
-              <div v-if="user.friends.length" class="space-y-4">
-                <div
-                  v-for="friend in user.friends"
-                  :key="friend.id"
-                  class="flex items-center justify-between"
-                >
-                  <div class="flex items-center gap-3">
-                    <img
-                      :src="friend.profilePicture"
-                      :alt="friend.name"
-                      class="w-10 h-10 rounded-full object-cover"
-                    />
-                    <p class="font-semibold text-blue-900">{{ friend.name }}</p>
-                  </div>
+            <FollowingList
+              :following="following"
+              :loading="followingLoading"
+              title="Following"
+              empty-message="Not following anyone yet"
+              :show-follow-button="true"
+              :friends="friendIds"
+              @refresh="handleListsRefresh"
+            />
 
-                  <button
-                    @click="goToProfile(friend.id)"
-                    class="text-blue-600 hover:text-blue-700 font-bold text-sm transition"
-                  >
-                    View
-                  </button>
-                </div>
-              </div>
-              <p v-else class="text-gray-500 text-sm">No friends yet</p>
-            </section>
-
-            <section v-if="!isOwnProfile" class="bg-white rounded-2xl shadow-lg p-6">
-              <h2 class="text-xl font-bold text-blue-900 mb-4">Basic Info</h2>
-
-              <div class="space-y-3 text-gray-600">
-                <p><strong class="text-blue-900">Type:</strong> {{ user.study }}</p>
-                <p><strong class="text-blue-900">Location:</strong> {{ user.country }}</p>
-              </div>
-            </section>
+            <FollowersList
+              :followers="followers"
+              :loading="followersLoading"
+              title="Followers"
+              empty-message="No followers yet"
+              :show-follow-button="true"
+              :current-user-id="currentUserId"
+              :current-user-following="followingIds"
+              :friends="friendIds"
+              @refresh="handleListsRefresh"
+            />
           </aside>
         </div>
       </template>
@@ -159,14 +176,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ProfilePosts from '../components/ProfilePosts.vue';
 import CreatePostForm from '../components/CreatePostForm.vue';
 import CategoryFilter from '../components/CategoryFilter.vue';
+import VisibilityFilter from '../components/VisibilityFilter.vue';
+import FriendsList from '../components/FriendsList.vue';
+import FollowersList from '../components/FollowersList.vue';
+import FollowingList from '../components/FollowingList.vue';
 import { useSessionStore } from '../store/session';
 import { getUserByUsername, type SafeUser } from '../api/user';
 import { getAvatarUrl } from '../utils/avatar';
+import { useFollow } from '../composables/useFollow';
+import { getFriends, getFollowers, getFollowing, type SafeFollow } from '../api/follow';
 
 interface Friend {
   id: number;
@@ -181,8 +204,6 @@ interface User {
   bio: string;
   study: string;
   country: string;
-  followers: number;
-  following: number;
   communities: string[];
   friends: Friend[];
 }
@@ -193,11 +214,20 @@ const route = useRoute();
 const router = useRouter();
 const session = useSessionStore();
 
-const isFollowing = ref(false);
+const createPostFormRef = ref<any>(null);
 const userProfile = ref<SafeUser | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const selectedCategoryId = ref<string | null>(null);
+const selectedVisibility = ref<'all' | 'public' | 'private' | 'friends'>('all');
+const postsRefreshKey = ref(0);
+const followButtonHovered = ref(false);
+const friends = ref<SafeFollow[]>([]);
+const friendsLoading = ref(false);
+const followers = ref<SafeFollow[]>([]);
+const followersLoading = ref(false);
+const following = ref<SafeFollow[]>([]);
+const followingLoading = ref(false);
 
 const routeUsername = computed(() => route.params.username as string);
 const currentUserId = computed(() => session.user?.id || null);
@@ -211,6 +241,25 @@ const profileUserId = computed(() => {
   return userProfile.value?.id || null;
 });
 
+const {
+  isFollowing,
+  followsBack,
+  followersCount,
+  followingCount,
+  isLoading: isFollowLoading,
+  error: followError,
+  toggleFollow,
+  fetchFollowStatus,
+  fetchFollowStats,
+  followText,
+  setUserId,
+} = useFollow(profileUserId.value || '');
+
+const friendsCount = computed(() => friends.value.length);
+
+const friendIds = computed(() => friends.value.map(friend => friend.id));
+const followingIds = computed(() => following.value.map(user => user.id));
+
 const mapUserData = (userData: SafeUser | typeof session.user): User => {
   if (!userData) {
     return {
@@ -220,8 +269,6 @@ const mapUserData = (userData: SafeUser | typeof session.user): User => {
       bio: '',
       study: '',
       country: '',
-      followers: 0,
-      following: 0,
       communities: [],
       friends: [],
     };
@@ -232,8 +279,6 @@ const mapUserData = (userData: SafeUser | typeof session.user): User => {
     name: userData.name || 'Unknown User',
     profilePicture: getAvatarUrl(userData.name || 'User', userData.avatar),
     bio: userData.bio || 'No bio yet',
-    followers: 0,
-    following: 0,
     communities: [],
     friends: [],
   };
@@ -265,12 +310,33 @@ const user = computed<User>(() => {
   return mapUserData(null as any);
 });
 
-const followButtonClass = computed(() => [
-  'font-bold px-6 py-2 rounded-lg transition',
-  isFollowing.value
-    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-    : 'bg-blue-600 text-white hover:bg-blue-700'
-]);
+const followButtonClass = computed(() => {
+  const baseClasses = 'font-bold px-6 py-2 rounded-lg transition';
+
+  if (isFollowing.value) {
+    // When hovering, always show red "Unfollow" style
+    if (followButtonHovered.value) {
+      return `${baseClasses} bg-red-600 text-white hover:bg-red-700`;
+    }
+    // When not hovering, show gray style for both Following and Friends
+    return `${baseClasses} bg-gray-200 text-gray-700 hover:bg-red-600 hover:text-white`;
+  }
+
+  // Not following - show blue Follow button
+  return `${baseClasses} bg-blue-600 text-white hover:bg-blue-700`;
+});
+
+const followButtonText = computed(() => {
+  if (isFollowing.value) {
+    // Show Friends if mutual follow exists
+    if (followsBack.value) {
+      return followButtonHovered.value ? 'Unfollow' : 'Friends';
+    }
+    return followButtonHovered.value ? 'Unfollow' : 'Following';
+  }
+  return followsBack.value ? 'Follow Back' : 'Follow';
+});
+
 
 const userTypeClass = computed(() => {
   const baseClass = 'inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold shadow-sm';
@@ -302,13 +368,77 @@ const userTypeIcon = computed(() => {
 });
 
 watch(routeUsername, () => {
-  isFollowing.value = false;
-  fetchUserProfile();
+  if (!isOwnProfile.value) {
+    fetchUserProfile();
+  } else {
+    userProfile.value = null;
+    if (profileUserId.value) {
+      fetchFollowStats();
+      fetchFriends();
+      fetchFollowers();
+      fetchFollowing();
+    }
+  }
+});
+
+watch(profileUserId, (newUserId) => {
+  if (newUserId) {
+    setUserId(newUserId);
+    if (!isOwnProfile.value && session.isAuthenticated) {
+      fetchFollowStatus();
+      fetchFollowStats();
+    } else if (isOwnProfile.value) {
+      fetchFollowStats();
+    }
+    fetchFriends();
+    fetchFollowers();
+    fetchFollowing();
+  }
 });
 
 onMounted(() => {
   if (!isOwnProfile.value) {
     fetchUserProfile();
+  } else if (profileUserId.value) {
+    fetchFollowStats();
+    fetchFriends();
+    fetchFollowers();
+    fetchFollowing();
+  }
+
+  const handleVisibilityChange = () => {
+    if (!document.hidden && !isOwnProfile.value && profileUserId.value && session.isAuthenticated) {
+      fetchFollowStatus();
+      fetchFollowStats();
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  const intervalId = setInterval(() => {
+    if (!isOwnProfile.value && profileUserId.value && session.isAuthenticated) {
+      fetchFollowStatus(true);
+      fetchFollowStats();
+    }
+  }, 1000);
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    clearInterval(intervalId);
+  });
+
+  const postSlug = route.params.slug as string | undefined;
+  if (postSlug) {
+    setTimeout(() => {
+      const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
+      if (postElement) {
+        postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        postElement.classList.add('highlight-post');
+        setTimeout(() => {
+          postElement.classList.remove('highlight-post');
+        }, 3000);
+      }
+    }, 1000);
   }
 });
 
@@ -319,6 +449,16 @@ const fetchUserProfile = async () => {
     loading.value = true;
     error.value = null;
     userProfile.value = await getUserByUsername(routeUsername.value);
+
+    if (userProfile.value?.id && session.isAuthenticated) {
+      await fetchFollowStatus();
+      await fetchFollowStats();
+    }
+    if (userProfile.value?.id) {
+      await fetchFriends();
+      await fetchFollowers();
+      await fetchFollowing();
+    }
   } catch (err: any) {
     error.value = err.message || 'Failed to load user profile';
   } finally {
@@ -330,29 +470,111 @@ const editProfile = () => {
   router.push("/edit-profile");
 };
 
-const toggleFollow = () => {
-  isFollowing.value = !isFollowing.value;
+const handleFollowToggle = async () => {
+  await toggleFollow();
+  if (followError.value) {
+    alert(followError.value);
+  }
+  postsRefreshKey.value++;
+  await fetchFriends();
+  await fetchFollowers();
+  await fetchFollowing();
 };
 
 const sendMessage = () => {
   router.push(`/messages/${user.value.id}`);
 };
 
-const goToProfile = (userId: number) => {
-  router.push(`/profile/${userId}`);
+const fetchFriends = async () => {
+  if (!profileUserId.value) return;
+
+  try {
+    friendsLoading.value = true;
+    const result = await getFriends(profileUserId.value, 1, 20);
+    friends.value = result.users;
+  } catch (err) {
+    friends.value = [];
+  } finally {
+    friendsLoading.value = false;
+  }
+};
+
+const fetchFollowers = async () => {
+  if (!profileUserId.value) return;
+
+  try {
+    followersLoading.value = true;
+    const result = await getFollowers(profileUserId.value, 1, 20);
+    followers.value = result.users;
+  } catch (err) {
+    followers.value = [];
+  } finally {
+    followersLoading.value = false;
+  }
+};
+
+const fetchFollowing = async () => {
+  if (!profileUserId.value) return;
+
+  try {
+    followingLoading.value = true;
+    const result = await getFollowing(profileUserId.value, 1, 20);
+    following.value = result.users;
+  } catch (err) {
+    following.value = [];
+  } finally {
+    followingLoading.value = false;
+  }
 };
 
 const handlePostSuccess = (post: any) => {
-  console.log('[UserProfile] Post created successfully:', post);
-  // The form will reset and collapse automatically
+  postsRefreshKey.value++;
 };
 
 const handlePostError = (error: any) => {
-  console.error('[UserProfile] Post creation failed:', error);
+};
+
+const handleListsRefresh = async () => {
+  await Promise.all([
+    fetchFriends(),
+    fetchFollowers(),
+    fetchFollowing(),
+    fetchFollowStats(),
+  ]);
+  postsRefreshKey.value++;
 };
 
 const handleCategoryChange = (categoryId: string | null) => {
   selectedCategoryId.value = categoryId;
 };
+
+const handleVisibilityChange = (visibility: 'all' | 'public' | 'private' | 'friends') => {
+  selectedVisibility.value = visibility;
+};
+
+const handleFocusCreatePost = () => {
+  if (createPostFormRef.value && typeof createPostFormRef.value.focusForm === 'function') {
+    createPostFormRef.value.focusForm();
+    setTimeout(() => {
+      createPostFormRef.value.$el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  }
+};
 </script>
+
+<style>
+.highlight-post {
+  animation: highlight-pulse 3s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+    transform: scale(1.02);
+  }
+}
+</style>
 

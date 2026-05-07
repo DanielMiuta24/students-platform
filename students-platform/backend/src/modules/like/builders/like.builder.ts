@@ -5,17 +5,23 @@ export class LikeBuilder {
   private data: any = {};
 
   setUser(userId?: string): this {
-    this.data.user = userId;
+    if (userId !== undefined) {
+      this.data.user = userId;
+    }
     return this;
   }
 
   setLikeable(likeableId?: string): this {
-    this.data.likeable = likeableId;
+    if (likeableId !== undefined) {
+      this.data.likeable = likeableId;
+    }
     return this;
   }
 
   setLikeableType(likeableType?: LikeableType): this {
-    this.data.likeableType = likeableType;
+    if (likeableType !== undefined) {
+      this.data.likeableType = likeableType;
+    }
     return this;
   }
 

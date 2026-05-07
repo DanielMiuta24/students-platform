@@ -65,18 +65,20 @@ export const getPostFeed = async (cursor?: string, limit: number = 10): Promise<
   }
 };
 
-export const getPostById = async (postId: string): Promise<SafePost> => {
+export const getPostById = async (postId: string, incrementView: boolean = false): Promise<{ post: SafePost }> => {
   try {
-    const response = await api.get<SafePost>(`/posts/${postId}`);
+    const params = incrementView ? '?incrementView=true' : '';
+    const response = await api.get<{ post: SafePost }>(`/posts/${postId}${params}`);
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to fetch post');
   }
 };
 
-export const getPostBySlug = async (slug: string): Promise<SafePost> => {
+export const getPostBySlug = async (slug: string, incrementView: boolean = false): Promise<{ post: SafePost }> => {
   try {
-    const response = await api.get<SafePost>(`/posts/slug/${slug}`);
+    const params = incrementView ? '?incrementView=true' : '';
+    const response = await api.get<{ post: SafePost }>(`/posts/slug/${slug}${params}`);
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to fetch post');
@@ -139,7 +141,7 @@ export const deletePost = async (postId: string): Promise<void> => {
 
 export const updatePostVisibility = async (
   postId: string,
-  visibility: 'public' | 'private'
+  visibility: 'public' | 'private' | 'friends'
 ): Promise<SafePost> => {
   try {
     const response = await secureApi.patch<SafePost>(`/posts/${postId}/visibility`, {

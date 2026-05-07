@@ -43,6 +43,7 @@ export interface SafeAuthor {
   username: string;
   email: string;
   avatar?: string;
+  type?: string;
 }
 
 export interface SafePost {

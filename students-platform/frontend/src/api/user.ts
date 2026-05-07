@@ -14,7 +14,7 @@ export interface SafeUser {
 
 export const getUserByUsername = async (username: string): Promise<SafeUser> => {
   try {
-    const response = await api.get<SafeUser>(`/user/username/${username}`);
+    const response = await api.get<SafeUser>(`/users/username/${username}`);
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) {

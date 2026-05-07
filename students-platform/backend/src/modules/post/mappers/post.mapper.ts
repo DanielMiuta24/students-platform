@@ -52,6 +52,7 @@ export class PostMapper {
         username: value.username || '',
         email: value.email || '',
         avatar: value.avatar || '',
+        type: value.type || '',
       };
     }
 
