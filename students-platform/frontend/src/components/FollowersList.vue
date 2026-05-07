@@ -36,8 +36,10 @@
           <p v-if="showUsername" class="text-xs text-gray-500">@{{ follower.username }}</p>
         </div>
         <button
-          v-if="showFollowButton"
+          v-if="showFollowButton && follower.id !== currentUserId"
           @click.stop="handleFollowToggle(follower)"
+          @mouseenter="hoveredButton[follower.id] = true"
+          @mouseleave="hoveredButton[follower.id] = false"
           :disabled="actionLoading[follower.id]"
           :class="getButtonClass(follower)"
           class="px-4 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
@@ -93,6 +95,7 @@ const emit = defineEmits<{
 const router = useRouter();
 const searchQuery = ref('');
 const actionLoading = ref<Record<string, boolean>>({});
+const hoveredButton = ref<Record<string, boolean>>({});
 
 const filteredFollowers = computed(() => {
   if (!searchQuery.value.trim()) {
@@ -116,15 +119,27 @@ const isFriend = (userId: string) => {
 
 const getButtonText = (follower: SafeFollow) => {
   if (follower.id === props.currentUserId) return '';
-  if (isFriend(follower.id)) return 'Friends';
-  if (isFollowing(follower.id)) return 'Following';
+  if (isFriend(follower.id)) {
+    return hoveredButton.value[follower.id] ? 'Unfollow' : 'Friends';
+  }
+  if (isFollowing(follower.id)) {
+    return hoveredButton.value[follower.id] ? 'Unfollow' : 'Following';
+  }
   return 'Follow Back';
 };
 
 const getButtonClass = (follower: SafeFollow) => {
   if (follower.id === props.currentUserId) return 'hidden';
-  if (isFriend(follower.id)) return 'bg-gray-200 text-gray-700 hover:bg-gray-300';
-  if (isFollowing(follower.id)) return 'bg-blue-100 text-blue-700 hover:bg-blue-200';
+  if (isFriend(follower.id)) {
+    return hoveredButton.value[follower.id]
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'bg-gray-200 text-gray-700 hover:bg-red-600 hover:text-white';
+  }
+  if (isFollowing(follower.id)) {
+    return hoveredButton.value[follower.id]
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'bg-blue-100 text-blue-700 hover:bg-red-600 hover:text-white';
+  }
   return 'bg-blue-600 text-white hover:bg-blue-700';
 };
 

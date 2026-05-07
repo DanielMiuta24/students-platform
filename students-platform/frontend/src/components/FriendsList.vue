@@ -36,12 +36,15 @@
           <p v-if="showUsername" class="text-xs text-gray-500">@{{ friend.username }}</p>
         </div>
         <button
-          v-if="showFollowButton"
-          @click.stop="handleUnfollow(friend.id)"
+          v-if="showFollowButton && friend.id !== currentUserId"
+          @click.stop="handleFollowToggle(friend)"
+          @mouseenter="hoveredButton[friend.id] = true"
+          @mouseleave="hoveredButton[friend.id] = false"
           :disabled="actionLoading[friend.id]"
-          class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+          :class="getButtonClass(friend)"
+          class="px-4 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
         >
-          {{ actionLoading[friend.id] ? 'Loading...' : 'Friends' }}
+          {{ actionLoading[friend.id] ? 'Loading...' : getButtonText(friend) }}
         </button>
       </div>
     </div>
@@ -60,7 +63,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { getAvatarUrl } from '../utils/avatar';
-import { unfollowUser } from '../api/follow';
+import { followUser, unfollowUser } from '../api/follow';
 import type { SafeFollow } from '../api/follow';
 
 interface Props {
@@ -70,6 +73,10 @@ interface Props {
   emptyMessage?: string;
   showUsername?: boolean;
   showFollowButton?: boolean;
+  currentUserId?: string;
+  currentUserFollowing?: string[];
+  currentUserFriends?: string[];
+  profileOwnerFollowing?: string[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -78,6 +85,9 @@ const props = withDefaults(defineProps<Props>(), {
   emptyMessage: 'No friends yet',
   showUsername: false,
   showFollowButton: true,
+  currentUserFollowing: () => [],
+  currentUserFriends: () => [],
+  profileOwnerFollowing: () => [],
 });
 
 const emit = defineEmits<{
@@ -87,6 +97,7 @@ const emit = defineEmits<{
 const router = useRouter();
 const searchQuery = ref('');
 const actionLoading = ref<Record<string, boolean>>({});
+const hoveredButton = ref<Record<string, boolean>>({});
 
 const filteredFriends = computed(() => {
   if (!searchQuery.value.trim()) {
@@ -100,17 +111,62 @@ const filteredFriends = computed(() => {
   );
 });
 
+const isFollowing = (userId: string) => {
+  return props.currentUserFollowing.includes(userId);
+};
+
+const isFriend = (userId: string) => {
+  return props.currentUserFriends.includes(userId);
+};
+
+const followsMe = (userId: string) => {
+  return props.profileOwnerFollowing.includes(props.currentUserId || '');
+};
+
+const getButtonText = (friend: SafeFollow) => {
+  if (isFriend(friend.id)) {
+    return hoveredButton.value[friend.id] ? 'Unfollow' : 'Friends';
+  }
+  if (isFollowing(friend.id)) {
+    return hoveredButton.value[friend.id] ? 'Unfollow' : 'Following';
+  }
+  if (props.profileOwnerFollowing.includes(friend.id)) {
+    return 'Follow Back';
+  }
+  return 'Follow';
+};
+
+const getButtonClass = (friend: SafeFollow) => {
+  if (isFriend(friend.id)) {
+    return hoveredButton.value[friend.id]
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'bg-gray-200 text-gray-700 hover:bg-red-600 hover:text-white';
+  }
+  if (isFollowing(friend.id)) {
+    return hoveredButton.value[friend.id]
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'bg-blue-100 text-blue-700 hover:bg-red-600 hover:text-white';
+  }
+  return 'bg-blue-600 text-white hover:bg-blue-700';
+};
+
 const navigateToProfile = (username: string) => {
   router.push(`/profile/${username}`);
 };
 
-const handleUnfollow = async (userId: string) => {
+const handleFollowToggle = async (friend: SafeFollow) => {
   try {
-    actionLoading.value[userId] = true;
-    await unfollowUser(userId);
+    actionLoading.value[friend.id] = true;
+
+    if (isFollowing(friend.id)) {
+      await unfollowUser(friend.id);
+    } else {
+      await followUser(friend.id);
+    }
+
     emit('refresh');
   } finally {
-    actionLoading.value[userId] = false;
+    actionLoading.value[friend.id] = false;
   }
 };
 </script>
