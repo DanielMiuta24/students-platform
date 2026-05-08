@@ -1,0 +1,26 @@
+/**
+ * User validation constraints
+ */
+export const USER_VALIDATION = {
+  NAME_MIN_LENGTH: 2,
+  NAME_MAX_LENGTH: 50,
+  USERNAME_MIN_LENGTH: 3,
+  USERNAME_MAX_LENGTH: 30,
+  EMAIL_MAX_LENGTH: 255,
+  PASSWORD_MIN_LENGTH: 8,
+  PASSWORD_MAX_LENGTH: 128,
+  BIO_MAX_LENGTH: 160,
+  LOCATION_MAX_LENGTH: 100,
+} as const;
+
+/**
+ * Password validation requirements
+ */
+export const PASSWORD_REQUIREMENTS = {
+  MIN_LENGTH: USER_VALIDATION.PASSWORD_MIN_LENGTH,
+  MAX_LENGTH: USER_VALIDATION.PASSWORD_MAX_LENGTH,
+  REQUIRE_UPPERCASE: true,
+  REQUIRE_LOWERCASE: true,
+  REQUIRE_NUMBER: true,
+  REQUIRE_SPECIAL: false, // Optional for now
+} as const;

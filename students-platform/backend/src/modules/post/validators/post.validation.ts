@@ -1,8 +1,10 @@
 import { body, param } from 'express-validator';
+import { Request, Response, NextFunction } from 'express';
 import { handleValidationErrors } from '../../../shared/middleware/validation.middleware';
 import { POST_STATUS, POST_VISIBILITY } from '../../../shared/constants';
 import { POST_VALIDATION } from '../constants/post.constants';
 import { ContentValidator } from './post-content.validator';
+import type { UploadRequest } from '../../image/middleware';
 
 const VALID_STATUSES = Object.values(POST_STATUS);
 const VALID_VISIBILITIES = Object.values(POST_VISIBILITY);
@@ -77,6 +79,12 @@ const validateImages = () =>
     .isArray().withMessage('Images must be an array')
     .custom(validateImageList);
 
+
+const validateExistingImages = () =>
+  body('existingImages')
+    .optional()
+    .isArray().withMessage('Existing images must be an array')
+    .custom(validateImageList);
 const validateStatus = () =>
   body('status')
     .notEmpty().withMessage('Status is required')
@@ -97,6 +105,21 @@ const validateOptionalVisibility = () =>
     .optional()
     .isIn(VALID_VISIBILITIES).withMessage(`Invalid visibility. Must be one of: ${VALID_VISIBILITIES.join(', ')}`);
 
+// Custom middleware to validate total image count (existing + new uploads)
+export const validateTotalImageCount = (req: UploadRequest, res: Response, next: NextFunction) => {
+  const existingImagesCount = Array.isArray(req.body.existingImages) ? req.body.existingImages.length : 0;
+  const newFilesCount = req.files ? req.files.length : 0;
+  const totalImages = existingImagesCount + newFilesCount;
+
+  if (totalImages > POST_VALIDATION.MAX_IMAGES) {
+    return res.status(400).json({
+      message: `Maximum ${POST_VALIDATION.MAX_IMAGES} images allowed. You have ${existingImagesCount} existing images and ${newFilesCount} new uploads.`,
+    });
+  }
+
+  next();
+};
+
 export const validateCreatePost = [
   validateTitle(),
   validateContent(),
@@ -104,6 +127,7 @@ export const validateCreatePost = [
   validateOptionalStatus(),
   validateOptionalVisibility(),
   validateImages(),
+  validateExistingImages(),
   handleValidationErrors,
 ];
 
@@ -114,7 +138,9 @@ export const validateUpdatePost = [
   validateStatus(),
   validateVisibilityField(),
   validateImages(),
+  validateExistingImages(),
   handleValidationErrors,
+  validateTotalImageCount,
 ];
 
 export const validatePostId = [

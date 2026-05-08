@@ -180,6 +180,14 @@
           </aside>
         </div>
       </template>
+
+      <!-- Edit Profile Modal -->
+      <EditProfileModal
+        :show="showEditProfileModal"
+        :user="session.user"
+        @close="showEditProfileModal = false"
+        @success="handleEditProfileSuccess"
+      />
     </div>
   </div>
 </template>
@@ -194,6 +202,7 @@ import VisibilityFilter from '../components/VisibilityFilter.vue';
 import FriendsList from '../components/FriendsList.vue';
 import FollowersList from '../components/FollowersList.vue';
 import FollowingList from '../components/FollowingList.vue';
+import EditProfileModal from '../components/EditProfileModal.vue';
 import { useSessionStore } from '../store/session';
 import { getUserByUsername, type SafeUser } from '../api/user';
 import { getAvatarUrl } from '../utils/avatar';
@@ -230,6 +239,7 @@ const error = ref<string | null>(null);
 const selectedCategoryId = ref<string | null>(null);
 const selectedVisibility = ref<'all' | 'public' | 'private' | 'friends'>('all');
 const postsRefreshKey = ref(0);
+const showEditProfileModal = ref(false);
 const followButtonHovered = ref(false);
 const friends = ref<SafeFollow[]>([]);
 const friendsLoading = ref(false);
@@ -504,7 +514,14 @@ const fetchUserProfile = async () => {
 };
 
 const editProfile = () => {
-  router.push("/edit-profile");
+  showEditProfileModal.value = true;
+};
+
+const handleEditProfileSuccess = async () => {
+  // Reload the profile to reflect changes
+  await fetchUserProfile();
+  // Refresh the page data
+  postsRefreshKey.value++;
 };
 
 const handleFollowToggle = async () => {

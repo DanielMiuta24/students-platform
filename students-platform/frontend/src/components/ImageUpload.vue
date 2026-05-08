@@ -17,7 +17,7 @@
         type="file"
         accept="image/jpeg,image/png,image/webp,image/gif"
         multiple
-        :disabled="images.length >= maxImages"
+        :disabled="(images.length + existingImageUrls.length) >= maxImages"
         @change="handleFileSelect"
         class="file-input"
       />
@@ -40,11 +40,38 @@
       {{ error }}
     </div>
 
-    <!-- Image Previews -->
-    <div v-if="images.length > 0" class="preview-container">
+    <!-- Images Preview (existing first, then new) -->
+    <div v-if="existingImageUrls.length > 0 || images.length > 0" class="preview-container">
+      <!-- Existing Images -->
+      <div
+        v-for="(imageUrl, index) in existingImageUrls"
+        :key="`existing-${index}`"
+        class="preview-card"
+      >
+        <img :src="imageUrl" alt="Existing image" class="preview-image" />
+
+        <div class="preview-overlay">
+          <button
+            type="button"
+            @click="removeExistingImage(index)"
+            class="remove-button"
+            title="Remove image"
+          >
+            <svg class="remove-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="file-info">
+          Existing image
+        </div>
+      </div>
+
+      <!-- New Images -->
       <div
         v-for="(image, index) in images"
-        :key="index"
+        :key="`new-${index}`"
         class="preview-card"
       >
         <img :src="image.preview" :alt="image.alt || 'Preview'" class="preview-image" />
@@ -91,21 +118,26 @@ export default defineComponent({
     },
     maxImages: {
       type: Number,
-      default: 3,
+      default: 8,
     },
     maxSizeMB: {
       type: Number,
       default: 5,
     },
+    existingImages: {
+      type: Array as PropType<string[]>,
+      default: () => [],
+    },
   },
 
-  emits: ['update:modelValue', 'error'],
+  emits: ['update:modelValue', 'error', 'update:existingImages'],
 
   setup(props, { emit }) {
     const fileInput = ref<HTMLInputElement | null>(null);
     const images = ref<ImageUpload[]>([...props.modelValue]);
     const isDragging = ref(false);
     const error = ref('');
+    const existingImageUrls = ref<string[]>([...props.existingImages]);
 
     const validateFile = (file: File): string | null => {
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -116,7 +148,8 @@ export default defineComponent({
         return `File too large: ${file.name}. Maximum size is ${props.maxSizeMB}MB.`;
       }
 
-      if (images.value.length >= props.maxImages) {
+      const totalImages = images.value.length + existingImageUrls.value.length;
+      if (totalImages >= props.maxImages) {
         return `Maximum ${props.maxImages} images allowed.`;
       }
 
@@ -164,7 +197,8 @@ export default defineComponent({
       if (!files || files.length === 0) return;
 
       for (let i = 0; i < files.length; i++) {
-        if (images.value.length >= props.maxImages) {
+        const currentTotal = images.value.length + existingImageUrls.value.length;
+        if (currentTotal >= props.maxImages) {
           error.value = `Maximum ${props.maxImages} images allowed`;
           emit('error', error.value);
           break;
@@ -183,7 +217,8 @@ export default defineComponent({
       if (!files || files.length === 0) return;
 
       for (let i = 0; i < files.length; i++) {
-        if (images.value.length >= props.maxImages) {
+        const totalImages = images.value.length + existingImageUrls.value.length;
+        if (totalImages >= props.maxImages) {
           error.value = `Maximum ${props.maxImages} images allowed`;
           emit('error', error.value);
           break;
@@ -197,6 +232,12 @@ export default defineComponent({
       URL.revokeObjectURL(images.value[index].preview);
       images.value.splice(index, 1);
       emit('update:modelValue', images.value);
+      error.value = '';
+    };
+
+    const removeExistingImage = (index: number) => {
+      existingImageUrls.value.splice(index, 1);
+      emit('update:existingImages', existingImageUrls.value);
       error.value = '';
     };
 
@@ -222,14 +263,21 @@ export default defineComponent({
       }
     });
 
+    // Watch for changes to existing images prop
+    watch(() => props.existingImages, (newValue) => {
+      existingImageUrls.value = [...newValue];
+    });
+
     return {
       fileInput,
       images,
+      existingImageUrls,
       isDragging,
       error,
       handleFileSelect,
       handleDrop,
       removeImage,
+      removeExistingImage,
       formatFileSize,
     };
   },

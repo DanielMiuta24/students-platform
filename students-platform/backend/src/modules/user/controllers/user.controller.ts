@@ -1,9 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { userService,getProfile,getUserByUsername,RegisterDTO,LoginDTO} from '../services';
+import { userService,getProfile,getUserByUsername,RegisterDTO,LoginDTO,ChangePasswordDTO,UpdateProfileDTO} from '../services';
 import type { UserDoc } from '../models';
 import { env } from '../../../config/env';
 import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
+import type { UploadRequest } from '../../image/services/image.types';
+import { imageService } from '../../image/services/image.service';
 
 const JWT_SECRET = env.JWT_SECRET || 'changeme';
 const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN || '7d';
@@ -166,6 +168,77 @@ class UserController {
             return next(err);
           }
         };
+
+  changePassword = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { currentPassword, newPassword, confirmPassword } = req.body;
+
+      const payload: ChangePasswordDTO = {
+        userId: req.user.id,
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      };
+
+      await userService.changePassword(payload);
+
+      return res.status(200).json({ message: 'Password changed successfully' });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      if (err.message === 'INCORRECT_CURRENT_PASSWORD') {
+        return res.status(403).json({ message: 'Current password is incorrect' });
+      }
+      if (err.message === 'PASSWORD_NOT_SET') {
+        return res.status(400).json({ message: 'Password is not set for this account' });
+      }
+      return next(err);
+    }
+  };
+
+  updateProfile = async (
+    req: AuthenticatedRequest & UploadRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { name, bio, location, removeAvatar } = req.body;
+      let avatarUrl: string | undefined;
+
+      if (removeAvatar === 'true' || removeAvatar === true) {
+        avatarUrl = '';
+      } else if (req.files && req.files.length > 0) {
+        const uploadResult = await imageService.uploadImageForAvatar(req.files[0]);
+        avatarUrl = uploadResult.url;
+      }
+
+      const payload: UpdateProfileDTO = {
+        userId: req.user.id,
+        name,
+        bio,
+        location,
+        avatar: avatarUrl,
+      };
+
+      const updatedUser = await userService.updateProfile(payload);
+      const safeUser = userService.toSafeUser(updatedUser);
+
+      return res.status(200).json({
+        message: 'Profile updated successfully',
+        user: safeUser
+      });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      return next(err);
+    }
+  };
 
 
 

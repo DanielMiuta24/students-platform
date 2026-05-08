@@ -12,7 +12,7 @@ export class PostQueryBuilder {
     return this;
   }
 
-  setVisibility(visibility: 'public' | 'private'): this {
+  setVisibility(visibility: 'public' | 'private' | 'friends'): this {
     this.query.visibility = visibility;
     return this;
   }
@@ -35,6 +35,16 @@ export class PostQueryBuilder {
   setPublicFeedDefaults(): this {
     this.query.status = 'published';
     this.query.visibility = 'public';
+    return this;
+  }
+
+  setFeedVisibilityForUser(userId: string, friendIds: string[]): this {
+    this.query.status = 'published';
+    this.query.$or = [
+      { visibility: 'public' },
+      { visibility: 'friends', author: { $in: friendIds } },
+      { author: userId }
+    ];
     return this;
   }
 

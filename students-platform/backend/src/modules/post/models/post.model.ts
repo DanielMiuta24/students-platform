@@ -41,6 +41,7 @@ const PostSchema = new Schema(
     likeCount: { type: Number, default: 0, min: 0 },
     commentCount: { type: Number, default: 0, min: 0 },
     viewCount: { type: Number, default: 0, min: 0 },
+    viewedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true }
 );
@@ -49,16 +50,9 @@ const PostSchema = new Schema(
 export type Post = InferSchemaType<typeof PostSchema>;
 export type PostDoc = HydratedDocument<Post>;
 
-// Index for slug lookups
 PostSchema.index({ slug: 1 });
-
-// Index for public feed queries (status + visibility + _id for cursor pagination)
 PostSchema.index({ status: 1, visibility: 1, _id: -1 });
-
-// Index for author's posts feed (sorted by _id for cursor pagination)
 PostSchema.index({ author: 1, _id: -1 });
-
-// Index for category-based feed (includes visibility for proper filtering)
 PostSchema.index({ category: 1, status: 1, visibility: 1, _id: -1 });
 
 export const PostModel: Model<Post> = model<Post>('Post', PostSchema);

@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import type { LexicalEditorState } from '../types/lexical';
 import { useTiptapToLexical } from './useTiptapToLexical';
+import { useLexicalToTiptap } from './useLexicalToTiptap';
 
 interface UseEditorSetupOptions {
   placeholder: string;
@@ -15,7 +16,13 @@ interface UseEditorSetupOptions {
 
 export function useEditorSetup(options: UseEditorSetupOptions) {
   const { tiptapToLexical } = useTiptapToLexical();
+  const { lexicalToTiptap } = useLexicalToTiptap();
   const characterCount = ref(0);
+
+  // Convert initial Lexical content to TipTap format
+  const initialContent = options.modelValue
+    ? lexicalToTiptap(options.modelValue)
+    : '';
 
   const editor = useEditor({
     extensions: [
@@ -27,7 +34,11 @@ export function useEditorSetup(options: UseEditorSetupOptions) {
         placeholder: options.placeholder,
       }),
     ],
-    content: '',
+    content: initialContent,
+    onCreate: ({ editor }) => {
+      // Set initial character count
+      characterCount.value = editor.getText().length;
+    },
     onUpdate: ({ editor }) => {
       const json = editor.getJSON();
       const lexicalFormat = tiptapToLexical(json);
