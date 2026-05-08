@@ -149,7 +149,7 @@ export function useCommentReplies(commentId: string, postId: string) {
   const repliesCount = ref(0);
   const pagination = ref<CommentPagination>({
     page: 1,
-    limit: 5,
+    limit: 3,
     total: 0,
     totalPages: 0,
   });
@@ -172,12 +172,15 @@ export function useCommentReplies(commentId: string, postId: string) {
     try {
       isLoading.value = true;
       error.value = null;
-      const response = await getCommentsByPost(postId, page, 5, commentId);
+      const response = await getCommentsByPost(postId, page, pagination.value.limit, commentId);
+
+      // Reverse to show oldest first (chronological order)
+      const sortedComments = [...response.comments].reverse();
 
       if (page === 1) {
-        replies.value = response.comments;
+        replies.value = sortedComments;
       } else {
-        replies.value = [...replies.value, ...response.comments];
+        replies.value = [...replies.value, ...sortedComments];
       }
 
       pagination.value = response.pagination;
@@ -205,7 +208,7 @@ export function useCommentReplies(commentId: string, postId: string) {
         parentCommentId: commentId,
       });
 
-      replies.value.unshift(newReply);
+      replies.value.push(newReply);
       repliesCount.value += 1;
       pagination.value.total += 1;
 

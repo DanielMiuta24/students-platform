@@ -36,8 +36,10 @@
           <p v-if="showUsername" class="text-xs text-gray-500">@{{ user.username }}</p>
         </div>
         <button
-          v-if="showFollowButton"
+          v-if="showFollowButton && user.id !== currentUserId"
           @click.stop="handleFollowToggle(user)"
+          @mouseenter="hoveredButton[user.id] = true"
+          @mouseleave="hoveredButton[user.id] = false"
           :disabled="actionLoading[user.id]"
           :class="getButtonClass(user)"
           class="px-4 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
@@ -61,7 +63,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { getAvatarUrl } from '../utils/avatar';
-import { unfollowUser } from '../api/follow';
+import { followUser, unfollowUser } from '../api/follow';
 import type { SafeFollow } from '../api/follow';
 
 interface Props {
@@ -72,6 +74,9 @@ interface Props {
   showUsername?: boolean;
   showFollowButton?: boolean;
   friends?: string[];
+  currentUserId?: string;
+  currentUserFollowing?: string[];
+  profileOwnerFollowing?: string[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -81,6 +86,8 @@ const props = withDefaults(defineProps<Props>(), {
   showUsername: false,
   showFollowButton: true,
   friends: () => [],
+  currentUserFollowing: () => [],
+  profileOwnerFollowing: () => [],
 });
 
 const emit = defineEmits<{
@@ -90,6 +97,7 @@ const emit = defineEmits<{
 const router = useRouter();
 const searchQuery = ref('');
 const actionLoading = ref<Record<string, boolean>>({});
+const hoveredButton = ref<Record<string, boolean>>({});
 
 const filteredFollowing = computed(() => {
   if (!searchQuery.value.trim()) {
@@ -103,18 +111,39 @@ const filteredFollowing = computed(() => {
   );
 });
 
+const isFollowing = (userId: string) => {
+  return props.currentUserFollowing.includes(userId);
+};
+
 const isFriend = (userId: string) => {
   return props.friends.includes(userId);
 };
 
 const getButtonText = (user: SafeFollow) => {
-  if (isFriend(user.id)) return 'Friends';
-  return 'Following';
+  if (isFriend(user.id)) {
+    return hoveredButton.value[user.id] ? 'Unfollow' : 'Friends';
+  }
+  if (isFollowing(user.id)) {
+    return hoveredButton.value[user.id] ? 'Unfollow' : 'Following';
+  }
+  if (props.profileOwnerFollowing.includes(user.id)) {
+    return 'Follow Back';
+  }
+  return 'Follow';
 };
 
 const getButtonClass = (user: SafeFollow) => {
-  if (isFriend(user.id)) return 'bg-gray-200 text-gray-700 hover:bg-gray-300';
-  return 'bg-blue-100 text-blue-700 hover:bg-blue-200';
+  if (isFriend(user.id)) {
+    return hoveredButton.value[user.id]
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'bg-gray-200 text-gray-700 hover:bg-red-600 hover:text-white';
+  }
+  if (isFollowing(user.id)) {
+    return hoveredButton.value[user.id]
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'bg-blue-100 text-blue-700 hover:bg-red-600 hover:text-white';
+  }
+  return 'bg-blue-600 text-white hover:bg-blue-700';
 };
 
 const navigateToProfile = (username: string) => {
@@ -124,7 +153,13 @@ const navigateToProfile = (username: string) => {
 const handleFollowToggle = async (user: SafeFollow) => {
   try {
     actionLoading.value[user.id] = true;
-    await unfollowUser(user.id);
+
+    if (isFollowing(user.id)) {
+      await unfollowUser(user.id);
+    } else {
+      await followUser(user.id);
+    }
+
     emit('refresh');
   } finally {
     actionLoading.value[user.id] = false;

@@ -144,6 +144,10 @@
               :title="isOwnProfile ? 'My Friends' : 'Friends'"
               empty-message="No friends yet"
               :show-follow-button="true"
+              :current-user-id="currentUserId"
+              :current-user-following="followingIds"
+              :current-user-friends="friendIds"
+              :profile-owner-following="profileOwnerFollowingIds"
               @refresh="handleListsRefresh"
             />
 
@@ -154,6 +158,9 @@
               empty-message="Not following anyone yet"
               :show-follow-button="true"
               :friends="friendIds"
+              :current-user-id="currentUserId"
+              :current-user-following="followingIds"
+              :profile-owner-following="profileOwnerFollowingIds"
               @refresh="handleListsRefresh"
             />
 
@@ -166,6 +173,8 @@
               :current-user-id="currentUserId"
               :current-user-following="followingIds"
               :friends="friendIds"
+              :profile-owner-following="profileOwnerFollowingIds"
+              :is-own-profile="isOwnProfile"
               @refresh="handleListsRefresh"
             />
           </aside>
@@ -229,6 +238,10 @@ const followersLoading = ref(false);
 const following = ref<SafeFollow[]>([]);
 const followingLoading = ref(false);
 
+const currentUserFollowing = ref<SafeFollow[]>([]);
+const currentUserFriends = ref<SafeFollow[]>([]);
+const currentUserFollowers = ref<SafeFollow[]>([]);
+
 const routeUsername = computed(() => route.params.username as string);
 const currentUserId = computed(() => session.user?.id || null);
 
@@ -257,8 +270,26 @@ const {
 
 const friendsCount = computed(() => friends.value.length);
 
-const friendIds = computed(() => friends.value.map(friend => friend.id));
-const followingIds = computed(() => following.value.map(user => user.id));
+const friendIds = computed(() => {
+  if (isOwnProfile.value) {
+    return friends.value.map(friend => friend.id);
+  }
+  return currentUserFriends.value.map(friend => friend.id);
+});
+
+const followingIds = computed(() => {
+  if (isOwnProfile.value) {
+    return following.value.map(user => user.id);
+  }
+  return currentUserFollowing.value.map(user => user.id);
+});
+
+const profileOwnerFollowingIds = computed(() => {
+  if (isOwnProfile.value) {
+    return following.value.map(user => user.id);
+  }
+  return currentUserFollowers.value.map(follower => follower.id);
+});
 
 const mapUserData = (userData: SafeUser | typeof session.user): User => {
   if (!userData) {
@@ -387,6 +418,9 @@ watch(profileUserId, (newUserId) => {
     if (!isOwnProfile.value && session.isAuthenticated) {
       fetchFollowStatus();
       fetchFollowStats();
+      fetchCurrentUserFollowing();
+      fetchCurrentUserFriends();
+      fetchCurrentUserFollowers();
     } else if (isOwnProfile.value) {
       fetchFollowStats();
     }
@@ -453,6 +487,9 @@ const fetchUserProfile = async () => {
     if (userProfile.value?.id && session.isAuthenticated) {
       await fetchFollowStatus();
       await fetchFollowStats();
+      await fetchCurrentUserFollowing();
+      await fetchCurrentUserFriends();
+      await fetchCurrentUserFollowers();
     }
     if (userProfile.value?.id) {
       await fetchFriends();
@@ -479,6 +516,9 @@ const handleFollowToggle = async () => {
   await fetchFriends();
   await fetchFollowers();
   await fetchFollowing();
+  await fetchCurrentUserFollowing();
+  await fetchCurrentUserFriends();
+  await fetchCurrentUserFollowers();
 };
 
 const sendMessage = () => {
@@ -527,6 +567,39 @@ const fetchFollowing = async () => {
   }
 };
 
+const fetchCurrentUserFollowing = async () => {
+  if (!currentUserId.value || isOwnProfile.value) return;
+
+  try {
+    const result = await getFollowing(currentUserId.value, 1, 100);
+    currentUserFollowing.value = result.users;
+  } catch (err) {
+    currentUserFollowing.value = [];
+  }
+};
+
+const fetchCurrentUserFriends = async () => {
+  if (!currentUserId.value || isOwnProfile.value) return;
+
+  try {
+    const result = await getFriends(currentUserId.value, 1, 100);
+    currentUserFriends.value = result.users;
+  } catch (err) {
+    currentUserFriends.value = [];
+  }
+};
+
+const fetchCurrentUserFollowers = async () => {
+  if (!currentUserId.value || isOwnProfile.value) return;
+
+  try {
+    const result = await getFollowers(currentUserId.value, 1, 100);
+    currentUserFollowers.value = result.users;
+  } catch (err) {
+    currentUserFollowers.value = [];
+  }
+};
+
 const handlePostSuccess = (post: any) => {
   postsRefreshKey.value++;
 };
@@ -540,6 +613,9 @@ const handleListsRefresh = async () => {
     fetchFollowers(),
     fetchFollowing(),
     fetchFollowStats(),
+    fetchCurrentUserFollowing(),
+    fetchCurrentUserFriends(),
+    fetchCurrentUserFollowers(),
   ]);
   postsRefreshKey.value++;
 };

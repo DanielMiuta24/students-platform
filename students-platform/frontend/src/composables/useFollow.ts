@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
   followUser,
   unfollowUser,
@@ -9,15 +9,32 @@ import {
   type SafeFollow,
   type FollowStatsResponse,
 } from '../api/follow';
+import { useFollowStore } from '../store/follow';
 
 export function useFollow(userId: string) {
   const currentUserId = ref(userId);
-  const isFollowing = ref(false);
-  const followsBack = ref(false);
+  const followStore = useFollowStore();
+
+  // Check if we have cached state
+  const cachedState = followStore.getFollowState(userId);
+  const isFollowing = ref(cachedState?.isFollowing ?? false);
+  const followsBack = ref(cachedState?.followsBack ?? false);
   const followersCount = ref(0);
   const followingCount = ref(0);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+
+  // Watch for changes in the global store for this user
+  watch(
+    () => followStore.followStates.value.get(userId),
+    (newState) => {
+      if (newState) {
+        isFollowing.value = newState.isFollowing;
+        followsBack.value = newState.followsBack;
+      }
+    },
+    { deep: true }
+  );
 
   const fetchFollowStatus = async (silent: boolean = false) => {
     if (!currentUserId.value) return;
@@ -30,6 +47,12 @@ export function useFollow(userId: string) {
       const status = await checkFollowStatus(currentUserId.value);
       isFollowing.value = status.isFollowing;
       followsBack.value = status.followsBack;
+
+      // Update global store
+      followStore.setFollowState(currentUserId.value, {
+        isFollowing: status.isFollowing,
+        followsBack: status.followsBack,
+      });
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Failed to check follow status';
     } finally {
@@ -62,6 +85,9 @@ export function useFollow(userId: string) {
       isFollowing.value = !isFollowing.value;
       followersCount.value += isFollowing.value ? 1 : -1;
 
+      // Update global store optimistically
+      followStore.updateFollowStatus(currentUserId.value, isFollowing.value);
+
       if (isFollowing.value) {
         await followUser(currentUserId.value);
       } else {
@@ -70,6 +96,9 @@ export function useFollow(userId: string) {
     } catch (err: any) {
       isFollowing.value = previousFollowing;
       followersCount.value = previousFollowersCount;
+
+      // Revert global store on error
+      followStore.updateFollowStatus(currentUserId.value, previousFollowing);
 
       if (err.response?.status === 401) {
         error.value = 'Please login to follow users';
