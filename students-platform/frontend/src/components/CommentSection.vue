@@ -1,5 +1,84 @@
 <template>
   <div class="comments-section">
+    <div v-if="replyingTo" class="replying-banner">
+      <span>Replying to comment</span>
+      <button @click="cancelReply" class="cancel-reply-btn">Cancel</button>
+    </div>
+
+    <div v-if="error" class="error-message">
+      {{ error }}
+    </div>
+
+    <div v-if="isLoading && comments.length === 0" class="loading-skeleton">
+      <div v-for="i in 3" :key="i" class="skeleton-comment">
+        <div class="skeleton-avatar" />
+        <div class="skeleton-content">
+          <div class="skeleton-bubble" />
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="comments.length === 0 && !isLoading" class="empty-state">
+      <p>No comments yet. Be the first to comment!</p>
+    </div>
+
+    <div v-else>
+      <div class="sort-options">
+        <button
+          @click="sortBy = 'relevant'"
+          :class="['sort-btn', { active: sortBy === 'relevant' }]"
+        >
+          Most Relevant
+        </button>
+        <button
+          @click="sortBy = 'newest'"
+          :class="['sort-btn', { active: sortBy === 'newest' }]"
+        >
+          Newest
+        </button>
+        <button
+          @click="sortBy = 'oldest'"
+          :class="['sort-btn', { active: sortBy === 'oldest' }]"
+        >
+          Oldest
+        </button>
+      </div>
+
+      <div class="comments-list">
+      <CommentItem
+        v-for="comment in displayedComments"
+        :key="comment.id"
+        :comment="comment"
+        :postId="postId"
+        :postAuthorId="postAuthorId"
+        :currentUserId="currentUserId"
+        :depth="0"
+        @reply="handleReply"
+        @update="handleUpdateComment"
+        @delete="handleDeleteComment"
+      />
+
+      <button
+        v-if="!showAllComments && comments.length > 1"
+        @click="showAllComments = true"
+        class="show-more-comments-btn"
+      >
+        View {{ comments.length - 1 }} more {{ comments.length - 1 === 1 ? 'comment' : 'comments' }}
+      </button>
+      </div>
+
+      <div v-if="hasMore && showAllComments" class="load-more-container">
+        <button
+          @click="loadMore"
+          :disabled="isLoading"
+          class="load-more-btn"
+        >
+          {{ isLoading ? 'Loading...' : 'Load More Comments' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Comment form at the bottom -->
     <div v-if="isAuthenticated" class="comment-form">
       <img
         :src="userAvatar"
@@ -32,60 +111,6 @@
 
     <div v-else class="login-prompt">
       <p>Please <router-link to="/login" class="login-link">login</router-link> to comment</p>
-    </div>
-
-    <div v-if="replyingTo" class="replying-banner">
-      <span>Replying to comment</span>
-      <button @click="cancelReply" class="cancel-reply-btn">Cancel</button>
-    </div>
-
-    <div v-if="error" class="error-message">
-      {{ error }}
-    </div>
-
-    <div v-if="isLoading && comments.length === 0" class="loading-skeleton">
-      <div v-for="i in 3" :key="i" class="skeleton-comment">
-        <div class="skeleton-avatar" />
-        <div class="skeleton-content">
-          <div class="skeleton-bubble" />
-        </div>
-      </div>
-    </div>
-
-    <div v-else-if="comments.length === 0 && !isLoading" class="empty-state">
-      <p>No comments yet. Be the first to comment!</p>
-    </div>
-
-    <div v-else class="comments-list">
-      <CommentItem
-        v-for="comment in displayedComments"
-        :key="comment.id"
-        :comment="comment"
-        :postId="postId"
-        :postAuthorId="postAuthorId"
-        :currentUserId="currentUserId"
-        @reply="handleReply"
-        @update="handleUpdateComment"
-        @delete="handleDeleteComment"
-      />
-
-      <button
-        v-if="!showAllComments && comments.length > 1"
-        @click="showAllComments = true"
-        class="show-more-comments-btn"
-      >
-        View {{ comments.length - 1 }} more {{ comments.length - 1 === 1 ? 'comment' : 'comments' }}
-      </button>
-    </div>
-
-    <div v-if="hasMore && showAllComments" class="load-more-container">
-      <button
-        @click="loadMore"
-        :disabled="isLoading"
-        class="load-more-btn"
-      >
-        {{ isLoading ? 'Loading...' : 'Load More Comments' }}
-      </button>
     </div>
   </div>
 </template>
@@ -134,27 +159,45 @@ const {
 const commentContent = ref('');
 const replyingTo = ref<SafeComment | null>(null);
 const showAllComments = ref(false);
+const sortBy = ref<'relevant' | 'newest' | 'oldest'>('relevant');
+
+const sortedComments = computed(() => {
+  const rootComments = [...comments.value];
+
+  if (sortBy.value === 'newest') {
+    return rootComments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } else if (sortBy.value === 'oldest') {
+    return rootComments.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  } else {
+    // Most Relevant: sort by likes (engagement), highest first
+    return rootComments.sort((a, b) => {
+      const likesA = a.likeCount || 0;
+      const likesB = b.likeCount || 0;
+
+      // Sort by likes descending (most likes first)
+      if (likesA !== likesB) {
+        return likesB - likesA;
+      }
+
+      // If same number of likes, prefer newer comments
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }
+});
 
 const displayedComments = computed(() => {
-  if (showAllComments.value || comments.value.length <= 1) {
-    return comments.value;
+  if (showAllComments.value || sortedComments.value.length <= 1) {
+    return sortedComments.value;
   }
-  return comments.value.slice(0, 1);
+  return sortedComments.value.slice(0, 1);
 });
 
 onMounted(() => {
-  console.log('[CommentSection] Mounted with postId:', props.postId);
   fetchComments();
 });
 
 const submitComment = async () => {
   if (!commentContent.value.trim() || isSubmitting.value) return;
-
-  console.log('[CommentSection] Submitting comment:', {
-    content: commentContent.value,
-    parentCommentId: replyingTo.value?.id,
-    postId: props.postId,
-  });
 
   try {
     await addComment(
@@ -164,9 +207,8 @@ const submitComment = async () => {
     commentContent.value = '';
     replyingTo.value = null;
     emit('comment-added');
-    console.log('[CommentSection] Comment submitted successfully');
   } catch (err) {
-    console.error('[CommentSection] Failed to post comment:', err);
+    console.error('Failed to post comment:', err);
   }
 };
 
@@ -184,6 +226,7 @@ const cancelReply = () => {
 
 const handleUpdateComment = async () => {
   await fetchComments();
+  emit('comment-added');
 };
 
 const handleDeleteComment = async () => {
@@ -201,8 +244,11 @@ const handleDeleteComment = async () => {
 .comment-form {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-top: 16px;
+  margin-bottom: 0;
   align-items: flex-start;
+  padding-top: 16px;
+  border-top: 1px solid #e4e6eb;
 }
 
 .form-avatar {
@@ -390,6 +436,35 @@ const handleDeleteComment = async () => {
 .empty-state p {
   margin: 0;
   font-size: 14px;
+}
+
+.sort-options {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e4e6eb;
+  margin-bottom: 8px;
+}
+
+.sort-btn {
+  padding: 6px 12px;
+  background: none;
+  border: none;
+  color: #65676b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.sort-btn:hover {
+  background: #f0f2f5;
+}
+
+.sort-btn.active {
+  color: #1877f2;
+  background: #e7f3ff;
 }
 
 .comments-list {

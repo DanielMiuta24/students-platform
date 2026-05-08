@@ -173,6 +173,8 @@
               :current-user-id="currentUserId"
               :current-user-following="followingIds"
               :friends="friendIds"
+              :profile-owner-following="profileOwnerFollowingIds"
+              :is-own-profile="isOwnProfile"
               @refresh="handleListsRefresh"
             />
           </aside>
@@ -283,6 +285,9 @@ const followingIds = computed(() => {
 });
 
 const profileOwnerFollowingIds = computed(() => {
+  if (isOwnProfile.value) {
+    return following.value.map(user => user.id);
+  }
   return currentUserFollowers.value.map(follower => follower.id);
 });
 

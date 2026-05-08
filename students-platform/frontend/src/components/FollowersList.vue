@@ -76,6 +76,8 @@ interface Props {
   currentUserId?: string;
   currentUserFollowing?: string[];
   friends?: string[];
+  profileOwnerFollowing?: string[];
+  isOwnProfile?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -86,6 +88,8 @@ const props = withDefaults(defineProps<Props>(), {
   showFollowButton: true,
   currentUserFollowing: () => [],
   friends: () => [],
+  profileOwnerFollowing: () => [],
+  isOwnProfile: false,
 });
 
 const emit = defineEmits<{
@@ -125,7 +129,15 @@ const getButtonText = (follower: SafeFollow) => {
   if (isFollowing(follower.id)) {
     return hoveredButton.value[follower.id] ? 'Unfollow' : 'Following';
   }
-  return 'Follow Back';
+  // On own profile: followers list = people who follow YOU, so default is "Follow Back"
+  // On other's profile: check if they follow you to show "Follow Back"
+  if (props.isOwnProfile) {
+    return 'Follow Back';
+  }
+  if (props.profileOwnerFollowing.includes(follower.id)) {
+    return 'Follow Back';
+  }
+  return 'Follow';
 };
 
 const getButtonClass = (follower: SafeFollow) => {

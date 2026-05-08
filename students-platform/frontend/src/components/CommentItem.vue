@@ -120,7 +120,7 @@
           </div>
         </div>
 
-        <div v-if="!isReply && repliesCount > 0" class="replies-toggle">
+        <div v-if="repliesCount > 0" class="replies-toggle">
           <button @click="toggleReplies" class="replies-toggle-btn">
             <svg
               class="toggle-icon"
@@ -134,29 +134,60 @@
           </button>
         </div>
 
-        <div v-if="isExpanded && replies.length > 0" class="replies-list">
-          <CommentItem
-            v-for="reply in replies"
-            :key="reply.id"
-            :comment="reply"
-            :postId="postId"
-            :postAuthorId="postAuthorId"
-            :currentUserId="currentUserId"
-            :isReply="true"
-            @reply="$emit('reply', $event)"
-            @update="handleReplyUpdate"
-            @delete="handleReplyDelete"
-          />
+        <template v-if="isExpanded && replies.length > 0">
+          <div v-if="props.depth < 2" class="replies-list" :class="`depth-${props.depth + 1}`">
+            <CommentItem
+              v-for="reply in replies"
+              :key="reply.id"
+              :comment="reply"
+              :postId="postId"
+              :postAuthorId="postAuthorId"
+              :currentUserId="currentUserId"
+              :isReply="true"
+              :rootParentId="props.rootParentId || props.comment.id"
+              :depth="props.depth + 1"
+              @reply="$emit('reply', $event)"
+              @update="handleReplyUpdate"
+              @delete="handleReplyDelete"
+            />
 
-          <button
-            v-if="hasMoreReplies"
-            @click="loadMoreReplies"
-            :disabled="isLoadingReplies"
-            class="load-more-replies"
-          >
-            {{ isLoadingReplies ? 'Loading...' : 'View more replies' }}
-          </button>
-        </div>
+            <button
+              v-if="hasMoreReplies"
+              @click="loadMoreReplies"
+              :disabled="isLoadingReplies"
+              class="load-more-replies"
+            >
+              {{ isLoadingReplies ? 'Loading...' : 'View more replies' }}
+            </button>
+          </div>
+
+          <template v-else>
+            <CommentItem
+              v-for="reply in replies"
+              :key="reply.id"
+              :comment="reply"
+              :postId="postId"
+              :postAuthorId="postAuthorId"
+              :currentUserId="currentUserId"
+              :isReply="true"
+              :rootParentId="props.rootParentId || props.comment.id"
+              :depth="2"
+              @reply="$emit('reply', $event)"
+              @update="handleReplyUpdate"
+              @delete="handleReplyDelete"
+            />
+
+            <button
+              v-if="hasMoreReplies"
+              @click="loadMoreReplies"
+              :disabled="isLoadingReplies"
+              class="load-more-replies"
+              style="margin-top: 8px;"
+            >
+              {{ isLoadingReplies ? 'Loading...' : 'View more replies' }}
+            </button>
+          </template>
+        </template>
       </div>
     </div>
 
@@ -184,7 +215,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import type { SafeComment } from '../api/comment';
-import { updateComment, deleteComment, getComment } from '../api/comment';
+import { updateComment, deleteComment, getComment, createComment } from '../api/comment';
 import { useLike } from '../composables/useLike';
 import { useCommentReplies } from '../composables/useComments';
 import { getAvatarUrl } from '../utils/avatar';
@@ -198,10 +229,14 @@ interface Props {
   postAuthorId?: string;
   currentUserId?: string;
   isReply?: boolean;
+  rootParentId?: string;
+  depth?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isReply: false,
+  rootParentId: undefined,
+  depth: 0,
 });
 
 const emit = defineEmits<{
@@ -257,13 +292,11 @@ const taggedUser = computed(() => {
 
 const canEdit = computed(() => {
   if (!props.currentUserId) return false;
-  // User can edit if they are the comment author
   return props.currentUserId === props.comment.authorId;
 });
 
 const canDelete = computed(() => {
   if (!props.currentUserId) return false;
-  // User can delete if they are the comment author OR the post author
   return props.currentUserId === props.comment.authorId || props.currentUserId === props.postAuthorId;
 });
 
@@ -292,16 +325,17 @@ const {
 } = useCommentReplies(props.comment.id, props.postId);
 
 onMounted(async () => {
-  // Fetch like status if user is authenticated
   if (sessionStore.isAuthenticated) {
     await fetchLikeStatus();
   }
 
-  if (!props.isReply) {
-    fetchRepliesCount();
+  await fetchRepliesCount();
+
+  if (props.depth === 0 && repliesCount.value > 0) {
+    isExpanded.value = true;
+    fetchReplies();
   }
 
-  // Fetch parent comment if this is a reply
   if (props.comment.parentCommentId) {
     try {
       parentComment.value = await getComment(props.comment.parentCommentId);
@@ -357,7 +391,11 @@ const toggleReply = async () => {
   showReplyBox.value = !showReplyBox.value;
 
   if (showReplyBox.value) {
-    replyContent.value = `@${authorName.value} `;
+    if (props.depth > 0) {
+      replyContent.value = `@${authorName.value} `;
+    } else {
+      replyContent.value = '';
+    }
     await nextTick();
     if (replyTextarea.value) {
       replyTextarea.value.focus();
@@ -390,12 +428,28 @@ const submitReply = async () => {
 
   isSubmittingReply.value = true;
   try {
-    await addReply(replyContent.value);
+    const targetParentId = props.depth >= 2 && props.comment.parentCommentId
+      ? props.comment.parentCommentId
+      : props.comment.id;
+
+    await createComment({
+      postId: props.postId,
+      content: replyContent.value,
+      parentCommentId: targetParentId,
+    });
+
     replyContent.value = '';
     showReplyBox.value = false;
 
-    if (!isExpanded.value) {
-      await toggleExpanded();
+    if (props.depth >= 2) {
+      emit('update');
+    } else {
+      await fetchRepliesCount();
+      if (!isExpanded.value) {
+        isExpanded.value = true;
+      }
+      await fetchReplies(1);
+      emit('update');
     }
   } catch (error) {
     console.error('Failed to submit reply:', error);
@@ -405,21 +459,18 @@ const submitReply = async () => {
 };
 
 const handleReplyUpdate = async () => {
-  // Refresh the replies list when a nested reply is updated
-  if (isExpanded.value) {
-    await fetchReplies(1);
-  }
-  // Also bubble up to parent
-  emit('update');
-};
-
-const handleReplyDelete = async () => {
-  // Refresh the replies list and count when a nested reply is deleted
   await fetchRepliesCount();
   if (isExpanded.value) {
     await fetchReplies(1);
   }
-  // Also bubble up to parent
+  emit('update');
+};
+
+const handleReplyDelete = async () => {
+  await fetchRepliesCount();
+  if (isExpanded.value) {
+    await fetchReplies(1);
+  }
   emit('delete');
 };
 
@@ -443,12 +494,10 @@ const formatDate = (date: Date) => {
 const formattedContent = computed(() => {
   let content = props.comment.content;
 
-  // If this is a reply with a tagged user, remove the @mention from the start
   if (taggedUser.value) {
     content = content.replace(/^@\S+\s*/, '');
   }
 
-  // Escape HTML to prevent XSS
   content = content
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -456,8 +505,6 @@ const formattedContent = computed(() => {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
-  // Replace remaining @mentions with clickable links
-  // Pattern: @Name (any characters except whitespace after @)
   content = content.replace(/@(\S+)/g, (match, name) => {
     return `<span class="mention">@${name}</span>`;
   });
@@ -728,7 +775,18 @@ const formattedContent = computed(() => {
 
 .replies-list {
   margin-top: 8px;
+}
+
+.replies-list.depth-1 {
   padding-left: 40px;
+}
+
+.replies-list.depth-2 {
+  padding-left: 40px;
+}
+
+.replies-list-flat {
+  margin-top: 8px;
 }
 
 .load-more-replies {
