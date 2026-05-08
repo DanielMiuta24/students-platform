@@ -371,6 +371,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
+  (e: 'edit', post: SafePost): void;
   (e: 'update', post: SafePost): void;
   (e: 'delete', postId: string): void;
 }>();
