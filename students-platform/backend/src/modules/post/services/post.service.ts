@@ -16,6 +16,7 @@ import { PostScorer } from './post.scorer';
 import { imageService, type UploadedFile, type UploadResult } from '../../image/services';
 import { CommentModel } from '../../comment/models';
 import { LikeModel } from '../../like/models';
+import { followService } from '../../follow/services';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
@@ -73,7 +74,7 @@ export class PostService {
       throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    const imageIds = await this.handleImages(files, data.images, authorId);
+    const imageIds = await this.handleImages(files, data.existingImages || data.images, authorId);
 
     const updateData = new PostUpdateBuilder()
       .fromDTO(data)
@@ -132,11 +133,33 @@ export class PostService {
     });
   }
 
-  async incrementViewCount(postId: string): Promise<void> {
-    await PostModel.findByIdAndUpdate(
-      postId,
-      { $inc: { viewCount: 1 } }
+  async incrementViewCount(postId: string, userId?: string): Promise<void> {
+    if (!userId) {
+      await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { viewCount: 1 } }
+      );
+      return;
+    }
+
+    const post = await PostModel.findById(postId).select('viewedBy');
+    if (!post) {
+      return;
+    }
+
+    const alreadyViewed = post.viewedBy?.some(
+      (viewerId) => viewerId.toString() === userId
     );
+
+    if (!alreadyViewed) {
+      await PostModel.findByIdAndUpdate(
+        postId,
+        {
+          $addToSet: { viewedBy: userId },
+          $inc: { viewCount: 1 }
+        }
+      );
+    }
   }
 
   private async handleImages(
@@ -144,9 +167,11 @@ export class PostService {
     existingImages: Array<{ url: string; alt?: string }> | undefined,
     userId: string
   ): Promise<string[]> {
+    const imageIds: string[] = [];
+
     if (files && files.length > 0) {
       const uploadedImages = await imageService.uploadImagesForPost(files, userId);
-      return uploadedImages.map((img: UploadResult) => img.imageId);
+      imageIds.push(...uploadedImages.map((img: UploadResult) => img.imageId));
     }
 
     if (existingImages && existingImages.length > 0) {
@@ -155,11 +180,11 @@ export class PostService {
       if (!isValid) {
         throw new Error(POST_ERROR.INVALID_IMAGES);
       }
-      const imageIds = await imageService.getImageIdsByUrls(urls);
-      return imageIds;
+      const existingImageIds = await imageService.getImageIdsByUrls(urls);
+      imageIds.push(...existingImageIds);
     }
 
-    return [];
+    return imageIds;
   }
 
   private buildCursorResult(posts: PostDoc[], limit: number): CursorPostsResult {
@@ -178,28 +203,66 @@ export class PostService {
   }
 
   async getScoredFeed(params: GetScoredFeedDTO): Promise<ScoredFeedResult> {
-    const { limit = this.DEFAULT_LIMIT, preferredCategories = [] } = params;
+    const {
+      cursor,
+      limit = this.DEFAULT_LIMIT,
+      preferredCategories = [],
+      userId,
+      followingIds = [],
+      friendIds = []
+    } = params;
 
-    const posts = await PostModel.find({
-      status: 'published',
-      visibility: 'public'
-    })
+    let friends = friendIds;
+    let following = followingIds;
+
+    if (userId && (friendIds.length === 0 || followingIds.length === 0)) {
+      [friends, following] = await Promise.all([
+        followService.getFriendIds(userId),
+        followService.getFollowingIds(userId)
+      ]);
+    }
+
+    const queryBuilder = userId
+      ? new PostQueryBuilder().setFeedVisibilityForUser(userId, friends)
+      : new PostQueryBuilder().setPublicFeedDefaults();
+
+    if (cursor) {
+      queryBuilder.setCursor(cursor);
+    }
+
+    const query = queryBuilder.build();
+
+    const posts = await PostModel.find(query)
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
       .populate('images')
+      .sort({ _id: -1 })
       .limit(limit * 3)
       .exec();
 
     const scoredPosts = posts.map(post => {
       const safePost = PostMapper.toSafePost(post);
-      const score = PostScorer.calculateScore(post, preferredCategories);
+      const score = PostScorer.calculateScore(post, {
+        preferredCategories,
+        currentUserId: userId,
+        followingIds: following,
+        friendIds: friends
+      });
       return { ...safePost, score };
     });
 
     scoredPosts.sort((a, b) => (b.score || 0) - (a.score || 0));
 
+    const resultPosts = scoredPosts.slice(0, limit);
+    const nextCursor = resultPosts.length > 0
+      ? resultPosts[resultPosts.length - 1].id
+      : null;
+    const hasMore = posts.length >= limit * 3;
+
     return {
-      posts: scoredPosts.slice(0, limit)
+      posts: resultPosts,
+      nextCursor,
+      hasMore
     };
   }
 
@@ -218,11 +281,9 @@ export class PostService {
       throw new Error(POST_ERROR.UNAUTHORIZED);
     }
 
-    // Get all comments (including replies) for this post to delete their likes
     const comments = await CommentModel.find({ post: postId }).select('_id');
     const commentIds = comments.map(c => c._id);
 
-    // Delete all likes for comments and replies
     if (commentIds.length > 0) {
       await LikeModel.deleteMany({
         likeable: { $in: commentIds },
@@ -230,10 +291,8 @@ export class PostService {
       });
     }
 
-    // Delete all likes for the post itself
     await LikeModel.deleteMany({ likeable: postId, likeableType: 'Post' });
 
-    // Delete all comments and replies associated with this post
     await CommentModel.deleteMany({ post: postId });
 
     if (post.images && post.images.length > 0) {

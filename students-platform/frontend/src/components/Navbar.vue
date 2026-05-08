@@ -29,9 +29,9 @@
         </el-menu-item>
       </el-sub-menu>
 
-      <!-- Threads -->
+      <!-- Feed -->
       <el-menu-item index="3">
-        <router-link to="/threads">Threads</router-link>
+        <router-link to="/feed">Feed</router-link>
       </el-menu-item>
 
       <!-- Account Button -->
@@ -45,7 +45,7 @@
           <el-dropdown>
             <span class="user-name">
               <img
-                :src="session.user?.profilePicture || 'https://via.placeholder.com/40'"
+                :src="userAvatar"
                 alt="Profile Picture"
                 class="w-8 h-8 rounded-full mr-2"
               />
@@ -55,6 +55,7 @@
               <el-dropdown-menu>
                 <el-dropdown-item @click="navigate(`/profile/${session.user?.username}`)">View Profile</el-dropdown-item>
                 <el-dropdown-item @click="navigate('/messages')">Messages</el-dropdown-item>
+                <el-dropdown-item @click="navigate('/change-password')">Change Password</el-dropdown-item>
                 <el-dropdown-item @click="logout">Logout</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -98,9 +99,9 @@
           </el-menu-item>
         </el-sub-menu>
 
-        <!-- Threads -->
+        <!-- Feed -->
         <el-menu-item index="3">
-          <router-link to="/threads">Threads</router-link>
+          <router-link to="/feed">Feed</router-link>
         </el-menu-item>
       </el-menu>
     </el-drawer>
@@ -116,6 +117,7 @@
         <p>Welcome, <b>{{ session.user?.name }}</b></p>
         <el-button class="w-100 mb-2" @click="navigate(`/profile/${session.user?.username}`)">View Profile</el-button>
         <el-button class="w-100 mb-2" @click="navigate('/messages')">Messages</el-button>
+        <el-button class="w-100 mb-2" @click="navigate('/change-password')">Change Password</el-button>
         <el-button type="danger" class="w-100" @click="logout">Logout</el-button>
       </template>
     </el-drawer>
@@ -123,12 +125,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { Menu, User } from '@element-plus/icons-vue';
 import { useActiveMenu } from '../composables/useActiveMenu';
 import { useNavigation } from '../composables/useNavigation';
 import { useAuth } from '../composables/useAuth';
 import { useSessionStore } from '../store/session';
+import { getAvatarUrl } from '../utils/avatar';
 
 const { activeIndex } = useActiveMenu();
 const { navigate } = useNavigation();
@@ -140,6 +143,10 @@ const session = useSessionStore();
 const drawerMenu = ref(false);
 const drawerAccount = ref(false);
 const isMobile = ref(false);
+
+const userAvatar = computed(() =>
+  session.user ? getAvatarUrl(session.user.username, session.user.avatar) : ''
+);
 
 const checkScreen = () => {
   isMobile.value = window.innerWidth < 768;

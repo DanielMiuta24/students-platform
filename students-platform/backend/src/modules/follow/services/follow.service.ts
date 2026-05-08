@@ -6,12 +6,10 @@ export class FollowService {
   async follow(data: FollowDTO): Promise<void> {
     const { followerId, followingId } = data;
 
-    // Check if trying to follow self
     if (followerId === followingId) {
       throw new Error(FOLLOW_ERROR.CANNOT_FOLLOW_SELF);
     }
 
-    // Check if both users exist
     const [follower, following] = await Promise.all([
       User.findById(followerId),
       User.findById(followingId),
@@ -21,31 +19,35 @@ export class FollowService {
       throw new Error(FOLLOW_ERROR.USER_NOT_FOUND);
     }
 
-    // Check if already following
     if (follower.following.includes(followingId as any)) {
       throw new Error(FOLLOW_ERROR.ALREADY_FOLLOWING);
     }
 
-    // Update both users
-    await Promise.all([
-      User.findByIdAndUpdate(followerId, {
-        $addToSet: { following: followingId },
-      }),
-      User.findByIdAndUpdate(followingId, {
-        $addToSet: { followers: followerId },
-      }),
+    const [followerUpdate, followingUpdate] = await Promise.all([
+      User.findByIdAndUpdate(
+        followerId,
+        { $addToSet: { following: followingId } },
+        { new: true }
+      ),
+      User.findByIdAndUpdate(
+        followingId,
+        { $addToSet: { followers: followerId } },
+        { new: true }
+      ),
     ]);
+
+    if (!followerUpdate || !followingUpdate) {
+      throw new Error(FOLLOW_ERROR.USER_NOT_FOUND);
+    }
   }
 
   async unfollow(data: FollowDTO): Promise<void> {
     const { followerId, followingId } = data;
 
-    // Check if trying to unfollow self
     if (followerId === followingId) {
       throw new Error(FOLLOW_ERROR.CANNOT_FOLLOW_SELF);
     }
 
-    // Check if both users exist
     const [follower, following] = await Promise.all([
       User.findById(followerId),
       User.findById(followingId),
@@ -55,20 +57,26 @@ export class FollowService {
       throw new Error(FOLLOW_ERROR.USER_NOT_FOUND);
     }
 
-    // Check if actually following
     if (!follower.following.includes(followingId as any)) {
       throw new Error(FOLLOW_ERROR.NOT_FOLLOWING);
     }
 
-    // Update both users
-    await Promise.all([
-      User.findByIdAndUpdate(followerId, {
-        $pull: { following: followingId },
-      }),
-      User.findByIdAndUpdate(followingId, {
-        $pull: { followers: followerId },
-      }),
+    const [followerUpdate, followingUpdate] = await Promise.all([
+      User.findByIdAndUpdate(
+        followerId,
+        { $pull: { following: followingId } },
+        { new: true }
+      ),
+      User.findByIdAndUpdate(
+        followingId,
+        { $pull: { followers: followerId } },
+        { new: true }
+      ),
     ]);
+
+    if (!followerUpdate || !followingUpdate) {
+      throw new Error(FOLLOW_ERROR.USER_NOT_FOUND);
+    }
   }
 
   async isFollowing(followerId: string, followingId: string): Promise<boolean> {
@@ -193,7 +201,6 @@ export class FollowService {
       throw new Error(FOLLOW_ERROR.USER_NOT_FOUND);
     }
 
-    // Find mutual follows (users who follow back)
     const mutualFollows = await User.find({
       _id: { $in: user.following },
       following: userId,
@@ -220,6 +227,28 @@ export class FollowService {
       limit,
       hasMore: skip + paginatedFriends.length < total,
     };
+  }
+
+  async getFriendIds(userId: string): Promise<string[]> {
+    const user = await User.findById(userId).select('followers following');
+    if (!user) {
+      return [];
+    }
+
+    const followersSet = new Set(user.followers.map(id => id.toString()));
+    const friendIds = user.following
+      .map(id => id.toString())
+      .filter(id => followersSet.has(id));
+
+    return friendIds;
+  }
+
+  async getFollowingIds(userId: string): Promise<string[]> {
+    const user = await User.findById(userId).select('following');
+    if (!user) {
+      return [];
+    }
+    return user.following.map(id => id.toString());
   }
 }
 

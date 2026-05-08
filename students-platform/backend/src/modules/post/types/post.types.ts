@@ -19,6 +19,7 @@ export interface UpdatePostDTO {
   status: PostStatus;
   visibility?: PostVisibility;
   images?: ImageMetadata[];
+  existingImages?: ImageMetadata[];
 }
 
 export interface ImageMetadata {
@@ -70,8 +71,12 @@ export interface CursorPostsResult {
 }
 
 export interface GetScoredFeedDTO {
+  cursor?: string;
   limit?: number;
   preferredCategories?: string[];
+  userId?: string;
+  followingIds?: string[];
+  friendIds?: string[];
 }
 
 export interface ScoredPost extends SafePost {
@@ -80,4 +85,6 @@ export interface ScoredPost extends SafePost {
 
 export interface ScoredFeedResult {
   posts: ScoredPost[];
+  nextCursor: string | null;
+  hasMore: boolean;
 }

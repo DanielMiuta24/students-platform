@@ -170,8 +170,9 @@
       </div>
     </div>
 
-    <div v-if="post.images && post.images.length > 0" class="relative bg-gray-900">
-      <div v-if="post.images.length === 1" class="w-full cursor-pointer" @click="viewPost">
+    <div v-if="post.images && post.images.length > 0" class="relative bg-gray-900 cursor-pointer" @click="viewPost">
+      <!-- Single image -->
+      <div v-if="post.images.length === 1" class="w-full">
         <img
           :src="post.images[0].url"
           :alt="post.images[0].alt || generateImageAlt(post.images[0].url)"
@@ -179,7 +180,8 @@
         />
       </div>
 
-      <div v-else-if="post.images.length === 2" class="grid grid-cols-2 gap-1 cursor-pointer" @click="viewPost">
+      <!-- Two images -->
+      <div v-else-if="post.images.length === 2" class="grid grid-cols-2 gap-1">
         <img
           v-for="(image, index) in post.images"
           :key="index"
@@ -189,7 +191,8 @@
         />
       </div>
 
-      <div v-else-if="post.images.length === 3" class="grid grid-cols-2 gap-1 cursor-pointer" @click="viewPost">
+      <!-- Three images -->
+      <div v-else-if="post.images.length === 3" class="grid grid-cols-2 gap-1">
         <img
           :src="post.images[0].url"
           :alt="post.images[0].alt || generateImageAlt(post.images[0].url)"
@@ -202,6 +205,30 @@
           :alt="image.alt || generateImageAlt(image.url)"
           class="w-full h-[300px] object-cover"
         />
+      </div>
+
+      <!-- Four or more images: show first 4 with +X overlay if needed -->
+      <div v-else class="relative">
+        <div class="grid grid-cols-2 gap-1">
+          <div
+            v-for="(image, index) in post.images.slice(0, 4)"
+            :key="index"
+            class="relative"
+          >
+            <img
+              :src="image.url"
+              :alt="image.alt || generateImageAlt(image.url)"
+              class="w-full h-[300px] object-cover"
+            />
+            <!-- Show "+X more" overlay on last image if there are more than 4 -->
+            <div
+              v-if="index === 3 && post.images.length > 4"
+              class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white text-4xl font-bold"
+            >
+              +{{ post.images.length - 4 }}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -378,6 +405,11 @@ const toggleMenu = () => {
 };
 
 const closeMenuOnClickOutside = (event: MouseEvent) => {
+  // Don't close menus when modal is open
+  if (showDeleteModal.value || showPostModal.value || showLikesModal.value || showAudienceModal.value) {
+    return;
+  }
+
   const target = event.target as HTMLElement;
   if (showMenu.value && !target.closest('.relative')) {
     showMenu.value = false;
@@ -465,8 +497,6 @@ const authorType = computed(() => {
 
   if (author && typeof author === 'object') {
     const authorObj = author as any;
-    console.log('Author object:', authorObj);
-    console.log('Author type:', authorObj.type);
     return authorObj.type || null;
   }
 
@@ -622,7 +652,7 @@ const viewPost = () => {
 };
 
 const editPost = () => {
-  router.push(`/posts/${props.post.id}/edit`);
+  emit('edit', props.post);
 };
 
 const handleEdit = () => {
@@ -642,12 +672,17 @@ const confirmDelete = async () => {
     actionLoading.value = true;
     actionError.value = null;
 
+    // Delete from API
     await deletePost(props.post.id);
+
+    actionLoading.value = false;
+    actionError.value = null;
+
+    // Emit delete event to parent so it can update its state
     emit('delete', props.post.id);
   } catch (err: any) {
-    actionError.value = err.message || 'Failed to delete post';
-  } finally {
     actionLoading.value = false;
+    actionError.value = err.message || 'Failed to delete post';
   }
 };
 

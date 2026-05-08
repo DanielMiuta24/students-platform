@@ -301,7 +301,7 @@ const canDelete = computed(() => {
 });
 
 const currentUserAvatar = computed(() =>
-  sessionStore.user ? getAvatarUrl(sessionStore.user.username) : ''
+  sessionStore.user ? getAvatarUrl(sessionStore.user.username, sessionStore.user.avatar) : ''
 );
 
 const { likeCount, isLiked, toggleLike, fetchLikeStatus } = useLike(
@@ -340,7 +340,6 @@ onMounted(async () => {
     try {
       parentComment.value = await getComment(props.comment.parentCommentId);
     } catch (error) {
-      console.error('Failed to fetch parent comment:', error);
     }
   }
 });
@@ -363,7 +362,6 @@ const saveEdit = async () => {
     emit('update');
     isEditing.value = false;
   } catch (error) {
-    console.error('Failed to update comment:', error);
   } finally {
     isSubmitting.value = false;
   }
@@ -378,7 +376,6 @@ const confirmDelete = async () => {
     await deleteComment(props.comment.id);
     emit('delete');
   } catch (error) {
-    console.error('Failed to delete comment:', error);
   }
   showDeleteModal.value = false;
 };
@@ -452,7 +449,6 @@ const submitReply = async () => {
       emit('update');
     }
   } catch (error) {
-    console.error('Failed to submit reply:', error);
   } finally {
     isSubmittingReply.value = false;
   }

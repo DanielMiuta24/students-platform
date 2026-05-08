@@ -1,6 +1,6 @@
 export const IMAGE_VALIDATION = {
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
-  MAX_FILES_PER_REQUEST: 3,
+  MAX_FILES_PER_REQUEST: 8,
   ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
   ALLOWED_EXTENSIONS: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
   MIN_WIDTH: 100,

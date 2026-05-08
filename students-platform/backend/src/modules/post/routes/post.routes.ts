@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { postController } from '../controllers/post.controller';
-import { authMiddleware } from '../../../shared/middleware/auth.middleware';
+import { authMiddleware, optionalAuthMiddleware } from '../../../shared/middleware/auth.middleware';
 import { busboyUploadMiddleware } from '../../image/middleware';
 import { IMAGE_VALIDATION } from '../../image/services';
 import {
@@ -32,11 +32,13 @@ router.get(
 
 router.get(
   '/slug/:slug',
+  optionalAuthMiddleware,
   postController.getPostBySlug
 );
 
 router.get(
   '/:postId',
+  optionalAuthMiddleware,
   validatePostId,
   postController.getPostById
 );

@@ -1,16 +1,24 @@
 import type { PostDoc } from '../models/post.model';
 
+interface ScoringContext {
+  preferredCategories: string[];
+  currentUserId?: string;
+  followingIds?: string[];
+  friendIds?: string[];
+}
+
 export class PostScorer {
-  static calculateScore(post: PostDoc, preferredCategories: string[]): number {
+  static calculateScore(post: PostDoc, context: ScoringContext): number {
     const recencyScore = this.calculateRecencyScore(post.createdAt);
     const engagementScore = this.calculateEngagementScore(
       post.likeCount,
       post.commentCount,
       post.viewCount
     );
-    const categoryScore = this.calculateCategoryScore(post.category, preferredCategories);
+    const categoryScore = this.calculateCategoryScore(post.category, context.preferredCategories);
+    const socialScore = this.calculateSocialScore(post, context);
 
-    return recencyScore + engagementScore + categoryScore;
+    return recencyScore + engagementScore + categoryScore + socialScore;
   }
 
   private static calculateRecencyScore(createdAt: Date): number {
@@ -31,5 +39,29 @@ export class PostScorer {
       : postCategory._id?.toString() || postCategory.toString();
 
     return preferredCategories.includes(categoryId) ? 50 : 0;
+  }
+
+  private static calculateSocialScore(post: PostDoc, context: ScoringContext): number {
+    if (!context.currentUserId) return 0;
+
+    const authorId = typeof post.author === 'string'
+      ? post.author
+      : post.author?._id?.toString();
+
+    if (!authorId) return 0;
+
+    let score = 0;
+
+    if (authorId === context.currentUserId) {
+      score += 200;
+    }
+
+    if (context.friendIds?.includes(authorId)) {
+      score += 150;
+    } else if (context.followingIds?.includes(authorId)) {
+      score += 100;
+    }
+
+    return score;
   }
 }

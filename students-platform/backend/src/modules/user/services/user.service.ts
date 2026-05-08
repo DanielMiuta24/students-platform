@@ -22,6 +22,21 @@ export interface getUserByUsername{
     username:string;
 }
 
+export interface ChangePasswordDTO {
+  userId: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface UpdateProfileDTO {
+  userId: string;
+  name?: string;
+  bio?: string;
+  location?: string;
+  avatar?: string;
+}
+
 
 
 export type SafeUser = {
@@ -91,6 +106,39 @@ export class UserService {
            return user;
     }
 
+    async changePassword({ userId, currentPassword, newPassword, confirmPassword }: ChangePasswordDTO): Promise<void> {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('USER_NOT_FOUND');
+      }
+
+      if (!user.password) {
+        throw new Error('PASSWORD_NOT_SET');
+      }
+
+      const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+      if (!isCurrentPasswordValid) {
+        throw new Error('INCORRECT_CURRENT_PASSWORD');
+      }
+
+      user.password = newPassword;
+      await user.save();
+    }
+
+    async updateProfile({ userId, name, bio, location, avatar }: UpdateProfileDTO): Promise<UserDoc> {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('USER_NOT_FOUND');
+      }
+
+      if (name !== undefined) user.name = name;
+      if (bio !== undefined) user.bio = bio;
+      if (location !== undefined) user.location = location;
+      if (avatar !== undefined) user.avatar = avatar;
+
+      await user.save();
+      return user;
+    }
 
 
   toSafeUser(user: UserDoc): SafeUser {

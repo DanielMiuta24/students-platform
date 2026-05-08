@@ -65,6 +65,28 @@ export const getPostFeed = async (cursor?: string, limit: number = 10): Promise<
   }
 };
 
+export const getScoredFeed = async (
+  userId?: string,
+  limit: number = 10,
+  preferredCategories?: string[],
+  cursor?: string
+): Promise<CursorPostsResult> => {
+  try {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+    if (userId) params.append('userId', userId);
+    if (preferredCategories && preferredCategories.length > 0) {
+      params.append('preferredCategories', preferredCategories.join(','));
+    }
+    if (cursor) params.append('cursor', cursor);
+
+    const response = await api.get<CursorPostsResult>(`/posts/feed/scored?${params.toString()}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch scored feed');
+  }
+};
+
 export const getPostById = async (postId: string, incrementView: boolean = false): Promise<{ post: SafePost }> => {
   try {
     const params = incrementView ? '?incrementView=true' : '';

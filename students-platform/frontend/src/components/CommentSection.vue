@@ -139,7 +139,7 @@ const sessionStore = useSessionStore();
 const isAuthenticated = computed(() => sessionStore.isAuthenticated);
 const currentUserId = computed(() => sessionStore.user?.id);
 const userAvatar = computed(() =>
-  sessionStore.user ? getAvatarUrl(sessionStore.user.username) : ''
+  sessionStore.user ? getAvatarUrl(sessionStore.user.username, sessionStore.user.avatar) : ''
 );
 
 const {
@@ -208,7 +208,6 @@ const submitComment = async () => {
     replyingTo.value = null;
     emit('comment-added');
   } catch (err) {
-    console.error('Failed to post comment:', err);
   }
 };
 

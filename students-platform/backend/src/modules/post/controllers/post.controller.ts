@@ -86,8 +86,11 @@ class PostController {
       }
 
       if (req.query.incrementView === 'true') {
-        await postService.incrementViewCount(postId);
-        post.viewCount += 1;
+        const userId = (req as AuthenticatedRequest).user?.id;
+        await postService.incrementViewCount(postId, userId);
+        if (!userId || !(post as any).viewedBy?.includes(userId)) {
+          post.viewCount += 1;
+        }
       }
 
       return res.status(PostController.HTTP_STATUS.OK).json({
@@ -112,8 +115,11 @@ class PostController {
       }
 
       if (req.query.incrementView === 'true') {
-        await postService.incrementViewCount(post._id.toString());
-        post.viewCount += 1;
+        const userId = (req as AuthenticatedRequest).user?.id;
+        await postService.incrementViewCount(post._id.toString(), userId);
+        if (!userId || !(post as any).viewedBy?.includes(userId)) {
+          post.viewCount += 1;
+        }
       }
 
       return res.status(PostController.HTTP_STATUS.OK).json({
@@ -223,9 +229,14 @@ class PostController {
       const preferredCategories = req.query.preferredCategories as string;
       const categories = preferredCategories ? preferredCategories.split(',') : [];
 
+      const userId = req.query.userId as string | undefined;
+      const cursor = req.query.cursor as string | undefined;
+
       const result = await postService.getScoredFeed({
+        cursor,
         limit: safeLimit,
         preferredCategories: categories,
+        userId,
       });
 
       return res.status(PostController.HTTP_STATUS.OK).json(result);
