@@ -21,7 +21,8 @@ export class ImageService {
         },
         (error, result) => {
           if (error) {
-            reject(new Error(IMAGE_ERROR.CLOUDINARY_ERROR));
+            console.error('Cloudinary upload error:', error);
+            reject(new Error(`${IMAGE_ERROR.CLOUDINARY_ERROR}: ${error.message || 'Unknown error'}`));
             return;
           }
 
@@ -44,7 +45,8 @@ export class ImageService {
       file.stream.pipe(uploadStream);
 
       file.stream.on('error', (error) => {
-        reject(new Error(IMAGE_ERROR.UPLOAD_FAILED));
+        console.error('File stream error:', error);
+        reject(new Error(`${IMAGE_ERROR.UPLOAD_FAILED}: ${error.message || 'Stream error'}`));
       });
     });
   }
@@ -86,8 +88,9 @@ export class ImageService {
   async deleteImage(publicId: string): Promise<void> {
     try {
       await cloudinary.uploader.destroy(publicId);
-    } catch (error) {
-      throw new Error(IMAGE_ERROR.CLOUDINARY_ERROR);
+    } catch (error: any) {
+      console.error('Cloudinary delete error:', error);
+      throw new Error(`${IMAGE_ERROR.CLOUDINARY_ERROR}: ${error.message || 'Delete failed'}`);
     }
   }
 

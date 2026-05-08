@@ -64,6 +64,7 @@
         :key="`post-${post.id}-${post.updatedAt}`"
         :post="post"
         :isOwner="isOwner"
+        @edit="handleEdit"
         @update="handlePostUpdate"
         @delete="handlePostDelete"
       />
@@ -97,6 +98,13 @@
       :type="toastType"
       @close="showToast = false"
     />
+
+    <EditPostModal
+      v-if="editingPost"
+      :post="editingPost"
+      @close="editingPost = null"
+      @updated="handlePostUpdated"
+    />
   </section>
 </template>
 
@@ -105,6 +113,7 @@ import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfilePosts } from '../composables/useProfilePosts';
 import PostCard from './PostCard.vue';
+import EditPostModal from './EditPostModal.vue';
 import Toast from './Toast.vue';
 import type { SafePost } from '../types/post';
 
@@ -143,6 +152,7 @@ const showToast = ref(false);
 const toastTitle = ref('');
 const toastMessage = ref('');
 const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success');
+const editingPost = ref<SafePost | null>(null);
 
 const showNotification = (
   title: string,
@@ -180,6 +190,17 @@ watch(() => props.isFriend, (newIsFriend) => {
 
 const handlePostUpdate = (updatedPost: SafePost) => {
   updatePost(updatedPost);
+  showNotification('Post Updated', 'Your post has been updated successfully.');
+  refresh();
+};
+
+const handleEdit = (post: SafePost) => {
+  editingPost.value = post;
+};
+
+const handlePostUpdated = (updatedPost: SafePost) => {
+  updatePost(updatedPost);
+  editingPost.value = null;
   showNotification('Post Updated', 'Your post has been updated successfully.');
   refresh();
 };
