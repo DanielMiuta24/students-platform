@@ -33,6 +33,13 @@ router.get(
   commentController.getCommentCount
 );
 
+router.post(
+  '/post/:postId/typing',
+  authMiddleware,
+  validatePostId,
+  commentController.notifyTyping
+);
+
 
 router.get(
   '/:commentId',
