@@ -96,3 +96,7 @@ export const updateComment = async (
 export const deleteComment = async (commentId: string): Promise<void> => {
   await secureApi.delete(`/comments/${commentId}`);
 };
+
+export const notifyTyping = async (postId: string, isTyping: boolean, parentCommentId?: string): Promise<void> => {
+  await secureApi.post(`/comments/post/${postId}/typing`, { isTyping, parentCommentId });
+};

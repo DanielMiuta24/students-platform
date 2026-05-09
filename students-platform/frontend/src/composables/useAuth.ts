@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import type { LoginForm, RegisterForm, AuthResponse, SafeUser } from '../types/auth';
 import { loginUser, registerUser, logoutUser, getProfile } from '../api/auth';
 import { useSessionStore } from '../store/session';
@@ -8,6 +9,7 @@ export const useAuth = () => {
     const error = ref<string | null>(null);
     const success = ref<string | null>(null);
     const session = useSessionStore();
+    const { user, isAuthenticated } = storeToRefs(session);
 
     const register = async (form: RegisterForm) => {
         loading.value = true;
@@ -56,8 +58,8 @@ export const useAuth = () => {
         loading,
         error,
         success,
-        user: session.user,
-        isAuthenticated: session.isAuthenticated,
+        user,
+        isAuthenticated,
         register,
         login,
         logout,

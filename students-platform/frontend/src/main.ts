@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router'
+import { useSessionStore } from './store/session'
 
 import './assets/styles.css'
 
@@ -12,14 +13,26 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 const app = createApp(App)
 
+const pinia = createPinia()
 
+app.use(pinia)
 app.use(router)
-app.use(createPinia())
 app.use(ElementPlus)
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
 }
 
-app.mount('#app')
+// Restore session before mounting the app
+const sessionStore = useSessionStore()
+console.log('[App] Starting session restoration...')
+sessionStore.restoreSession()
+    .catch(err => {
+        console.warn('[App] Failed to restore session:', err)
+    })
+    .finally(() => {
+        console.log('[App] Session restoration complete, mounting app...')
+        console.log('[App] User after restoration:', sessionStore.user?.username)
+        app.mount('#app')
+    })
 

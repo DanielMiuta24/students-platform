@@ -7,6 +7,9 @@ export default defineConfig({
     vue(),
     tailwindcss()
   ],
+  optimizeDeps: {
+    include: ['socket.io-client']
+  },
   server: {
     host: true,
     port: 5173,
