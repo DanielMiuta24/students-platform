@@ -53,6 +53,7 @@
         :postAuthorId="postAuthorId"
         :currentUserId="currentUserId"
         :depth="0"
+        :sendTypingIndicator="sendTypingIndicator"
         @reply="handleReply"
         @update="handleUpdateComment"
         @delete="handleDeleteComment"
@@ -86,6 +87,28 @@
         class="form-avatar"
       />
       <div class="form-input-wrapper">
+        <!-- Typing indicator with avatars, names, and animated dots -->
+        <div v-if="Array.from(typingUsers.values()).length > 0" class="typing-indicator">
+          <div class="typing-user-info">
+            <div class="typing-avatars">
+              <img
+                v-for="(typingUser, index) in Array.from(typingUsers.values()).slice(0, 3)"
+                :key="typingUser.userId"
+                :src="getAvatarUrl(typingUser.name, typingUser.userAvatar)"
+                :alt="typingUser.name"
+                class="typing-avatar"
+                :style="{ zIndex: 3 - index }"
+              />
+            </div>
+            <span class="typing-names">{{ getTypingNamesText(Array.from(typingUsers.values())) }}</span>
+          </div>
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+
         <textarea
           v-model="commentContent"
           placeholder="Write a comment..."
@@ -93,6 +116,8 @@
           rows="3"
           maxlength="2000"
           :disabled="isSubmitting"
+          @input="handleTyping"
+          @blur="handleStopTyping"
           @keydown.meta.enter="submitComment"
           @keydown.ctrl.enter="submitComment"
         />
@@ -116,8 +141,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, provide } from 'vue';
 import { useComments } from '../composables/useComments';
+import { useRealtimeComments } from '../composables/useRealtimeComments';
+import { useCommentTyping } from '../composables/useCommentTyping';
 import CommentItem from './CommentItem.vue';
 import type { SafeComment } from '../api/comment';
 import { useSessionStore } from '../store/session';
@@ -161,6 +188,97 @@ const replyingTo = ref<SafeComment | null>(null);
 const showAllComments = ref(false);
 const sortBy = ref<'relevant' | 'newest' | 'oldest'>('relevant');
 
+// Real-time features
+const latestCommentCreated = ref<SafeComment | null>(null);
+const latestCommentUpdated = ref<SafeComment | null>(null);
+const latestCommentDeleted = ref<{ commentId: string; childCommentIds: string[] } | null>(null);
+
+const handleCommentCreated = (comment: SafeComment) => {
+  latestCommentCreated.value = comment; // Notify watchers
+
+  if (!comment.parentCommentId) {
+    // Only add if it's not already in the list
+    if (!comments.value.find(c => c.id === comment.id)) {
+      comments.value.unshift(comment);
+      pagination.value.total += 1;
+      emit('comment-added');
+    }
+  } else {
+    // If it's a reply, also emit to update the count
+    emit('comment-added');
+  }
+};
+
+const handleCommentUpdated = (updatedComment: SafeComment) => {
+  latestCommentUpdated.value = updatedComment; // Notify watchers
+
+  const index = comments.value.findIndex(c => c.id === updatedComment.id);
+  if (index !== -1) {
+    comments.value[index] = updatedComment;
+  }
+};
+
+const handleCommentDeleted = (commentId: string, childCommentIds: string[]) => {
+  console.log('[CommentSection] handleCommentDeleted:', commentId, 'with', childCommentIds.length, 'child comments');
+  latestCommentDeleted.value = { commentId, childCommentIds }; // Notify watchers
+
+  comments.value = comments.value.filter(c => c.id !== commentId);
+  comments.value = comments.value.filter(c => !childCommentIds.includes(c.id));
+
+  const deletedCount = 1 + childCommentIds.length;
+  pagination.value.total -= deletedCount;
+  emit('comment-deleted');
+};
+
+const {
+  sendTypingIndicator,
+} = useRealtimeComments(
+  props.postId,
+  handleCommentCreated,
+  handleCommentUpdated,
+  handleCommentDeleted
+);
+
+// Provide real-time comment handlers to child CommentItem components
+provide('realtimeCommentEvents', {
+  latestCommentCreated,
+  latestCommentUpdated,
+  latestCommentDeleted,
+});
+
+// Use the comment typing composable for root-level comments (no parent)
+const { typingUsers } = useCommentTyping();
+
+// Helper function to format typing user names
+const getTypingNamesText = (users: any[]) => {
+  if (users.length === 0) return '';
+  if (users.length === 1) return users[0].name;
+  if (users.length === 2) return `${users[0].name} and ${users[1].name}`;
+  return `${users[0].name} and ${users.length - 1} others`;
+};
+
+let typingTimer: number | null = null;
+
+const handleTyping = () => {
+  sendTypingIndicator(true);
+
+  if (typingTimer) {
+    clearTimeout(typingTimer);
+  }
+
+  typingTimer = window.setTimeout(() => {
+    sendTypingIndicator(false);
+  }, 2000);
+};
+
+const handleStopTyping = () => {
+  if (typingTimer) {
+    clearTimeout(typingTimer);
+    typingTimer = null;
+  }
+  sendTypingIndicator(false);
+};
+
 const sortedComments = computed(() => {
   const rootComments = [...comments.value];
 
@@ -198,6 +316,13 @@ onMounted(() => {
 
 const submitComment = async () => {
   if (!commentContent.value.trim() || isSubmitting.value) return;
+
+  // Clear typing indicator before submitting
+  if (typingTimer) {
+    clearTimeout(typingTimer);
+    typingTimer = null;
+  }
+  sendTypingIndicator(false);
 
   try {
     await addComment(
@@ -511,5 +636,89 @@ const handleDeleteComment = async () => {
 .load-more-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.typing-indicator {
+  position: absolute;
+  top: -36px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.typing-user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.typing-avatars {
+  display: flex;
+}
+
+.typing-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  margin-left: -6px;
+  object-fit: cover;
+}
+
+.typing-avatar:first-child {
+  margin-left: 0;
+}
+
+.typing-names {
+  font-size: 13px;
+  font-weight: 500;
+  color: #050505;
+}
+
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 12px;
+  background: #e4e6eb;
+  border-radius: 12px;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: #65676b;
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

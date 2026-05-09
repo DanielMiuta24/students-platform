@@ -1,6 +1,7 @@
 import { CommentModel, type CommentDoc } from '../models';
 import { PostModel } from '../../post/models';
 import { LikeModel } from '../../like/models';
+import { realtimeService } from '../../realtime/services';
 
 export interface CreateCommentDTO {
   postId: string;
@@ -67,6 +68,13 @@ export class CommentService {
     // Populate author data before returning
     await comment.populate('author', 'name username avatar');
 
+    // Emit realtime event
+    realtimeService.publishToRoom('post', data.postId, 'comment:created', {
+      id: comment._id.toString(),
+      timestamp: new Date(),
+      data: this.toSafeComment(comment),
+    });
+
     return comment;
   }
 
@@ -112,6 +120,15 @@ export class CommentService {
       .populate('author', 'name username avatar')
       .exec();
 
+    if (comment) {
+      // Emit realtime event
+      realtimeService.publishToRoom('post', comment.post.toString(), 'comment:updated', {
+        id: comment._id.toString(),
+        timestamp: new Date(),
+        data: this.toSafeComment(comment),
+      });
+    }
+
     return comment;
   }
 
@@ -150,6 +167,16 @@ export class CommentService {
 
     // Decrement the post's comment count
     await PostModel.findByIdAndUpdate(postId, { $inc: { commentCount: -totalCommentsToDelete } });
+
+    // Emit realtime event
+    realtimeService.publishToRoom('post', postId.toString(), 'comment:deleted', {
+      id: commentId,
+      timestamp: new Date(),
+      data: {
+        commentId: commentId,
+        childCommentIds: childCommentIds.map(id => id.toString()),
+      },
+    });
   }
 
   async getCommentCount(postId: string): Promise<number> {
@@ -163,7 +190,7 @@ export class CommentService {
   verifyCommentOwnership(comment: CommentDoc, userId: string): boolean {
     const authorId = typeof comment.author === 'object' && comment.author !== null && '_id' in comment.author
       ? (comment.author as any)._id.toString()
-      : comment.author.toString();
+      : String(comment.author);
     return authorId === userId;
   }
 
@@ -186,10 +213,10 @@ export class CommentService {
     } else {
       // Post is not populated, fetch it
       const post = await PostModel.findById(comment.post);
-      if (post) {
+      if (post && post.author) {
         postAuthorId = typeof post.author === 'object' && post.author !== null && '_id' in post.author
           ? (post.author as any)._id.toString()
-          : post.author.toString();
+          : String(post.author);
       }
     }
 
@@ -214,6 +241,20 @@ export class CommentService {
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
     };
+  }
+
+  broadcastTypingIndicator(postId: string, userId: string, name: string, userAvatar: string | undefined, isTyping: boolean, parentCommentId?: string): void {
+    realtimeService.publishToRoom('post', postId, 'comment:typing', {
+      id: userId,
+      timestamp: new Date(),
+      data: {
+        userId,
+        name,
+        userAvatar,
+        isTyping,
+        parentCommentId,
+      },
+    });
   }
 }
 

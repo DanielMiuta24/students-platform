@@ -219,6 +219,31 @@ export function useCommentReplies(commentId: string, postId: string) {
     }
   };
 
+  const addReplyFromRealtime = (reply: SafeComment) => {
+    // Only add if it's not already in the list (avoid duplicates)
+    if (!replies.value.find(r => r.id === reply.id)) {
+      replies.value.push(reply);
+      repliesCount.value += 1;
+      pagination.value.total += 1;
+    }
+  };
+
+  const updateReplyFromRealtime = (updatedReply: SafeComment) => {
+    const index = replies.value.findIndex(r => r.id === updatedReply.id);
+    if (index !== -1) {
+      replies.value[index] = updatedReply;
+    }
+  };
+
+  const deleteReplyFromRealtime = (replyId: string) => {
+    const index = replies.value.findIndex(r => r.id === replyId);
+    if (index !== -1) {
+      replies.value.splice(index, 1);
+      repliesCount.value = Math.max(0, repliesCount.value - 1);
+      pagination.value.total = Math.max(0, pagination.value.total - 1);
+    }
+  };
+
   const loadMore = async () => {
     if (!hasMore.value || isLoading.value) return;
     await fetchReplies(pagination.value.page + 1);
@@ -236,6 +261,9 @@ export function useCommentReplies(commentId: string, postId: string) {
     fetchReplies,
     toggleExpanded,
     addReply,
+    addReplyFromRealtime,
+    updateReplyFromRealtime,
+    deleteReplyFromRealtime,
     loadMore,
   };
 }

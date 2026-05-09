@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { createServer } from "http";
 import { db } from "./config/db";
 import { env } from "./config/env";
 import { userRoutes } from './modules/user/routes';
@@ -10,9 +11,11 @@ import { postRoutes } from './modules/post/routes';
 import { likeRoutes } from './modules/like/routes';
 import { commentRoutes } from './modules/comment/routes';
 import { followRoutes } from './modules/follow/routes';
+import { realtimeGateway } from './modules/realtime';
 import cookieParser from 'cookie-parser';
 
 const app = express();
+const httpServer = createServer(app);
 
 app.use(cookieParser());
 
@@ -42,9 +45,12 @@ const port = env.PORT || 3000;
 async function start() {
   await db.connect();
 
-  app.listen(port, () => {
+  realtimeGateway.initialize(httpServer);
+
+  httpServer.listen(port, () => {
     console.log(`API listening on :${port}`);
     console.log(`Public API URL: ${env.API_URL}`);
+    console.log(`WebSocket server ready`);
   });
 }
 

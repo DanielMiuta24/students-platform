@@ -86,6 +86,28 @@
           </button>
         </div>
 
+        <!-- Typing indicator for replies - always visible when someone is typing -->
+        <div v-if="!showReplyBox && Array.from(replyTypingUsers.values()).length > 0" class="typing-indicator-outside">
+          <div class="typing-user-info">
+            <div class="typing-avatars">
+              <img
+                v-for="(typingUser, index) in Array.from(replyTypingUsers.values()).slice(0, 3)"
+                :key="typingUser.userId"
+                :src="getAvatarUrl(typingUser.name, typingUser.userAvatar)"
+                :alt="typingUser.name"
+                class="typing-avatar"
+                :style="{ zIndex: 3 - index }"
+              />
+            </div>
+            <span class="typing-names">{{ getTypingNamesText(Array.from(replyTypingUsers.values())) }}</span>
+          </div>
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+
         <div v-if="showReplyBox" class="reply-box">
           <img
             :src="currentUserAvatar"
@@ -93,6 +115,28 @@
             class="reply-avatar"
           />
           <div class="reply-input-wrapper">
+            <!-- Typing indicator for this reply -->
+            <div v-if="Array.from(replyTypingUsers.values()).length > 0" class="typing-indicator">
+              <div class="typing-user-info">
+                <div class="typing-avatars">
+                  <img
+                    v-for="(typingUser, index) in Array.from(replyTypingUsers.values()).slice(0, 3)"
+                    :key="typingUser.userId"
+                    :src="getAvatarUrl(typingUser.name, typingUser.userAvatar)"
+                    :alt="typingUser.name"
+                    class="typing-avatar"
+                    :style="{ zIndex: 3 - index }"
+                  />
+                </div>
+                <span class="typing-names">{{ getTypingNamesText(Array.from(replyTypingUsers.values())) }}</span>
+              </div>
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+
             <textarea
               ref="replyTextarea"
               v-model="replyContent"
@@ -101,6 +145,8 @@
               rows="2"
               maxlength="2000"
               :disabled="isSubmittingReply"
+              @input="handleReplyTyping"
+              @blur="handleReplyStopTyping"
               @keydown.meta.enter="submitReply"
               @keydown.ctrl.enter="submitReply"
               @keydown.esc="cancelReply"
@@ -146,6 +192,7 @@
               :isReply="true"
               :rootParentId="props.rootParentId || props.comment.id"
               :depth="props.depth + 1"
+              :sendTypingIndicator="props.sendTypingIndicator"
               @reply="$emit('reply', $event)"
               @update="handleReplyUpdate"
               @delete="handleReplyDelete"
@@ -172,6 +219,7 @@
               :isReply="true"
               :rootParentId="props.rootParentId || props.comment.id"
               :depth="2"
+              :sendTypingIndicator="props.sendTypingIndicator"
               @reply="$emit('reply', $event)"
               @update="handleReplyUpdate"
               @delete="handleReplyDelete"
@@ -212,12 +260,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch, inject, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { SafeComment } from '../api/comment';
 import { updateComment, deleteComment, getComment, createComment } from '../api/comment';
 import { useLike } from '../composables/useLike';
 import { useCommentReplies } from '../composables/useComments';
+import { useCommentTyping } from '../composables/useCommentTyping';
 import { getAvatarUrl } from '../utils/avatar';
 import { useSessionStore } from '../store/session';
 import LikesModal from './LikesModal.vue';
@@ -231,6 +280,7 @@ interface Props {
   isReply?: boolean;
   rootParentId?: string;
   depth?: number;
+  sendTypingIndicator?: (isTyping: boolean, parentCommentId?: string) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -322,7 +372,38 @@ const {
   toggleExpanded,
   loadMore: loadMoreReplies,
   addReply,
+  addReplyFromRealtime,
+  updateReplyFromRealtime,
+  deleteReplyFromRealtime,
 } = useCommentReplies(props.comment.id, props.postId);
+
+// Inject real-time comment events from CommentSection
+const realtimeEvents = inject<{
+  latestCommentCreated: Ref<SafeComment | null>;
+  latestCommentUpdated: Ref<SafeComment | null>;
+  latestCommentDeleted: Ref<{ commentId: string; childCommentIds: string[] } | null>;
+} | null>('realtimeCommentEvents', null);
+
+// Watch for real-time reply events for this comment
+if (realtimeEvents) {
+  watch(realtimeEvents.latestCommentCreated, (comment) => {
+    if (comment && comment.parentCommentId === props.comment.id) {
+      addReplyFromRealtime(comment);
+    }
+  });
+
+  watch(realtimeEvents.latestCommentUpdated, (comment) => {
+    if (comment && comment.parentCommentId === props.comment.id) {
+      updateReplyFromRealtime(comment);
+    }
+  });
+
+  watch(realtimeEvents.latestCommentDeleted, (data) => {
+    if (data && replies.value.find(r => r.id === data.commentId)) {
+      deleteReplyFromRealtime(data.commentId);
+    }
+  });
+}
 
 onMounted(async () => {
   if (sessionStore.isAuthenticated) {
@@ -418,10 +499,40 @@ const navigateToTaggedProfile = () => {
 const cancelReply = () => {
   showReplyBox.value = false;
   replyContent.value = '';
+  if (props.sendTypingIndicator) {
+    props.sendTypingIndicator(false, props.comment.id);
+  }
+};
+
+const commentId = computed(() => props.comment.id);
+const { typingUsers: replyTypingUsers } = useCommentTyping(commentId.value);
+
+const handleReplyTyping = () => {
+  if (props.sendTypingIndicator) {
+    props.sendTypingIndicator(true, props.comment.id);
+  }
+};
+
+const handleReplyStopTyping = () => {
+  if (props.sendTypingIndicator) {
+    props.sendTypingIndicator(false, props.comment.id);
+  }
+};
+
+// Helper function to format typing user names
+const getTypingNamesText = (users: any[]) => {
+  if (users.length === 0) return '';
+  if (users.length === 1) return users[0].name;
+  if (users.length === 2) return `${users[0].name} and ${users[1].name}`;
+  return `${users[0].name} and ${users.length - 1} others`;
 };
 
 const submitReply = async () => {
   if (!replyContent.value.trim() || isSubmittingReply.value) return;
+
+  if (props.sendTypingIndicator) {
+    props.sendTypingIndicator(false, props.comment.id);
+  }
 
   isSubmittingReply.value = true;
   try {
@@ -824,6 +935,7 @@ const formattedContent = computed(() => {
 .reply-input-wrapper {
   flex: 1;
   position: relative;
+  padding-top: 40px; /* Make space for typing indicator */
 }
 
 .reply-textarea {
@@ -898,5 +1010,110 @@ const formattedContent = computed(() => {
 
 .comment-text :deep(.mention):hover {
   text-decoration: underline;
+}
+
+/* Typing indicator styles for replies */
+.typing-indicator {
+  position: absolute;
+  top: 4px; /* Position at the top of the padding space */
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.2s ease-in;
+  background: white;
+  padding: 6px 12px;
+  border-radius: 16px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e4e6eb;
+}
+
+/* Typing indicator shown outside reply box */
+.typing-indicator-outside {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  margin-left: 12px;
+  padding: 6px 12px;
+  background: #f0f2f5;
+  border-radius: 16px;
+  animation: fadeIn 0.2s ease-in;
+  font-size: 13px;
+}
+
+.typing-user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.typing-avatars {
+  display: flex;
+}
+
+.typing-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  margin-left: -6px;
+  object-fit: cover;
+}
+
+.typing-avatar:first-child {
+  margin-left: 0;
+}
+
+.typing-names {
+  font-size: 13px;
+  font-weight: 500;
+  color: #050505;
+}
+
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 12px;
+  background: #e4e6eb;
+  border-radius: 12px;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #65676b;
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
 }
 </style>

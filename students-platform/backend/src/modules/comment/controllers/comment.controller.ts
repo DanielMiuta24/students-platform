@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
 import { commentService, type CreateCommentDTO, type UpdateCommentDTO } from '../services';
 import { parsePaginationParams } from '../validators';
+import { User } from '../../user/models';
 
 class CommentController {
   createComment = async (
@@ -186,6 +187,32 @@ class CommentController {
       const count = await commentService.getRepliesCount(commentId);
 
       return res.status(200).json({ count });
+    } catch (err: any) {
+      return next(err);
+    }
+  };
+
+  notifyTyping = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { postId } = req.params;
+      const { isTyping, parentCommentId } = req.body;
+
+      const user = await User.findById(req.user!.id).select('name avatar');
+
+      commentService.broadcastTypingIndicator(
+        postId,
+        req.user!.id,
+        user?.name || req.user!.email.split('@')[0],
+        user?.avatar,
+        isTyping === true,
+        parentCommentId
+      );
+
+      return res.status(200).json({ message: 'Typing status broadcasted' });
     } catch (err: any) {
       return next(err);
     }

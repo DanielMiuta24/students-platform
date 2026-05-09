@@ -24,6 +24,7 @@ export const useSessionStore = defineStore('session', {
 
         async restoreSession() {
             const saved = localStorage.getItem('sessionUser');
+
             if (saved) {
                 this.user = JSON.parse(saved);
                 return;
@@ -32,7 +33,7 @@ export const useSessionStore = defineStore('session', {
             try {
                 const user = await getProfile();
                 this.setUser(user);
-            } catch {
+            } catch (error) {
                 this.clearUser();
             }
         },
