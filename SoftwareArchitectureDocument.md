@@ -126,7 +126,7 @@ root/: Contains the docker-compose.yml and environment configurations.
 /backend: Node.js/Express server.
 
 /docs: Contains the SAD, SRS, and API contracts (Swagger/Bruno).
-![Overall Use Case Diagram](./Visualizations/package.png)
+![Overall Use Case Diagram](./Visualizations/packages1.png)
 
 ### Our database structure in a schema:
 ![Database](./Visualizations/database.png)
