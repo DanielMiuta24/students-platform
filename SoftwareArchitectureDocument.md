@@ -48,7 +48,7 @@ The system follows a **3-Tier Layered Architecture**.
 * **Presentation Tier:** Responsible for the User Interface and client-side logic using Vue.js.
 * **Application Tier:** The "brain" of the system, handling business logic and API routing via Node.js and Express.
 * **Data Tier:** Manages persistent storage using MongoDB and Mongoose schemas.
-
+![Overall Use Case Diagram](./Visualizations/architecture.png)
 ---
 
 ## 3. Architectural Goals and Constraints
@@ -126,7 +126,7 @@ root/: Contains the docker-compose.yml and environment configurations.
 /backend: Node.js/Express server.
 
 /docs: Contains the SAD, SRS, and API contracts (Swagger/Bruno).
-![Overall Use Case Diagram](./Visualizations/package.png)
+![Overall Use Case Diagram](./Visualizations/packages1.png)
 
 ### Our database structure in a schema:
 ![Database](./Visualizations/database.png)
