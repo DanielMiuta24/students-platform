@@ -4,7 +4,7 @@ import { handleValidationErrors } from '../../../shared/middleware/validation.mi
 import { POST_STATUS, POST_VISIBILITY } from '../../../shared/constants';
 import { POST_VALIDATION } from '../constants/post.constants';
 import { ContentValidator } from './post-content.validator';
-import type { UploadRequest } from '../../image/middleware';
+import type { UploadRequest } from '../../image/services/image.types';
 
 const VALID_STATUSES = Object.values(POST_STATUS);
 const VALID_VISIBILITIES = Object.values(POST_VISIBILITY);

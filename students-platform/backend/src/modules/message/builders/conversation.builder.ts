@@ -1,5 +1,4 @@
-import type { SafeUser } from '@/shared/types/domain';
-import type { ConversationDTO, SafeMessage } from '../types';
+import type { ConversationDTO, SafeMessage, SafeUser } from '../types';
 
 export class ConversationDTOBuilder {
   private userId?: string;

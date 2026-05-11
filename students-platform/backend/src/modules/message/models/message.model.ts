@@ -5,7 +5,7 @@ import {
   type HydratedDocument,
   type Model,
 } from 'mongoose';
-import type { AttachmentMeta } from '@/shared/types/files';
+import type { AttachmentMeta } from '../../../shared/types/files';
 
 
 const AttachmentSchema = new Schema<AttachmentMeta>(
@@ -15,7 +15,7 @@ const AttachmentSchema = new Schema<AttachmentMeta>(
     sizeBytes:  { type: Number, required: true, min: 0 },
     storageUrl: { type: String, required: true },
   },
-  { _id: true, _idRequired: false }
+  { _id: false }
 );
 
 

@@ -439,7 +439,7 @@ describe('CommentController', () => {
       };
 
       (commentService.getCommentById as jest.Mock).mockResolvedValue(mockComment);
-      (commentService.verifyCommentOwnership as jest.Mock).mockReturnValue(true);
+      (commentService.canDeleteComment as jest.Mock).mockResolvedValue(true);
       (commentService.deleteComment as jest.Mock).mockResolvedValue(undefined);
 
       await commentController.deleteComment(
@@ -479,7 +479,7 @@ describe('CommentController', () => {
       };
 
       (commentService.getCommentById as jest.Mock).mockResolvedValue(mockComment);
-      (commentService.verifyCommentOwnership as jest.Mock).mockReturnValue(false);
+      (commentService.canDeleteComment as jest.Mock).mockResolvedValue(false);
 
       await commentController.deleteComment(
         mockRequest as AuthenticatedRequest,

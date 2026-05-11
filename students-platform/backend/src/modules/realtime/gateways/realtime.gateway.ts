@@ -107,10 +107,6 @@ export class RealtimeGateway {
     socket.join(userRoom);
     connectionInfo.rooms.push(userRoom);
 
-    console.log(`[RealtimeGateway] User ${userId} connected with socket ${socket.id}`);
-    console.log(`[RealtimeGateway] User ${userId} joined room: ${userRoom}`);
-    console.log(`[RealtimeGateway] Active connections: ${this.connections.size}`);
-
     socket.on('disconnect', () => this.handleDisconnection(socket));
   }
 
@@ -118,7 +114,6 @@ export class RealtimeGateway {
     socket.on('join:room', (room: RoomIdentifier, callback) => {
       try {
         if (!RealtimeValidator.validateRoomIdentifier(room)) {
-          console.log(`[RealtimeGateway] Invalid room identifier:`, room);
           callback?.({ success: false, error: REALTIME_ERROR.INVALID_ROOM });
           return;
         }
@@ -131,7 +126,6 @@ export class RealtimeGateway {
           connectionInfo.rooms.push(roomName);
         }
 
-        console.log(`[RealtimeGateway] Socket ${socket.id} (user ${socket.userId}) joined room: ${roomName}`);
         callback?.({ success: true, room: roomName });
       } catch (error) {
         console.error(`[RealtimeGateway] Error joining room:`, error);
@@ -157,6 +151,31 @@ export class RealtimeGateway {
         callback?.({ success: true, room: roomName });
       } catch (error) {
         callback?.({ success: false, error: REALTIME_ERROR.INVALID_ROOM });
+      }
+    });
+
+    // Handle typing indicator
+    socket.on('typing', (data: { recipientId: string; isTyping: boolean }) => {
+      try {
+        const { recipientId, isTyping } = data;
+        const userId = socket.userId!;
+
+        // Emit to recipient's room
+        const recipientRoom = RealtimeValidator.buildRoomName({ type: 'user', id: recipientId });
+
+        const payload = {
+          id: `typing-${userId}-${recipientId}`,
+          timestamp: new Date(),
+          data: {
+            userId,
+            recipientId,
+            isTyping,
+          },
+        };
+
+        this.io?.to(recipientRoom).emit('typing', payload);
+      } catch (error) {
+        console.error(`[RealtimeGateway] Error handling typing event:`, error);
       }
     });
   }

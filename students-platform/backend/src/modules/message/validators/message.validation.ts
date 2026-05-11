@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { MESSAGE_ERROR, MESSAGE_VALIDATION } from '../constants';
 import type { CreateMessageDTO, UpdateMessageDTO } from '../types';
-import type { AttachmentMeta } from '@/shared/types/files';
+import type { AttachmentMeta } from '../../../shared/types/files';
 
 export class MessageValidator {
   static validateContent(content: string): void {

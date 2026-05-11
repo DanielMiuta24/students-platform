@@ -36,7 +36,10 @@ export const createMockCategory = (overrides = {}) => ({
 });
 
 export const createMockPost = (overrides = {}) => ({
-  _id: { toString: () => 'post123' },
+  _id: {
+    toString: () => 'post123',
+    constructor: { name: 'ObjectId' }
+  },
   title: 'Test Post',
   slug: 'test-post-1234567890',
   content: 'Test content',

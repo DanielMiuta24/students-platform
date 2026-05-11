@@ -13,10 +13,17 @@ import type {
   ReadReceiptPayload,
   ConversationDTO,
 } from '../types';
-import type { SafeUser } from '../../../shared/types/domain';
 import { realtimeService } from '../../realtime/services';
 import { User } from '../../user/models';
 import { followService } from '../../follow/services';
+
+interface SafeUser {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  profilePicture: string | null;
+}
 
 class MessageService {
   async createMessage(dto: CreateMessageDTO, senderId: string): Promise<SafeMessage> {
@@ -62,8 +69,8 @@ class MessageService {
     }
 
     const message = await MessageModel.findById(messageId)
-      .populate('sender', 'name username email profilePicture')
-      .populate('recipient', 'name username email profilePicture');
+      .populate('sender', 'name username email avatar')
+      .populate('recipient', 'name username email avatar');
 
     if (!message) {
       throw new Error(MESSAGE_ERROR.NOT_FOUND);
@@ -108,8 +115,8 @@ class MessageService {
       .sort({ createdAt: -1 })
       .skip((validPage - 1) * validLimit)
       .limit(validLimit)
-      .populate('sender', 'name username email profilePicture')
-      .populate('recipient', 'name username email profilePicture');
+      .populate('sender', 'name username email avatar')
+      .populate('recipient', 'name username email avatar');
 
     return {
       messages: messages.map((msg) => this.toSafeMessage(msg)).reverse(),
@@ -121,12 +128,22 @@ class MessageService {
 
   async getConversations(userId: string): Promise<ConversationListResult> {
     const sentMessages = await MessageModel.aggregate([
-      { $match: { sender: new Types.ObjectId(userId) } },
+      {
+        $match: {
+          sender: new Types.ObjectId(userId),
+          deletedForSender: { $ne: true }
+        }
+      },
       { $group: { _id: '$recipient', lastMessage: { $max: '$createdAt' } } },
     ]);
 
     const receivedMessages = await MessageModel.aggregate([
-      { $match: { recipient: new Types.ObjectId(userId) } },
+      {
+        $match: {
+          recipient: new Types.ObjectId(userId),
+          deletedForRecipient: { $ne: true }
+        }
+      },
       { $group: { _id: '$sender', lastMessage: { $max: '$createdAt' } } },
     ]);
 
@@ -156,7 +173,7 @@ class MessageService {
     }
 
     const users = await User.find({ _id: { $in: Array.from(conversationUserIds) } }).select(
-      'name username email profilePicture'
+      'name username email avatar'
     );
 
     const conversations = await Promise.all(
@@ -165,13 +182,21 @@ class MessageService {
 
         const latestMessageDoc = await MessageModel.findOne({
           $or: [
-            { sender: new Types.ObjectId(userId), recipient: user._id },
-            { sender: user._id, recipient: new Types.ObjectId(userId) },
+            {
+              sender: new Types.ObjectId(userId),
+              recipient: user._id,
+              deletedForSender: { $ne: true }
+            },
+            {
+              sender: user._id,
+              recipient: new Types.ObjectId(userId),
+              deletedForRecipient: { $ne: true }
+            },
           ],
         })
           .sort({ createdAt: -1 })
-          .populate('sender', 'name username email profilePicture')
-          .populate('recipient', 'name username email profilePicture');
+          .populate('sender', 'name username email avatar')
+          .populate('recipient', 'name username email avatar');
 
         const unreadCount = await MessageModel.countDocuments({
           sender: user._id,
@@ -211,7 +236,6 @@ class MessageService {
 
     this.verifyOwnership(message, userId);
 
-    // Check if message is within 15 minutes edit window
     const messageAge = Date.now() - message.createdAt!.getTime();
     const maxEditAge = MESSAGE_VALIDATION.EDIT_TIME_MINUTES * 60 * 1000;
 
@@ -224,7 +248,6 @@ class MessageService {
     message.editedAt = new Date();
     await message.save();
 
-    // Store IDs before population
     const senderId = message.sender.toString();
     const recipientId = message.recipient.toString();
 
@@ -236,12 +259,6 @@ class MessageService {
       timestamp: new Date(),
       data: safeMessage,
     };
-
-    console.log('[MessageService] Emitting message:updated event to rooms:', [
-      { type: 'user', id: senderId },
-      { type: 'user', id: recipientId },
-    ]);
-    console.log('[MessageService] Event payload:', payload);
 
     await realtimeService.publishToMultipleRooms(
       [
@@ -275,7 +292,6 @@ class MessageService {
     const recipientId = message.recipient.toString();
 
     if (deleteFor === 'everyone') {
-      // Check if message is within 68 hours
       const messageAge = Date.now() - message.createdAt!.getTime();
       const maxAge = MESSAGE_VALIDATION.DELETE_FOR_EVERYONE_HOURS * 60 * 60 * 1000;
 
@@ -283,7 +299,6 @@ class MessageService {
         throw new Error(MESSAGE_ERROR.DELETE_FOR_EVERYONE_EXPIRED);
       }
 
-      // Delete for everyone
       message.isDeletedForEveryone = true;
       message.deletedAt = new Date();
       message.content = 'This message was deleted';
@@ -307,14 +322,12 @@ class MessageService {
         payload
       );
     } else {
-      // Delete for me only
       if (userId === senderId) {
         message.deletedForSender = true;
       } else {
         message.deletedForRecipient = true;
       }
 
-      // If both users deleted it, remove it completely
       if (message.deletedForSender && message.deletedForRecipient) {
         await MessageModel.findByIdAndDelete(messageId);
       } else {
@@ -327,7 +340,6 @@ class MessageService {
         data: { messageId, userId, deleteFor: 'me' },
       };
 
-      // Only notify the user who deleted it
       await realtimeService.publishToRoom('user', userId, MESSAGE_EVENTS.DELETED, payload);
     }
   }
@@ -450,7 +462,7 @@ class MessageService {
         { username: { $regex: searchQuery, $options: 'i' } },
       ],
     })
-      .select('name username email profilePicture')
+      .select('name username email avatar')
       .limit(50)
       .lean();
 
@@ -484,8 +496,8 @@ class MessageService {
 
   private async populateMessage(message: MessageDoc): Promise<MessageDoc> {
     return await message.populate([
-      { path: 'sender', select: 'name username email profilePicture' },
-      { path: 'recipient', select: 'name username email profilePicture' },
+      { path: 'sender', select: 'name username email avatar' },
+      { path: 'recipient', select: 'name username email avatar' },
     ]);
   }
 
@@ -512,22 +524,30 @@ class MessageService {
     const userIdObj = new Types.ObjectId(userId);
     const otherUserIdObj = new Types.ObjectId(otherUserId);
 
-    // Mark all messages as deleted for this user
-    const updateResult = await MessageModel.updateMany(
+    await MessageModel.updateMany(
       {
-        $or: [
-          { sender: userIdObj, recipient: otherUserIdObj },
-          { sender: otherUserIdObj, recipient: userIdObj },
-        ],
+        sender: userIdObj,
+        recipient: otherUserIdObj,
       },
       {
         $set: {
-          [`deletedForSender`]: true,
+          deletedForSender: true,
         },
       }
     );
 
-    // Find messages where both users have deleted and remove them
+    await MessageModel.updateMany(
+      {
+        sender: otherUserIdObj,
+        recipient: userIdObj,
+      },
+      {
+        $set: {
+          deletedForRecipient: true,
+        },
+      }
+    );
+
     const bothDeletedMessages = await MessageModel.find({
       $or: [
         { sender: userIdObj, recipient: otherUserIdObj },
@@ -583,7 +603,7 @@ class MessageService {
       name: user.name,
       username: user.username,
       email: user.email,
-      profilePicture: user.profilePicture || null,
+      profilePicture: user.avatar || null,
     };
   }
 }
