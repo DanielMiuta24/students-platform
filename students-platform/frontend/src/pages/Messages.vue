@@ -3,41 +3,25 @@
     <div class="max-w-6xl mx-auto px-4">
       <div class="bg-white rounded-2xl shadow-lg overflow-hidden h-[720px] flex">
 
-        <!-- Sidebar -->
-        <aside class="w-1/3 border-r border-blue-100 bg-white overflow-y-auto">
-          <div class="p-5 border-b border-blue-100">
-            <h2 class="text-2xl font-bold text-blue-900">Messages</h2>
-            <p class="text-sm text-gray-500 mt-1">Your student conversations</p>
-          </div>
-
-          <ul>
-            <li
-              v-for="conversation in conversations"
-              :key="conversation.userId"
-              @click="selectConversation(conversation)"
-              :class="[
-                'flex items-center p-4 cursor-pointer transition',
-                selectedConversation?.userId === conversation.userId
-                  ? 'bg-blue-50'
-                  : 'hover:bg-gray-50'
-              ]"
-            >
-              <img
-                :src="getAvatarUrl(conversation.user.name, conversation.user.profilePicture)"
-                alt="Profile Picture"
-                class="w-12 h-12 rounded-full mr-4 object-cover"
-              />
-
-              <div class="min-w-0">
-                <h3 class="text-base font-bold text-blue-900 truncate">
-                  {{ conversation.user.name }}
-                </h3>
-                <p class="text-sm text-gray-500 truncate">
-                  {{ conversation.latestMessage?.content || 'No messages yet' }}
-                </p>
-              </div>
-            </li>
-          </ul>
+        <!-- Sidebar using ConversationList component -->
+        <aside class="w-1/3 border-r border-blue-100 bg-white flex flex-col">
+          <ConversationList
+            :conversations="filteredConversations"
+            :selected-conversation-id="selectedConversation?.userId"
+            :empty-message="'No conversations yet'"
+            :show-header="true"
+            :title="'Messages'"
+            :show-new-button="true"
+            :show-search="true"
+            :search-query="searchQuery"
+            @update:search-query="searchQuery = $event"
+            :search-placeholder="'Search conversations...'"
+            :show-filter="true"
+            :filter="conversationFilter"
+            @update:filter="conversationFilter = $event"
+            @select="selectConversation"
+            @new-conversation="showNewConversationDialog = true"
+          />
         </aside>
 
         <!-- Chat Window -->
@@ -118,6 +102,14 @@
       </div>
     </div>
 
+    <!-- New Conversation Dialog -->
+    <NewConversationDialog
+      v-model="showNewConversationDialog"
+      :available-users="availableUsers"
+      :existing-conversation-user-ids="conversations.map(c => c.userId)"
+      @select="startConversationWithUser"
+    />
+
     <!-- Delete Message Dialog -->
     <div
       v-if="showDeleteDialog"
@@ -161,7 +153,10 @@ import { useSessionStore } from '../store/session';
 import { messageService, type Message, type Conversation } from '../services/message.service';
 import { socketService } from '../services/socket';
 import { getAvatarUrl } from '../utils/avatar';
+import { api } from '../services/api';
 import MessageBubble from '../components/MessageBubble.vue';
+import ConversationList from '../components/ConversationList.vue';
+import NewConversationDialog from '../components/NewConversationDialog.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -176,11 +171,35 @@ const isOtherUserTyping = ref(false);
 const messagesContainer = ref<HTMLElement | null>(null);
 const showDeleteDialog = ref(false);
 const messageToDelete = ref<Message | null>(null);
+const searchQuery = ref('');
+const conversationFilter = ref('all');
+const showNewConversationDialog = ref(false);
+const availableUsers = ref<any[]>([]);
 
 const currentUserId = computed(() => sessionStore.user?.id || '');
 const canDeleteForEveryone = computed(() =>
   messageToDelete.value ? messageService.canDeleteForEveryone(messageToDelete.value) : false
 );
+
+const filteredConversations = computed(() => {
+  let filtered = conversations.value;
+
+  // Filter by search query
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(c =>
+      c.user.name.toLowerCase().includes(query) ||
+      c.user.username.toLowerCase().includes(query)
+    );
+  }
+
+  // Filter by unread status
+  if (conversationFilter.value === 'unread') {
+    filtered = filtered.filter(c => c.unreadCount > 0);
+  }
+
+  return filtered;
+});
 
 let typingTimeout: number | null = null;
 
@@ -203,6 +222,15 @@ const loadConversations = async () => {
   }
 };
 
+const loadAvailableUsers = async () => {
+  try {
+    const response = await api.get('users');
+    availableUsers.value = response.data.data;
+  } catch (error) {
+    console.error('Failed to load users:', error);
+  }
+};
+
 const selectConversation = async (conversation: Conversation) => {
   selectedConversation.value = conversation;
   router.push(`/messages/${conversation.userId}`);
@@ -212,12 +240,43 @@ const selectConversation = async (conversation: Conversation) => {
     messages.value = result.messages.reverse();
     await messageService.markConversationAsRead(conversation.userId);
 
+    // Update conversation unread count
+    const conv = conversations.value.find(c => c.userId === conversation.userId);
+    if (conv) {
+      conv.unreadCount = 0;
+    }
+
     nextTick(() => {
       scrollToBottom();
     });
   } catch (error) {
     console.error('Failed to load messages:', error);
   }
+};
+
+const startConversationWithUser = async (user: any) => {
+  // Check if conversation already exists
+  let conversation = conversations.value.find(c => c.userId === user.id);
+
+  if (!conversation) {
+    // Create new conversation
+    conversation = {
+      userId: user.id,
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        profilePicture: user.profilePicture
+      },
+      latestMessage: null,
+      unreadCount: 0,
+      lastActivity: new Date().toISOString()
+    };
+    conversations.value.unshift(conversation);
+  }
+
+  selectConversation(conversation);
 };
 
 const sendMessage = async () => {
@@ -386,8 +445,11 @@ const handleMessageRead = (data: { messageId: string; readAt: string }) => {
   }
 };
 
-onMounted(() => {
-  loadConversations();
+onMounted(async () => {
+  await Promise.all([
+    loadConversations(),
+    loadAvailableUsers()
+  ]);
 
   const socket = socketService.getSocket();
   if (!socket) {
