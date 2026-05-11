@@ -48,7 +48,7 @@ The system follows a **3-Tier Layered Architecture**.
 * **Presentation Tier:** Responsible for the User Interface and client-side logic using Vue.js.
 * **Application Tier:** The "brain" of the system, handling business logic and API routing via Node.js and Express.
 * **Data Tier:** Manages persistent storage using MongoDB and Mongoose schemas.
-
+![Overall Architecture Diagram](./Visualizations/architecture.png)
 ---
 
 ## 3. Architectural Goals and Constraints
@@ -61,7 +61,7 @@ The system follows a **3-Tier Layered Architecture**.
 ## 4. Use-Case View
 This view represents the functional requirements that shape the architecture.
 
-![Overall Use Case Diagram](./Visualizations/use_case_diagram.png)
+![Overall Use Case Diagram](./Visualizations/class_diagram.png)
 
 [cite_start]**Diagram Legend:** [cite: 6]
 * **Yellow Ovals:** Completed Core Features (e.g., UC-01, UC-02).
@@ -81,7 +81,7 @@ This view represents the functional requirements that shape the architecture.
 | **Presentation** | `src/views`, `src/components` | `HomeView.vue`, `SearchView.vue`, `ChatComponent.vue` |
 | **Application** | `server/controllers`, `server/routes` | `AuthController.js`, `SearchController.js`, `ChatHandler.js` |
 | **Data** | `server/models` | `UserSchema.js`, `UniversitySchema.js`, `ThreadSchema.js` |
-
+![Architecture Diagram](./Visualizations/architecture.png)
 ### 5.2 Class Diagrams
 This diagram shows the relationships between the Controllers in the Application Tier and the Schemas in the Data Tier.
 
@@ -116,11 +116,20 @@ The system uses a physical **Client-Server Architecture**.
 
 ---
 
-## 8. Data View
-Our persistent data is managed in a NoSQL format to support the flexible nature of international university data.
+## 8. Implementation  and Data View
+The system is implemented using a Monorepo structure to simplify Docker orchestration.
 
-* **User Collection:** Stores credentials and profile metadata.
-* **Message Collection:** Stores real-time chat history.
+root/: Contains the docker-compose.yml and environment configurations.
+
+/frontend: Vue.js application using Vite for optimized builds.
+
+/backend: Node.js/Express server.
+
+/docs: Contains the SAD, SRS, and API contracts (Swagger/Bruno).
+![Overall Use Case Diagram](./Visualizations/packages1.png)
+
+### Our database structure in a schema:
+![Database](./Visualizations/database.png)
 
 ---
 
@@ -129,5 +138,15 @@ The architecture is designed to support a 99.5% uptime and sub-500ms API respons
 Load Capacity: Support for 500 concurrent users without degradation.
 
 Scalability: Horizontal scaling capabilities via VPS clustering.
----
 
+### 10. Size and Performance
+
+Efficiency: The frontend utilizes lazy-loading for routes (SearchView.vue, ChatComponent.vue) to keep the initial DOM content load under 1.5 seconds.
+
+Memory Constraint: The Node.js API is configured to run within a 512MB RAM container, ensuring it remains performant on low-cost VPS instances.
+
+Database Indexing: MongoDB indexes are applied to UniversityName and Location to ensure query results are returned in <200ms for datasets up to 10,000 entries.
+
+---
+### 11. Architecture MetricsEfferent Coupling ($Ce$): 
+Target < 10 for all core logic packages to ensure high maintainability.Component Dependency: Monitored via Madge to prevent circular dependencies between the API and Database models.

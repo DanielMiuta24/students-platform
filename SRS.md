@@ -83,10 +83,14 @@ A Student Community: A friendly place to connect with students from all over the
 Easy Search Tools: Find the perfect university and scholarships without the headache. No more opening 50 browser tabs. We’ll put everything you need to know in one clean, easy-to-search list.
 Real Tips & Help: A library full of helpful short videos, guides, and advice from current international students. Learn everything from “how to pack” to “how to open a bank account.”
 
+Timezone Resilience: The system shall display all community post timestamps in the user's local timezone.
+
+Bandwidth Optimization: The system shall implement lazy-loading for all university images to ensure page functionality on connections as slow as 1Mbps (reflecting legacy hardware/low-bandwidth constraints).
+
 ### 2.2 Use Cases and Diagrams
 This diagram shows all the major actions (use cases) that each type of user (actor) can perform, giving a complete "bird's-eye view" of the system's capabilities.
 
-![Overall Use Case Diagram](./Visualizations/use_case_diagram.png)
+![Overall Use Case Diagram](./Visualizations/class_diagram.png)
 
 2.2.2 Activity Diagrams (Use Case Realizations)
 These diagrams show the step-by-step flow for a specific use case. They help explain the detailed logic from start to finish.
@@ -117,6 +121,7 @@ Hosting:
 Frontend: dedicated vps
 Backend: dedicated vps
 DB: mongo db
+
 
 Collaboration:
 GitHub (branches: frontend, backend, db)
@@ -213,6 +218,8 @@ Review content flagged by the community through the reporting system.
 | UC-04 | Manage Post | In Progress | [Manage Post](use_cases/UCManagePost.md) |
 | UC-05 | Manage Comment | In Progress | [Manage Comment](use_cases/UCManageComment.md) |
 | UC-06 | Like Post | In Progress | [Like Post](use_cases/UCLikePost.md) |
+| UC-07 | Delete Account | In Progress | [Like Post](use_cases/delete_account.md) |
+| UC-08 | Search Scholarship | In Progress | [Like Post](use_cases/search_scholarships.md) |
 
 #### 3.1.1 Creating an Account:
  Users can sign up with an email and password to create a personal profile.
@@ -310,10 +317,25 @@ The system's architecture must be designed to scale horizontally to accommodate 
 ### 3.5 Supportability
 
 #### 3.5.1 Coding Standards
-We are going to write the code by using all of the most common clean code standards. For example we will name our variables and methods by their functionalities. This will keep the code easy to read by everyone and make further developement much easier.
+We are going to write the code by using all of the most common clean code standards. For example we will name our variables and methods by their functionalities. This will keep the code easy to read by everyone and make further 
+developement much easier.
+
 
 #### 3.5.2 Testing Strategy
-The application will have a high test coverage and all important functionalities and edge cases should be tested. Further mistakes in the implementation will be discovered instantly and it will be easy to locate the error. 
+Our quality assurance strategy for the International Student Compass (ISC) is built on a multi-layered verification approach to ensure the system remains stable, secure, and performant on legacy hardware. This strategy bridges the gap between high-level requirements and low-level code through the following pillars:
+
+### 🧪 Our Integrated Testing FrameworkBehavior-Driven Development (BDD) with Feature Files:
+[View Feature Files (Cucumber/Gherkin)](https://github.com/DanielMiuta24/students-platform/tree/main/students-platform/backend/features)
+We have implemented .feature files using the Gherkin syntax (Given/When/Then) to ensure our functional requirements are directly testable. These files act as a "living document," allowing us to verify that user actions—such as university searches or account creation—behave exactly as specified in the SRS.
+
+### Logic Verification through Unit Tests:
+To maintain the integrity of our core business logic, we utilize a comprehensive suite of Unit Tests. These tests are critical for verifying the individual components of our 3-tier architecture, ensuring that refactored methods (like our extracted search patterns) produce consistent results without side effects.
+
+### Continuous Quality with SonarCloud:
+We leverage SonarCloud for automated static analysis and code quality monitoring. Every time we push code, SonarCloud scans for "code smells," security vulnerabilities, and technical debt. This provides us with measurable metrics—such as Cyclomatic Complexity ($CC$) and code duplication—ensuring our "Clean Code" standards are met before any feature is considered finished.
+
+### Git-Flow and CI/CD Integration:
+Our Git workflow serves as the backbone of our deployment pipeline. By integrating our testing suite and SonarCloud gates directly into our Git branches, we ensure a "test-first" culture. No code is merged into the main branch unless it passes all automated functional and unit tests, guaranteeing that the platform remains reliable for students worldwide.
 
 ### 3.6 Design Constraints
 This section describes the hardware and  architectural  decisions and constraints that guide the development of the application.
