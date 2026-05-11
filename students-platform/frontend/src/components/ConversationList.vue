@@ -71,7 +71,7 @@
             {{ conversation.user.name }}
             <span v-if="conversation.unread" class="unread-badge"></span>
           </div>
-          <div class="conversation-message">{{ conversation.latestMessage || 'No messages yet' }}</div>
+          <div class="conversation-message">{{ conversation.latestMessage?.content || 'No messages yet' }}</div>
         </div>
       </div>
       <div v-if="conversations.length === 0" class="no-messages">
