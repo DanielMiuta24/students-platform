@@ -46,9 +46,8 @@
         :current-user-id="currentUserId"
         :show-info="showMessageInfo === message.id"
         @toggle-info="toggleMessageInfo"
-        @edit-message="$emit('edit-message', $event.messageId, $event.newContent)"
         @delete-message-menu="$emit('delete-message', $event)"
-        @edit-save="$emit('edit-message', $event.messageId, $event.newContent)"
+        @edit-save="(messageId, newContent) => $emit('edit-message', messageId, newContent)"
       />
 
       <!-- Typing indicator -->
