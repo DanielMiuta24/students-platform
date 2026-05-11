@@ -390,32 +390,14 @@
       </div>
 
       <div v-else-if="activeTab === 'about'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="relative h-32 sm:h-40 md:h-48 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 overflow-hidden">
-          <div class="absolute inset-0 opacity-10">
-            <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="about-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <circle cx="20" cy="20" r="2" fill="white" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#about-pattern)" />
-            </svg>
-          </div>
-
-          <div class="relative h-full flex items-center px-4 sm:px-6 md:px-8">
-            <div class="flex items-center gap-3 sm:gap-4 md:gap-6">
-              <div class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl">
-                <svg class="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1">About</h2>
-                <p class="text-sm sm:text-base text-blue-100">{{ communityName }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TabContentHeader
+          :icon="`<svg fill='currentColor' viewBox='0 0 24 24'><path d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>`"
+          title="About"
+          :subtitle="communityName"
+          gradient-from="#3b82f6"
+          gradient-via="#2563eb"
+          gradient-to="#4f46e5"
+        />
 
         <div class="p-4 sm:p-6 md:p-8">
           <div class="space-y-6">
@@ -428,49 +410,7 @@
 
             <div class="border-t pt-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Community Stats</h3>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                  <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="text-sm text-gray-600 font-medium">Members</p>
-                      <p class="text-2xl font-bold text-gray-900">{{ memberCount.toLocaleString() }}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                  <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="text-sm text-gray-600 font-medium">Total Posts</p>
-                      <p class="text-2xl font-bold text-gray-900">{{ posts.length }}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-                  <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="text-sm text-gray-600 font-medium">Created</p>
-                      <p class="text-2xl font-bold text-gray-900">{{ communityCreatedDate }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <CommunityStatsCard :stats="aboutStats" />
             </div>
 
             <div class="border-t pt-6">
@@ -1052,6 +992,10 @@ import { useSessionStore } from '../store/session';
 import CategoryFilter from '../components/CategoryFilter.vue';
 import CreatePostForm from '../components/CreatePostForm.vue';
 import PostCard from '../components/PostCard.vue';
+import TabContentHeader from '../components/TabContentHeader.vue';
+import CommunityStatsCard from '../components/CommunityStatsCard.vue';
+import ConfirmationModal from '../components/ConfirmationModal.vue';
+import EmptyState from '../components/EmptyState.vue';
 import { getScoredFeed } from '../api/post';
 import type { SafePost } from '../types/post';
 
@@ -1160,6 +1104,24 @@ const communityCreatedDate = computed(() => {
   };
   return dates[communityId.value] || 'Recently';
 });
+
+const aboutStats = computed(() => [
+  {
+    icon: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>`,
+    label: 'Members',
+    value: memberCount.value,
+  },
+  {
+    icon: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>`,
+    label: 'Total Posts',
+    value: posts.value.length,
+  },
+  {
+    icon: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+    label: 'Created',
+    value: communityCreatedDate.value,
+  },
+]);
 
 const recentImages = computed(() => {
   const images: Array<{ url: string; alt?: string }> = [];
