@@ -53,9 +53,9 @@
     <div class="conversation-list">
       <div
         v-for="conversation in conversations"
-        :key="conversation.id"
+        :key="conversation.userId"
         class="conversation-item"
-        :class="{ 'selected': selectedConversationId === conversation.id, 'unread': conversation.unread }"
+        :class="{ 'selected': selectedConversationId === conversation.userId, 'unread': conversation.unreadCount > 0 }"
         @click="$emit('select', conversation)"
       >
         <div class="avatar-container">
@@ -69,7 +69,7 @@
         <div class="conversation-info">
           <div class="conversation-name">
             {{ conversation.user.name }}
-            <span v-if="conversation.unread" class="unread-badge"></span>
+            <span v-if="conversation.unreadCount > 0" class="unread-badge"></span>
           </div>
           <div class="conversation-message">{{ conversation.latestMessage?.content || 'No messages yet' }}</div>
         </div>
@@ -85,21 +85,30 @@
 import { defineProps, defineEmits } from 'vue';
 import { getAvatarUrl } from '../utils/avatar';
 
+interface Message {
+  id: string;
+  content: string;
+  [key: string]: any;
+}
+
 interface Conversation {
-  id: number;
+  userId: string;
   user: {
-    id: number;
+    id: string;
     name: string;
-    profilePicture: string;
+    username: string;
+    email: string;
+    profilePicture: string | null;
     isOnline?: boolean;
   };
-  latestMessage: string;
-  unread?: boolean;
+  latestMessage: Message | null;
+  unreadCount: number;
+  lastActivity: string;
 }
 
 defineProps<{
   conversations: Conversation[];
-  selectedConversationId?: number;
+  selectedConversationId?: string;
   emptyMessage?: string;
   showHeader?: boolean;
   title?: string;
