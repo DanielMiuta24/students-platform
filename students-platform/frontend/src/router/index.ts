@@ -4,6 +4,8 @@ import Login from '../pages/Auth/Login.vue';
 import Register from '../pages/Auth/Register.vue';
 import Dashboard from '../pages/Dashboard.vue';
 import Community from '../pages/Community.vue';
+import JoinCommunity from '../pages/JoinCommunity.vue';
+import CreateCommunity from '../pages/CreateCommunity.vue';
 import Universities from '../pages/Universities.vue';
 import Scholarships from '../pages/Scholarships.vue';
 import Feed from '../pages/Feed.vue';
@@ -26,6 +28,8 @@ const routes = [
   { path: '/posts/:id/edit', component: EditPost, name: 'EditPost', meta: { requiresAuth: true } },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/community', component: Community, meta: { requiresAuth: true }},
+  { path: '/community/join', component: JoinCommunity, name: 'JoinCommunity', meta: { requiresAuth: true }},
+  { path: '/community/create', component: CreateCommunity, name: 'CreateCommunity', meta: { requiresAuth: true }},
   { path: '/universities', component: Universities },
   { path: '/scholarships', component: Scholarships },
   { path: '/feed', component: Feed, name: 'Feed', meta: { requiresAuth: true } },

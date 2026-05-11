@@ -1,347 +1,180 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
-    <section class="max-w-6xl mx-auto px-4 py-16">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-        <div>
-          <p class="inline-block bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-full mb-5">
-            Student communities
-          </p>
-
-          <h1 class="text-5xl font-bold text-blue-900 mb-5 leading-tight">
-            Find your study abroad circle.
-          </h1>
-
-          <p class="text-lg text-gray-700 leading-relaxed max-w-xl">
-            Join focused communities based on countries, scholarships, study fields, and student life topics.
-          </p>
-        </div>
-
-        <div class="bg-white/70 rounded-2xl shadow-lg p-6">
-          <div class="community-hero-image"></div>
-        </div>
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 py-16">
+    <div class="max-w-6xl w-full">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <p class="inline-block bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-full mb-4">
+          Student Communities
+        </p>
+        <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          Connect with Your<br />
+          <span class="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Study Abroad Circle
+          </span>
+        </h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+          Join existing communities or create your own to connect with students worldwide
+        </p>
       </div>
-    </section>
 
-    <section class="max-w-6xl mx-auto px-4 -mt-4 mb-8">
-      <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
-          <input
-            v-model="searchInput"
-            placeholder="Search communities, e.g. Germany, scholarships, nursing..."
-            class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-
-          <button
-            @click="showCreateForm = !showCreateForm"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-lg"
-          >
-            {{ showCreateForm ? 'Close' : '+ Create Community' }}
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="showCreateForm" class="max-w-6xl mx-auto px-4 mb-8">
-      <div class="bg-white rounded-xl shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-blue-900 mb-5">Create a Community</h2>
-
-        <form @submit.prevent="createCommunity">
-          <input
-            v-model="newCommunityName"
-            placeholder="Community name, e.g. Study in Germany"
-            class="input"
-          />
-
-          <textarea
-            v-model="newCommunityDescription"
-            rows="4"
-            placeholder="What is this community about?"
-            class="input"
-          ></textarea>
-
-          <select v-model="newCommunityCategory" class="input">
-            <option value="">Choose category</option>
-            <option>Country</option>
-            <option>Scholarships</option>
-            <option>University Applications</option>
-            <option>Visa</option>
-            <option>Student Life</option>
-            <option>Career</option>
-          </select>
-
-          <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg">
-            Create Community
-          </button>
-        </form>
-      </div>
-    </section>
-
-    <section class="max-w-6xl mx-auto px-4 pb-16">
-      <div class="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-6">
-        <aside class="bg-white rounded-xl shadow-lg p-5 h-fit">
-          <h3 class="font-bold text-blue-900 mb-4">Categories</h3>
-
-          <ul class="space-y-3 text-sm">
-            <li
-              v-for="category in categories"
-              :key="category"
-              @click="selectedCategory = category"
-              :class="[
-                'category',
-                selectedCategory === category ? 'active' : ''
-              ]"
-            >
-              {{ category }}
-            </li>
-          </ul>
-        </aside>
-
-        <main>
-          <div class="flex justify-between items-center mb-5">
-            <h2 class="text-2xl font-bold text-blue-900">
-              Communities
-            </h2>
-
-            <p class="text-sm text-gray-500">
-              {{ filteredCommunities.length }} found
-            </p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div
-              v-for="community in filteredCommunities"
-              :key="community.id"
-              class="bg-white rounded-xl shadow-lg p-6 border border-blue-100 hover:shadow-xl transition"
-            >
-              <div class="flex items-start justify-between gap-4 mb-4">
-                <div class="community-icon">
-                  {{ getInitial(community.name) }}
-                </div>
-
-                <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
-                  {{ community.category }}
-                </span>
-              </div>
-
-              <h3 class="text-xl font-bold text-blue-900 mb-2">
-                {{ community.name }}
-              </h3>
-
-              <p class="text-gray-600 mb-4">
-                {{ community.description }}
-              </p>
-
-              <p class="text-sm text-gray-500 mb-5">
-                {{ community.members }} members
-              </p>
-
-              <div class="flex gap-3">
-                <button
-                  @click="toggleJoin(community)"
-                  :class="[
-                    'font-bold px-5 py-2 rounded-lg transition',
-                    community.joined
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  ]"
-                >
-                  {{ community.joined ? 'Joined' : 'Join' }}
-                </button>
-
-                <button @click="viewThreads(community)">
-  View Community
-</button>
+      <!-- Choice Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <!-- Join Community Card -->
+        <div
+          @click="navigateToJoin"
+          class="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border-2 border-transparent hover:border-blue-500 transform hover:-translate-y-2"
+        >
+          <div class="relative h-48 bg-gradient-to-br from-blue-600 to-indigo-600 overflow-hidden">
+            <div class="absolute inset-0 opacity-20">
+              <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="join-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <circle cx="20" cy="20" r="2" fill="white" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#join-pattern)" />
+              </svg>
+            </div>
+            <div class="relative h-full flex items-center justify-center">
+              <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
             </div>
           </div>
-        </main>
+
+          <div class="p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">Browse Communities</h2>
+            <p class="text-gray-600 mb-6 leading-relaxed">
+              Explore and join communities based on countries, scholarships, study fields, and student life topics
+            </p>
+
+            <ul class="space-y-3 mb-6">
+              <li class="flex items-center gap-3 text-sm text-gray-700">
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span>Search from hundreds of communities</span>
+              </li>
+              <li class="flex items-center gap-3 text-sm text-gray-700">
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span>Filter by category and interest</span>
+              </li>
+              <li class="flex items-center gap-3 text-sm text-gray-700">
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span>Join instantly and start connecting</span>
+              </li>
+            </ul>
+
+            <div class="flex items-center justify-between">
+              <span class="text-blue-600 font-semibold group-hover:text-blue-700">
+                Browse Now
+              </span>
+              <svg class="w-6 h-6 text-blue-600 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Create Community Card -->
+        <div
+          @click="navigateToCreate"
+          class="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border-2 border-transparent hover:border-indigo-500 transform hover:-translate-y-2"
+        >
+          <div class="relative h-48 bg-gradient-to-br from-indigo-500 to-purple-600 overflow-hidden">
+            <div class="absolute inset-0 opacity-20">
+              <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="create-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <circle cx="20" cy="20" r="2" fill="white" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#create-pattern)" />
+              </svg>
+            </div>
+            <div class="relative h-full flex items-center justify-center">
+              <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-12 h-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">Create Community</h2>
+            <p class="text-gray-600 mb-6 leading-relaxed">
+              Start your own community and bring together students who share your interests and goals
+            </p>
+
+            <ul class="space-y-3 mb-6">
+              <li class="flex items-center gap-3 text-sm text-gray-700">
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span>Easy step-by-step creation process</span>
+              </li>
+              <li class="flex items-center gap-3 text-sm text-gray-700">
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span>Customize category and description</span>
+              </li>
+              <li class="flex items-center gap-3 text-sm text-gray-700">
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span>Become a community leader</span>
+              </li>
+            </ul>
+
+            <div class="flex items-center justify-between">
+              <span class="text-indigo-600 font-semibold group-hover:text-indigo-700">
+                Get Started
+              </span>
+              <svg class="w-6 h-6 text-indigo-600 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
-    </section>
+
+      <!-- Stats Section -->
+      <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center">
+          <div class="text-3xl font-bold text-blue-600 mb-2">500+</div>
+          <div class="text-gray-600 font-medium">Active Communities</div>
+        </div>
+        <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center">
+          <div class="text-3xl font-bold text-indigo-600 mb-2">10K+</div>
+          <div class="text-gray-600 font-medium">Student Members</div>
+        </div>
+        <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center">
+          <div class="text-3xl font-bold text-purple-600 mb-2">50+</div>
+          <div class="text-gray-600 font-medium">Countries</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
-
-interface Community {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-  members: number;
-  joined: boolean;
-}
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-const searchInput = ref("");
-const selectedCategory = ref("All");
-const showCreateForm = ref(false);
-
-const newCommunityName = ref("");
-const newCommunityDescription = ref("");
-const newCommunityCategory = ref("");
-
-const categories = [
-  "All",
-  "Country",
-  "Scholarships",
-  "University Applications",
-  "Visa",
-  "Student Life",
-  "Career",
-];
-
-const communities = ref<Community[]>([
-  {
-    id: 1,
-    name: "Study in Germany",
-    description: "For students applying to German universities, Ausbildung, scholarships, and student visas.",
-    category: "Country",
-    members: 1240,
-    joined: false,
-  },
-  {
-    id: 2,
-    name: "Scholarship Seekers",
-    description: "Share scholarship opportunities, tips, deadlines, and application advice.",
-    category: "Scholarships",
-    members: 980,
-    joined: true,
-  },
-  {
-    id: 3,
-    name: "International Nursing Students",
-    description: "A space for nursing students planning to study or work abroad.",
-    category: "Career",
-    members: 430,
-    joined: false,
-  },
-  {
-    id: 4,
-    name: "Visa Support Circle",
-    description: "Ask questions about visa documents, appointments, and embassy processes.",
-    category: "Visa",
-    members: 760,
-    joined: false,
-  },
-  {
-    id: 5,
-    name: "University Applications",
-    description: "Help with SOPs, documents, application portals, and admission requirements.",
-    category: "University Applications",
-    members: 690,
-    joined: false,
-  },
-]);
-
-const filteredCommunities = computed(() => {
-  const query = searchInput.value.toLowerCase();
-
-  return communities.value.filter((community) => {
-    const matchesSearch =
-      community.name.toLowerCase().includes(query) ||
-      community.description.toLowerCase().includes(query) ||
-      community.category.toLowerCase().includes(query);
-
-    const matchesCategory =
-      selectedCategory.value === "All" ||
-      community.category === selectedCategory.value;
-
-    return matchesSearch && matchesCategory;
-  });
-});
-
-const getInitial = (name: string) => {
-  return name.charAt(0).toUpperCase();
+const navigateToJoin = () => {
+  router.push('/community/join');
 };
 
-const toggleJoin = (community: Community) => {
-  community.joined = !community.joined;
-  community.members += community.joined ? 1 : -1;
-};
-
-const createCommunity = () => {
-  if (
-    !newCommunityName.value.trim() ||
-    !newCommunityDescription.value.trim() ||
-    !newCommunityCategory.value
-  ) {
-    alert("Please fill in the name, description, and category.");
-    return;
-  }
-
-  communities.value.unshift({
-    id: Date.now(),
-    name: newCommunityName.value,
-    description: newCommunityDescription.value,
-    category: newCommunityCategory.value,
-    members: 1,
-    joined: true,
-  });
-
-  newCommunityName.value = "";
-  newCommunityDescription.value = "";
-  newCommunityCategory.value = "";
-  showCreateForm.value = false;
-};
-
-const viewThreads = (community: Community) => {
-  router.push(`/community/${community.id}`);
+const navigateToCreate = () => {
+  router.push('/community/create');
 };
 </script>
-
-<style scoped>
-.community-hero-image {
-  min-height: 280px;
-  border-radius: 20px;
-  background:
-    linear-gradient(rgba(239, 246, 255, 0.15), rgba(239, 246, 255, 0.15)),
-    url("../images/community-hero.png");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  outline: none;
-  margin-bottom: 16px;
-}
-
-.input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px #bfdbfe;
-}
-
-.category {
-  color: #475569;
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.category.active,
-.category:hover {
-  background: #eff6ff;
-  color: #2563eb;
-  font-weight: 700;
-}
-
-.community-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: #dbeafe;
-  color: #2563eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 24px;
-}
-</style>

@@ -507,7 +507,7 @@
             <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
               <div class="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0">
                 <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                     A
                   </div>
                   <div class="flex-1">
@@ -855,7 +855,7 @@
               @click="toggleInviteSelection(person.id)"
             >
               <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                   {{ person.name.charAt(0) }}
                 </div>
 
