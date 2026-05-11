@@ -61,7 +61,7 @@ The system follows a **3-Tier Layered Architecture**.
 ## 4. Use-Case View
 This view represents the functional requirements that shape the architecture.
 
-![Overall Use Case Diagram](./Visualizations/use_case_diagram.png)
+![Overall Use Case Diagram](./Visualizations/class_diagram.png)
 
 [cite_start]**Diagram Legend:** [cite: 6]
 * **Yellow Ovals:** Completed Core Features (e.g., UC-01, UC-02).
@@ -81,7 +81,7 @@ This view represents the functional requirements that shape the architecture.
 | **Presentation** | `src/views`, `src/components` | `HomeView.vue`, `SearchView.vue`, `ChatComponent.vue` |
 | **Application** | `server/controllers`, `server/routes` | `AuthController.js`, `SearchController.js`, `ChatHandler.js` |
 | **Data** | `server/models` | `UserSchema.js`, `UniversitySchema.js`, `ThreadSchema.js` |
-
+![Architecture Diagram](./Visualizations/architecture.png)
 ### 5.2 Class Diagrams
 This diagram shows the relationships between the Controllers in the Application Tier and the Schemas in the Data Tier.
 
@@ -116,7 +116,7 @@ The system uses a physical **Client-Server Architecture**.
 
 ---
 
-## 8. Implementation View
+## 8. Implementation  and Data View
 The system is implemented using a Monorepo structure to simplify Docker orchestration.
 
 root/: Contains the docker-compose.yml and environment configurations.
@@ -127,6 +127,10 @@ root/: Contains the docker-compose.yml and environment configurations.
 
 /docs: Contains the SAD, SRS, and API contracts (Swagger/Bruno).
 ![Overall Use Case Diagram](./Visualizations/package.png)
+
+### Our database structure in a schema:
+![Database](./Visualizations/database.png)
+
 ---
 
 ## 9. Quality
