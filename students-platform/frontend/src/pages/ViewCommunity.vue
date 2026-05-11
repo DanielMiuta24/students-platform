@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-100">
-    <div class="bg-white sticky top-0 z-10 shadow-md">
+    <div class="shadow-md">
       <div class="relative h-40 sm:h-48 md:h-64 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 overflow-hidden">
         <div class="absolute inset-0 opacity-20">
           <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -31,7 +31,7 @@
       </div>
 
       <div class="max-w-7xl mx-auto px-4 sm:px-4">
-        <div class="relative -mt-12 sm:-mt-16 md:-mt-20 pb-4">
+        <div class="relative -mt-12 sm:-mt-16 md:-mt-20">
           <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 md:gap-6 relative z-10">
             <div class="flex flex-col sm:flex-row items-center sm:items-end gap-0 w-full md:w-auto mx-auto md:mx-0 max-w-lg sm:max-w-none">
               <div class="w-24 h-24 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 bg-gradient-to-br from-white to-gray-50 rounded-t-2xl sm:rounded-l-2xl sm:rounded-t-none flex items-center justify-center shadow-2xl border-4 border-white ring-2 ring-gray-100 z-20">
@@ -141,7 +141,11 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
+    <div class="bg-white sticky top-0 z-30 shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-4">
         <div class="pt-3">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <nav class="flex gap-1 justify-center md:justify-start overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
@@ -242,7 +246,7 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-4 py-4 sm:py-6">
       <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
-        <div class="flex-1 w-full lg:max-w-2xl mx-auto lg:mx-0">
+        <div class="flex-1 w-full lg:max-w-3xl mx-auto lg:mx-0">
 
       <div v-if="activeTab === 'feed'">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
@@ -667,7 +671,7 @@
 
         </div>
 
-        <div class="hidden lg:block w-full lg:w-80 space-y-4 lg:sticky lg:top-24 self-start">
+        <div class="hidden lg:block w-full lg:w-[32rem] space-y-4 lg:sticky lg:top-24 self-start flex-shrink-0">
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div class="p-4 border-b border-gray-200 bg-gray-50">
               <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
