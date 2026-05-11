@@ -55,25 +55,9 @@
     <!-- Main Content -->
     <section class="max-w-6xl mx-auto px-4 pb-16">
       <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-        <!-- Sidebar Categories -->
         <aside class="bg-white rounded-2xl shadow-xl p-6 h-fit border-2 border-blue-100">
           <h3 class="font-bold text-gray-900 mb-4 text-lg">Categories</h3>
-
-          <ul class="space-y-2">
-            <li
-              v-for="category in categories"
-              :key="category"
-              @click="selectedCategory = category"
-              :class="[
-                'px-4 py-2.5 rounded-xl cursor-pointer transition-all font-medium text-sm',
-                selectedCategory === category
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
-              ]"
-            >
-              {{ category }}
-            </li>
-          </ul>
+          <CategoryFilter @change="handleCategoryChange" />
         </aside>
 
         <!-- Communities Grid -->
@@ -160,6 +144,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
+import CategoryFilter from "../components/CategoryFilter.vue";
 
 interface Community {
   id: number;
@@ -173,17 +158,7 @@ interface Community {
 const router = useRouter();
 
 const searchInput = ref("");
-const selectedCategory = ref("All");
-
-const categories = [
-  "All",
-  "Country",
-  "Scholarships",
-  "University Applications",
-  "Visa",
-  "Student Life",
-  "Career",
-];
+const selectedCategory = ref<string | null>(null);
 
 const communities = ref<Community[]>([
   {
@@ -262,12 +237,16 @@ const filteredCommunities = computed(() => {
       community.category.toLowerCase().includes(query);
 
     const matchesCategory =
-      selectedCategory.value === "All" ||
+      selectedCategory.value === null ||
       community.category === selectedCategory.value;
 
     return matchesSearch && matchesCategory;
   });
 });
+
+const handleCategoryChange = (categoryId: string | null) => {
+  selectedCategory.value = categoryId;
+};
 
 const getInitial = (name: string) => {
   return name.charAt(0).toUpperCase();
