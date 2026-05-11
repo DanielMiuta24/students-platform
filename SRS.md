@@ -325,7 +325,7 @@ developement much easier.
 Our quality assurance strategy for the International Student Compass (ISC) is built on a multi-layered verification approach to ensure the system remains stable, secure, and performant on legacy hardware. This strategy bridges the gap between high-level requirements and low-level code through the following pillars:
 
 ### 🧪 Our Integrated Testing FrameworkBehavior-Driven Development (BDD) with Feature Files:
-[View Feature Files (Cucumber/Gherkin)](https://github.com/YourUsername/students-platform/tree/main/backend/features)
+[View Feature Files (Cucumber/Gherkin)](https://github.com/DanielMiuta/students-platform/backend/features)
 We have implemented .feature files using the Gherkin syntax (Given/When/Then) to ensure our functional requirements are directly testable. These files act as a "living document," allowing us to verify that user actions—such as university searches or account creation—behave exactly as specified in the SRS.
 
 ### Logic Verification through Unit Tests:
