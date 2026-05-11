@@ -1,5 +1,12 @@
-import type { AttachmentMeta } from '@/shared/types/files';
-import type { SafeUser } from '@/shared/types/domain';
+import type { AttachmentMeta } from '../../../shared/types/files';
+
+export interface SafeUser {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  profilePicture: string | null;
+}
 
 export interface CreateMessageDTO {
   recipientId: string;

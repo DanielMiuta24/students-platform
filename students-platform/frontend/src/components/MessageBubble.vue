@@ -26,7 +26,7 @@
           </svg>
           <span>Edit</span>
         </button>
-        <button @click="$emit('delete-message-menu', message)" class="dropdown-menu-item delete-item">
+        <button @click="handleDelete" class="dropdown-menu-item delete-item">
           <svg xmlns="http://www.w3.org/2000/svg" class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
@@ -36,21 +36,22 @@
 
       <div
         :class="[
-          'inline-block px-4 py-3 rounded-2xl max-w-[70%] text-sm leading-relaxed break-words',
+          'inline-block px-4 py-2.5 rounded-2xl text-sm leading-normal overflow-wrap-break',
           isSent
             ? 'bg-blue-600 text-white rounded-br-sm'
-            : 'bg-white text-gray-700 rounded-bl-sm shadow-sm',
+            : 'bg-white text-gray-800 rounded-bl-sm shadow-sm',
           message.isDeletedForEveryone && 'italic opacity-75'
         ]"
+        style="word-break: break-word; overflow-wrap: break-word; max-width: 100%;"
       >
         <!-- Inline edit mode -->
         <div v-if="isEditing" class="edit-mode">
           <textarea
             ref="editInput"
             v-model="editContent"
-            @keyup.enter.exact="saveEdit"
-            @keyup.esc="cancelEdit"
-            rows="3"
+            @keydown.enter.exact.prevent="saveEdit"
+            @keydown.esc="cancelEdit"
+            @input="autoResize"
             class="edit-input"
             :class="isSent ? 'edit-input-sent' : 'edit-input-received'"
           />
@@ -61,7 +62,7 @@
         </div>
 
         <!-- Normal display mode -->
-        <div v-else class="whitespace-pre-wrap">{{ displayContent }}</div>
+        <div v-else class="whitespace-pre-wrap" style="word-break: normal; overflow-wrap: break-word;">{{ displayContent }}</div>
         <div
           :class="[
             'flex items-center gap-2 mt-1',
@@ -73,7 +74,10 @@
             v-if="isSent || message.isEdited || message.isDeletedForEveryone"
             @click="$emit('toggle-info', message.id)"
             class="status-icon-info cursor-pointer"
-            :class="isSent && message.isRead && !message.isDeletedForEveryone ? 'seen' : 'delivered'"
+            :class="[
+              isSent && message.isRead && !message.isDeletedForEveryone ? 'seen' : 'delivered',
+              !isSent && (message.isEdited || message.isDeletedForEveryone) ? 'received-info' : ''
+            ]"
             viewBox="0 0 16 16"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -84,6 +88,8 @@
           <span class="text-[10px]">{{ formatTime(new Date(message.createdAt)) }}</span>
           <!-- Edited indicator -->
           <span v-if="message.isEdited && !message.isDeletedForEveryone" class="text-[10px] opacity-75">(edited)</span>
+          <!-- Deleted indicator -->
+          <span v-if="message.isDeletedForEveryone" class="text-[10px] opacity-75">(deleted)</span>
           <!-- Two checkmarks - RIGHT of time (green only when seen) -->
           <svg
             v-if="isSent && !message.isDeletedForEveryone"
@@ -102,7 +108,7 @@
     <!-- Message info popup -->
     <div
       v-if="showInfo"
-      class="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-xl p-3 min-w-[200px] z-50 text-xs"
+      class="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-xl p-3 min-w-[200px] z-[1002] text-xs"
     >
       <!-- Show delivery and read info only for sent messages that aren't deleted -->
       <div v-if="isSent && !message.isDeletedForEveryone" class="flex justify-between gap-3 py-1">
@@ -126,7 +132,7 @@
     </div>
     <!-- Seen status below message -->
     <div
-      v-if="isSent && message.isRead && message.readAt && !message.isDeletedForEveryone"
+      v-if="showSeenStatus && isSent && message.isRead && message.readAt && !message.isDeletedForEveryone"
       class="text-[11px] text-gray-500 mt-1 px-2"
     >
       Seen {{ formatTime(new Date(message.readAt)) }}
@@ -135,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, defineEmits, ref, nextTick } from 'vue';
+import { computed, defineProps, defineEmits, ref, nextTick, onMounted, onUnmounted } from 'vue';
 import type { Message } from '../services/message.service';
 import { messageService } from '../services/message.service';
 
@@ -143,6 +149,7 @@ const props = defineProps<{
   message: Message;
   currentUserId: string;
   showInfo: boolean;
+  showSeenStatus?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -199,23 +206,37 @@ const handleRightClick = (event: MouseEvent) => {
 
 const toggleMessageMenu = () => {
   showMenu.value = !showMenu.value;
+  console.log('[MessageBubble] Menu toggled:', showMenu.value);
 };
 
 const startEdit = () => {
+  console.log('[MessageBubble] Starting edit for message:', props.message.id);
   showMenu.value = false;
   isEditing.value = true;
   editContent.value = props.message.content;
   nextTick(() => {
-    editInput.value?.focus();
+    if (editInput.value) {
+      editInput.value.focus();
+      autoResize();
+    }
   });
 };
 
+const autoResize = () => {
+  if (editInput.value) {
+    editInput.value.style.height = 'auto';
+    editInput.value.style.height = editInput.value.scrollHeight + 'px';
+  }
+};
+
 const cancelEdit = () => {
+  console.log('[MessageBubble] Cancelling edit');
   isEditing.value = false;
   editContent.value = '';
 };
 
 const saveEdit = () => {
+  console.log('[MessageBubble] Saving edit:', editContent.value);
   const trimmedContent = editContent.value.trim();
   if (trimmedContent && trimmedContent !== props.message.content) {
     emit('edit-save', props.message.id, trimmedContent);
@@ -223,6 +244,30 @@ const saveEdit = () => {
   isEditing.value = false;
   editContent.value = '';
 };
+
+const handleDelete = () => {
+  console.log('[MessageBubble] Delete clicked');
+  showMenu.value = false;
+  emit('delete-message-menu', props.message);
+};
+
+// Close menu when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.message-dropdown-menu') && !target.closest('.message-menu-button')) {
+    if (showMenu.value) {
+      showMenu.value = false;
+    }
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <style scoped>
@@ -235,11 +280,11 @@ const saveEdit = () => {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  max-width: 80%;
+  max-width: 90%;
 }
 
 .message-menu-button {
-  opacity: 0;
+  opacity: 0.6;
   transition: opacity 0.2s;
   width: 24px;
   height: 24px;
@@ -280,6 +325,9 @@ const saveEdit = () => {
   z-index: 1000;
   min-width: 160px;
   padding: 4px;
+  /* Prevent menu from going off-screen in narrow containers */
+  transform: translateX(0);
+  max-width: calc(100vw - 20px);
 }
 
 .dropdown-menu-item {
@@ -317,14 +365,14 @@ const saveEdit = () => {
 }
 
 .status-icon-info {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .status-icon-info:hover {
-  transform: scale(1.1);
+  transform: scale(1.2);
 }
 
 .status-icon-info.seen {
@@ -335,6 +383,16 @@ const saveEdit = () => {
   color: rgba(255, 255, 255, 0.7);
 }
 
+.status-icon-info.received-info {
+  color: #6b7280;
+  opacity: 0.9;
+}
+
+.status-icon-info.received-info:hover {
+  color: #374151;
+  opacity: 1;
+}
+
 .status-icon-checkmarks {
   width: 16px;
   height: 16px;
@@ -342,32 +400,33 @@ const saveEdit = () => {
 }
 
 .edit-mode {
-  min-width: 200px;
   width: 100%;
 }
 
 .edit-input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: none;
   border-radius: 8px;
   font-size: 14px;
   outline: none;
-  margin-bottom: 8px;
-  resize: vertical;
-  min-height: 60px;
+  margin-bottom: 10px;
+  resize: none;
+  min-height: 50px;
+  max-height: 300px;
+  overflow-y: auto;
   font-family: inherit;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .edit-input-sent {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .edit-input-sent::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .edit-input-received {
@@ -380,6 +439,34 @@ const saveEdit = () => {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.edit-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn {
+  background: rgba(0, 0, 0, 0.1);
+  color: inherit;
+}
+
+.cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.save-btn {
+  background: rgba(255, 255, 255, 0.3);
+  color: inherit;
+}
+
+.save-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .edit-btn {

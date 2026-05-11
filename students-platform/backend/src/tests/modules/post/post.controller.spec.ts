@@ -112,7 +112,7 @@ describe('PostController', () => {
         mockNext
       );
 
-      expect(postService.incrementViewCount).toHaveBeenCalledWith('post123');
+      expect(postService.incrementViewCount).toHaveBeenCalledWith('post123', 'user123');
       expect(mockResponse.status).toHaveBeenCalledWith(200);
     });
 

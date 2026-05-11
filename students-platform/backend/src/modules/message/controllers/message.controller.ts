@@ -118,7 +118,11 @@ class MessageController {
           res.status(403).json({ error: error.message });
           return;
         }
-        if (error.message === MESSAGE_ERROR.CONTENT_REQUIRED || error.message === MESSAGE_ERROR.CONTENT_TOO_LONG) {
+        if (
+          error.message === MESSAGE_ERROR.CONTENT_REQUIRED ||
+          error.message === MESSAGE_ERROR.CONTENT_TOO_LONG ||
+          error.message === MESSAGE_ERROR.EDIT_TIME_EXPIRED
+        ) {
           res.status(400).json({ error: error.message });
           return;
         }

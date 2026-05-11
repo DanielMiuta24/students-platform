@@ -64,7 +64,6 @@ describe('UploadService', () => {
         height: mockCloudinaryResult.height,
         format: mockCloudinaryResult.format,
         size: mockCloudinaryResult.bytes,
-        imageId: '',
       });
 
       expect(cloudinary.uploader.upload_stream).toHaveBeenCalledWith(

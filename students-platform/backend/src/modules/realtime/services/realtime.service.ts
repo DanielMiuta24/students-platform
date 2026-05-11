@@ -54,11 +54,6 @@ export class RealtimeService {
 
       const roomName = RealtimeValidator.buildRoomName(room);
 
-      // Log which sockets are in this room
-      const socketsInRoom = io?.sockets.adapter.rooms.get(roomName);
-      console.log(`[RealtimeService] Publishing event "${event}" to room: ${roomName}`);
-      console.log(`[RealtimeService] Sockets in room ${roomName}:`, socketsInRoom ? Array.from(socketsInRoom) : 'NONE');
-
       this.publishEvent(dto);
     }
   }

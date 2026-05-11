@@ -89,7 +89,7 @@ describe('PostService', () => {
       const result = await postService.getPostById('post123');
 
       expect(PostModel.findById).toHaveBeenCalledWith('post123');
-      expect(mockQuery.populate).toHaveBeenCalledWith('author', 'name username avatar email');
+      expect(mockQuery.populate).toHaveBeenCalledWith('author', 'name username avatar email type');
       expect(mockQuery.populate).toHaveBeenCalledWith('category', 'name slug');
       expect(result).toEqual(mockPost);
     });

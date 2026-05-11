@@ -6,22 +6,26 @@ class SocketService {
   private socket: Socket | null = null;
   private token: string | null = null;
 
-  connect(authToken: string): Socket {
+  connect(authToken?: string): Socket {
     if (this.socket?.connected) {
       return this.socket;
     }
 
-    this.token = authToken;
+    this.token = authToken || null;
 
-    this.socket = io(SOCKET_URL, {
-      auth: {
-        token: authToken,
-      },
+    const socketConfig: any = {
       withCredentials: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
-    });
+    };
+
+    // Only add auth token if provided
+    if (authToken) {
+      socketConfig.auth = { token: authToken };
+    }
+
+    this.socket = io(SOCKET_URL, socketConfig);
 
     this.socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error.message);

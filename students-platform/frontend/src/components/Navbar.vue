@@ -196,6 +196,7 @@
         @typing="handleChatBoxTyping(chatBox.conversation.userId)"
         @edit-message="handleEditMessage"
         @delete-message="handleDeleteMessage"
+        @mark-as-read="markChatBoxAsRead(chatBox.conversation.userId)"
       />
     </div>
 
@@ -215,6 +216,41 @@
         <el-button type="danger" @click="confirmDeleteConversation">Delete</el-button>
       </template>
     </el-dialog>
+
+    <!-- Delete Message Dialog -->
+    <div
+      v-if="showMessageDeleteDialog"
+      class="fixed inset-0 flex items-center justify-center z-[9999]"
+      @click.self="closeMessageDeleteDialog"
+      style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px);"
+    >
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Delete Message</h3>
+        <p class="text-gray-600 mb-6">Choose how you want to delete this message:</p>
+
+        <div class="space-y-3">
+          <button
+            @click="deleteMessage('me')"
+            class="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg transition font-medium"
+          >
+            Delete for Me
+          </button>
+          <button
+            v-if="canDeleteForEveryone"
+            @click="deleteMessage('everyone')"
+            class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
+          >
+            Delete for Everyone
+          </button>
+          <button
+            @click="closeMessageDeleteDialog"
+            class="w-full px-4 py-3 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-lg transition font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -267,6 +303,8 @@ interface ChatBoxState {
 const openChatBoxes = ref<ChatBoxState[]>([]);
 const showDeleteDialog = ref(false);
 const conversationToDelete = ref<string | null>(null);
+const showMessageDeleteDialog = ref(false);
+const messageToDelete = ref<Message | null>(null);
 
 const userAvatar = computed(() =>
   session.user ? getAvatarUrl(session.user.name, session.user.avatar) : ''
@@ -302,6 +340,10 @@ const displayUnreadCount = computed(() => {
     .reduce((sum, c) => sum + c.unreadCount, 0);
 });
 
+const canDeleteForEveryone = computed(() =>
+  messageToDelete.value ? messageService.canDeleteForEveryone(messageToDelete.value) : false
+);
+
 // Data loading
 const loadConversations = async () => {
   if (!session.isAuthenticated) return;
@@ -324,8 +366,9 @@ const loadUnreadCount = async () => {
 const loadAvailableUsers = async () => {
   if (!session.isAuthenticated) return;
   try {
-    const response = await api.get('users');
-    availableUsers.value = response.data.data;
+    // Use empty search to get all users
+    const users = await messageService.searchUsers('');
+    availableUsers.value = users;
   } catch (error) {
     console.error('Failed to load users:', error);
   }
@@ -370,7 +413,6 @@ const openConversation = async (conversation: Conversation) => {
   try {
     const messages = await messageService.getConversationMessages(conversation.userId);
 
-    // Remove oldest if at limit (3)
     if (openChatBoxes.value.length >= 3) {
       openChatBoxes.value.shift();
     }
@@ -390,7 +432,6 @@ const openConversation = async (conversation: Conversation) => {
     // Mark as read
     await messageService.markConversationAsRead(conversation.userId);
 
-    // Update conversation unread count
     const conv = conversations.value.find(c => c.userId === conversation.userId);
     if (conv) {
       conv.unreadCount = 0;
@@ -454,7 +495,6 @@ const confirmDeleteConversation = async () => {
   try {
     await messageService.deleteConversation(conversationToDelete.value);
 
-    // Remove from conversations
     const convIndex = conversations.value.findIndex(c => c.userId === conversationToDelete.value);
     if (convIndex !== -1) {
       conversations.value.splice(convIndex, 1);
@@ -490,17 +530,12 @@ const sendMessageInChatBox = async (userId: string) => {
       content
     });
 
-    // Add to chat box messages
-    chatBox.conversation.messages.push(message);
-
-    // Update conversation
     const conv = conversations.value.find(c => c.userId === userId);
     if (conv) {
       conv.latestMessage = message;
       conv.lastActivity = message.createdAt;
     }
 
-    // Scroll to bottom
     nextTick(() => {
       scrollChatBoxToBottom(userId);
     });
@@ -526,7 +561,6 @@ const scrollChatBoxToBottom = async (userId: string) => {
     chatBox.newMessagesCount = 0;
     chatBox.isScrolledToBottom = true;
 
-    // Mark messages as read
     const unreadMessages = chatBox.conversation.messages.filter(
       m => !m.isRead && m.recipient.id === session.user?.id
     );
@@ -558,11 +592,40 @@ const handleChatBoxTyping = (userId: string) => {
   }
 };
 
+const markChatBoxAsRead = async (userId: string) => {
+  try {
+    await messageService.markConversationAsRead(userId);
+
+    const conv = conversations.value.find(c => c.userId === userId);
+    if (conv) {
+      conv.unreadCount = 0;
+    }
+
+    const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === userId);
+    if (chatBox) {
+      chatBox.conversation.unreadCount = 0;
+      chatBox.newMessagesCount = 0;
+
+      chatBox.conversation.messages = chatBox.conversation.messages.map(msg => {
+        if (msg.recipient.id === session.user?.id && !msg.isRead) {
+          return {
+            ...msg,
+            isRead: true,
+            readAt: new Date().toISOString()
+          };
+        }
+        return msg;
+      });
+    }
+  } catch (error) {
+    console.error('Failed to mark conversation as read:', error);
+  }
+};
+
 const handleEditMessage = async (messageId: string, newContent: string) => {
   try {
     const updatedMessage = await messageService.updateMessage(messageId, newContent);
 
-    // Update in all open chat boxes
     for (const chatBox of openChatBoxes.value) {
       const index = chatBox.conversation.messages.findIndex(m => m.id === messageId);
       if (index !== -1) {
@@ -571,32 +634,66 @@ const handleEditMessage = async (messageId: string, newContent: string) => {
     }
   } catch (error) {
     console.error('Failed to edit message:', error);
+    // Show user-friendly error message
+    if (error instanceof Error || (typeof error === 'object' && error !== null && 'response' in error)) {
+      const axiosError = error as any;
+      console.error('[Navbar] Edit error details:', {
+        status: axiosError.response?.status,
+        data: axiosError.response?.data,
+        message: axiosError.message
+      });
+      const errorMessage = axiosError.response?.data?.error || 'Failed to edit message';
+      alert(errorMessage);
+    }
   }
 };
 
 const handleDeleteMessage = async (message: Message) => {
-  // For now, just delete for me
-  try {
-    await messageService.deleteMessage(message.id, 'me');
+  messageToDelete.value = message;
+  showMessageDeleteDialog.value = true;
+};
 
-    // Remove from all open chat boxes
-    for (const chatBox of openChatBoxes.value) {
-      const index = chatBox.conversation.messages.findIndex(m => m.id === message.id);
-      if (index !== -1) {
-        chatBox.conversation.messages.splice(index, 1);
+const closeMessageDeleteDialog = () => {
+  showMessageDeleteDialog.value = false;
+  messageToDelete.value = null;
+};
+
+const deleteMessage = async (deleteFor: 'me' | 'everyone') => {
+  if (!messageToDelete.value) return;
+
+  try {
+    await messageService.deleteMessage(messageToDelete.value.id, deleteFor);
+
+    if (deleteFor === 'me') {
+      for (const chatBox of openChatBoxes.value) {
+        const index = chatBox.conversation.messages.findIndex(m => m.id === messageToDelete.value?.id);
+        if (index !== -1) {
+          chatBox.conversation.messages.splice(index, 1);
+        }
       }
     }
+
+    closeMessageDeleteDialog();
   } catch (error) {
     console.error('Failed to delete message:', error);
   }
 };
 
 // WebSocket handlers
-const handleNewMessage = (message: Message) => {
+const handleNewMessage = (payload: any) => {
+
+  const message = payload.data || payload;
+
+  // Safety checks
+  if (!message || !message.sender || !message.recipient) {
+    console.error('[Navbar] Invalid message format:', message);
+    return;
+  }
+
   const isSentByMe = message.sender.id === session.user?.id;
   const isForMe = message.recipient.id === session.user?.id;
 
-  // Update conversations
+
   let conv = conversations.value.find(
     c => c.userId === (isSentByMe ? message.recipient.id : message.sender.id)
   );
@@ -619,25 +716,34 @@ const handleNewMessage = (message: Message) => {
     conversations.value.unshift(conv);
   }
 
-  // Update open chat boxes
   const chatBox = openChatBoxes.value.find(
     cb => cb.conversation.userId === (isSentByMe ? message.recipient.id : message.sender.id)
   );
 
   if (chatBox) {
-    chatBox.conversation.messages.push(message);
+    // Check if message already exists to prevent duplicates
+    const messageExists = chatBox.conversation.messages.some(m => m.id === message.id);
+    const messageCount = chatBox.conversation.messages.filter(m => m.id === message.id).length;
+
+    if (!messageExists) {
+      chatBox.conversation.messages.push(message);
+    } else {
+    }
 
     if (isForMe) {
       if (chatBox.isScrolledToBottom && !chatBox.isMinimized) {
-        // Mark as read automatically
-        messageService.markAsRead(message.id).catch(console.error);
+        // Mark entire conversation as read automatically
+        const otherUserId = message.sender.id;
+        messageService.markConversationAsRead(otherUserId).catch(console.error);
         if (conv) conv.unreadCount = 0;
+        chatBox.newMessagesCount = 0;
       } else {
         chatBox.newMessagesCount += 1;
       }
     }
 
-    if (chatBox.isScrolledToBottom) {
+    // Always scroll to bottom if I sent the message, only scroll if at bottom for received messages
+    if (isSentByMe || chatBox.isScrolledToBottom) {
       nextTick(() => {
         scrollChatBoxToBottom(chatBox.conversation.userId);
       });
@@ -645,8 +751,9 @@ const handleNewMessage = (message: Message) => {
   }
 };
 
-const handleMessageUpdated = (updatedMessage: Message) => {
-  // Update in conversations
+const handleMessageUpdated = (payload: any) => {
+  const updatedMessage = payload.data || payload;
+
   const conv = conversations.value.find(
     c => c.latestMessage?.id === updatedMessage.id
   );
@@ -654,7 +761,6 @@ const handleMessageUpdated = (updatedMessage: Message) => {
     conv.latestMessage = updatedMessage;
   }
 
-  // Update in chat boxes
   for (const chatBox of openChatBoxes.value) {
     const index = chatBox.conversation.messages.findIndex(m => m.id === updatedMessage.id);
     if (index !== -1) {
@@ -663,9 +769,10 @@ const handleMessageUpdated = (updatedMessage: Message) => {
   }
 };
 
-const handleMessageDeleted = (data: { messageId: string; deletedForEveryone: boolean }) => {
+const handleMessageDeleted = (payload: any) => {
+  const data = payload.data || payload;
+
   if (data.deletedForEveryone) {
-    // Update message to show as deleted
     for (const chatBox of openChatBoxes.value) {
       const message = chatBox.conversation.messages.find(m => m.id === data.messageId);
       if (message) {
@@ -674,7 +781,6 @@ const handleMessageDeleted = (data: { messageId: string; deletedForEveryone: boo
       }
     }
   } else {
-    // Remove from chat boxes
     for (const chatBox of openChatBoxes.value) {
       const index = chatBox.conversation.messages.findIndex(m => m.id === data.messageId);
       if (index !== -1) {
@@ -684,38 +790,85 @@ const handleMessageDeleted = (data: { messageId: string; deletedForEveryone: boo
   }
 };
 
-const handleMessageRead = (data: { messageId: string; readAt: string }) => {
-  // Update in chat boxes
+const handleMessageRead = (payload: any) => {
+  const data = payload.data || payload;
+
   for (const chatBox of openChatBoxes.value) {
-    const message = chatBox.conversation.messages.find(m => m.id === data.messageId);
-    if (message) {
-      message.isRead = true;
-      message.readAt = data.readAt;
+    // For single message read
+    if (data.messageId) {
+      chatBox.conversation.messages = chatBox.conversation.messages.map(msg => {
+        if (msg.id === data.messageId) {
+          return {
+            ...msg,
+            isRead: true,
+            readAt: data.readAt || new Date().toISOString()
+          };
+        }
+        return msg;
+      });
+    }
+    // For conversation read (multiple messages)
+    else if (data.otherUserId && data.userId) {
+      // data.userId = person who marked as read (recipient)
+      // data.otherUserId = person whose messages were marked as read (sender)
+      // If I'm the sender (otherUserId), update my sent messages
+      const iAmTheSender = data.otherUserId === session.user?.id;
+
+      if (iAmTheSender) {
+        chatBox.conversation.messages = chatBox.conversation.messages.map(msg => {
+          if (msg.sender.id === session.user?.id && !msg.isRead) {
+            return {
+              ...msg,
+              isRead: true,
+              readAt: new Date().toISOString()
+            };
+          }
+          return msg;
+        });
+      }
     }
   }
+
 };
 
-const handleTypingIndicator = (data: { userId: string; isTyping: boolean }) => {
+const handleTypingIndicator = (payload: any) => {
+  const data = payload.data || payload;
   const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === data.userId);
   if (chatBox) {
     chatBox.isOtherUserTyping = data.isTyping;
+  } else {
   }
 };
 
 // Setup WebSocket
-const setupWebSocket = () => {
+const setupWebSocket = async () => {
   if (!session.isAuthenticated || !session.user) return;
 
-  const token = localStorage.getItem('token');
-  if (!token) return;
+  const socket = socketService.connect(); // Use cookie-based auth
 
-  const socket = socketService.connect(token);
+  // Wait for connection and join user room
+  socket.on('connect', async () => {
+    const result = await socketService.joinRoom('user', session.user!.id);
+    if (result.success) {
+    } else {
+      console.error('[Navbar] Failed to join user room:', result.error);
+    }
+  });
 
   socket.on('message:new', handleNewMessage);
   socket.on('message:updated', handleMessageUpdated);
   socket.on('message:deleted', handleMessageDeleted);
   socket.on('message:read', handleMessageRead);
   socket.on('typing', handleTypingIndicator);
+
+  // If already connected, join room immediately
+  if (socket.connected) {
+    const result = await socketService.joinRoom('user', session.user!.id);
+    if (result.success) {
+    } else {
+      console.error('[Navbar] Failed to join user room:', result.error);
+    }
+  }
 };
 
 const cleanupWebSocket = () => {
