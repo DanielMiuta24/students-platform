@@ -42,6 +42,49 @@
         </template>
 
         <template v-else>
+          <!-- Messenger Button with Popup -->
+          <div v-if="!isOnMessagesPage" class="messenger-wrapper">
+            <button
+              @click="toggleMessengerPopup"
+              :class="['messenger-button', { 'messenger-button-active': showMessengerPopup || openChatBoxes.length > 0 }]"
+              title="Messages"
+            >
+              <el-icon><ChatDotRound /></el-icon>
+              <span v-if="displayUnreadCount > 0" class="messenger-badge">{{ displayUnreadCount }}</span>
+            </button>
+
+            <!-- Messenger Popup -->
+            <div v-if="showMessengerPopup" class="messenger-popup" @click.stop>
+              <ConversationList
+                :conversations="filteredRecentConversations"
+                :selected-conversation-id="null"
+                :empty-message="'No conversations yet'"
+                :show-header="true"
+                :title="'Messages'"
+                :show-new-button="true"
+                :show-search="true"
+                :search-query="navbarSearchQuery"
+                @update:search-query="handleNavbarSearchChange"
+                :search-placeholder="'Search messages...'"
+                :show-filter="true"
+                :filter="navbarConversationFilter"
+                @update:filter="navbarConversationFilter = $event"
+                @select="openConversation"
+                @new-conversation="showNewConversationDialog = true"
+              />
+              <div class="messenger-footer">
+                <button @click="closeMessengerPopup" class="see-all-button">
+                  See all messages
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications Button (Placeholder) -->
+          <button class="notifications-button" title="Notifications">
+            <el-icon><Bell /></el-icon>
+          </button>
+
           <el-dropdown>
             <span class="user-name">
               <img
@@ -121,46 +164,609 @@
         <el-button type="danger" class="w-100" @click="logout">Logout</el-button>
       </template>
     </el-drawer>
+
+    <!-- Floating Chat Boxes -->
+    <div v-if="!isOnMessagesPage" class="floating-chat-boxes">
+      <ChatBox
+        v-for="(chatBox, index) in openChatBoxes"
+        :key="chatBox.conversation.userId"
+        :conversation="chatBox.conversation"
+        :current-user-id="session.user?.id || ''"
+        :new-message="chatBox.newMessage"
+        :is-minimized="chatBox.isMinimized"
+        :new-messages-count="chatBox.newMessagesCount"
+        :is-scrolled-to-bottom="chatBox.isScrolledToBottom"
+        :is-other-user-typing="chatBox.isOtherUserTyping"
+        :style="{ right: `${16 + index * 366}px` }"
+        @close="closeChatBox(chatBox.conversation.userId)"
+        @minimize="toggleMinimizeChatBox(chatBox.conversation.userId)"
+        @open-in-messenger="openInMessenger"
+        @delete-conversation="deleteChatBoxConversation(chatBox.conversation.userId)"
+        @send="sendMessageInChatBox(chatBox.conversation.userId)"
+        @update:new-message="updateChatBoxMessage(chatBox.conversation.userId, $event)"
+        @scroll="handleChatBoxScroll(chatBox.conversation.userId, $event)"
+        @scroll-to-bottom="scrollChatBoxToBottom(chatBox.conversation.userId)"
+        @typing="handleChatBoxTyping(chatBox.conversation.userId)"
+        @edit-message="handleEditMessage"
+        @delete-message="handleDeleteMessage"
+      />
+    </div>
+
+    <!-- New Conversation Dialog -->
+    <NewConversationDialog
+      v-model="showNewConversationDialog"
+      :available-users="availableUsers"
+      :existing-conversation-user-ids="conversations.map(c => c.userId)"
+      @select="startConversationWithUser"
+    />
+
+    <!-- Delete Confirmation Modal -->
+    <el-dialog v-model="showDeleteDialog" title="Delete Conversation" width="400px">
+      <p>Are you sure you want to delete this conversation? This action cannot be undone.</p>
+      <template #footer>
+        <el-button @click="showDeleteDialog = false">Cancel</el-button>
+        <el-button type="danger" @click="confirmDeleteConversation">Delete</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { Menu, User } from '@element-plus/icons-vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
+import { Menu, User, ChatDotRound, Bell } from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router';
 import { useActiveMenu } from '../composables/useActiveMenu';
 import { useNavigation } from '../composables/useNavigation';
 import { useAuth } from '../composables/useAuth';
 import { useSessionStore } from '../store/session';
 import { getAvatarUrl } from '../utils/avatar';
+import { messageService, type Conversation, type Message } from '../services/message.service';
+import { socketService } from '../services/socket';
+import { api } from '../services/api';
+import ChatBox from './ChatBox.vue';
+import ConversationList from './ConversationList.vue';
+import NewConversationDialog from './NewConversationDialog.vue';
 
 const { activeIndex } = useActiveMenu();
 const { navigate } = useNavigation();
-
 const { logout } = useAuth();
-
+const route = useRoute();
 const session = useSessionStore();
 
 const drawerMenu = ref(false);
 const drawerAccount = ref(false);
 const isMobile = ref(false);
 
+// Messenger state
+const showMessengerPopup = ref(false);
+const conversations = ref<Conversation[]>([]);
+const unreadCount = ref(0);
+const navbarSearchQuery = ref('');
+const navbarConversationFilter = ref('all');
+const showNewConversationDialog = ref(false);
+const availableUsers = ref<any[]>([]);
+
+// Chat boxes state
+interface ChatBoxState {
+  conversation: Conversation & { messages: Message[] };
+  newMessage: string;
+  isMinimized: boolean;
+  newMessagesCount: number;
+  isScrolledToBottom: boolean;
+  isOtherUserTyping: boolean;
+  typingTimeout?: number;
+}
+
+const openChatBoxes = ref<ChatBoxState[]>([]);
+const showDeleteDialog = ref(false);
+const conversationToDelete = ref<string | null>(null);
+
 const userAvatar = computed(() =>
-  session.user ? getAvatarUrl(session.user.username, session.user.avatar) : ''
+  session.user ? getAvatarUrl(session.user.name, session.user.avatar) : ''
 );
 
-const checkScreen = () => {
-  isMobile.value = window.innerWidth < 768;
+const isOnMessagesPage = computed(() => route.path.startsWith('/messages'));
+
+const filteredRecentConversations = computed(() => {
+  let filtered = conversations.value;
+
+  // Filter by search query
+  if (navbarSearchQuery.value.trim()) {
+    const query = navbarSearchQuery.value.toLowerCase();
+    filtered = filtered.filter(c =>
+      c.user.name.toLowerCase().includes(query) ||
+      c.user.username.toLowerCase().includes(query)
+    );
+  }
+
+  // Filter by unread status
+  if (navbarConversationFilter.value === 'unread') {
+    filtered = filtered.filter(c => c.unreadCount > 0);
+  }
+
+  return filtered.slice(0, 10); // Show top 10
+});
+
+const displayUnreadCount = computed(() => {
+  // Count unread messages excluding open chat boxes
+  const openChatBoxUserIds = new Set(openChatBoxes.value.map(cb => cb.conversation.userId));
+  return conversations.value
+    .filter(c => !openChatBoxUserIds.has(c.userId))
+    .reduce((sum, c) => sum + c.unreadCount, 0);
+});
+
+// Data loading
+const loadConversations = async () => {
+  if (!session.isAuthenticated) return;
+  try {
+    conversations.value = await messageService.getConversations();
+  } catch (error) {
+    console.error('Failed to load conversations:', error);
+  }
 };
 
-onMounted(() => {
-  session.restoreSession();
+const loadUnreadCount = async () => {
+  if (!session.isAuthenticated) return;
+  try {
+    unreadCount.value = await messageService.getUnreadCount();
+  } catch (error) {
+    console.error('Failed to load unread count:', error);
+  }
+};
 
-  checkScreen();
-  window.addEventListener('resize', checkScreen);
+const loadAvailableUsers = async () => {
+  if (!session.isAuthenticated) return;
+  try {
+    const response = await api.get('users');
+    availableUsers.value = response.data.data;
+  } catch (error) {
+    console.error('Failed to load users:', error);
+  }
+};
+
+// Messenger popup
+const toggleMessengerPopup = () => {
+  showMessengerPopup.value = !showMessengerPopup.value;
+};
+
+const closeMessengerPopup = () => {
+  showMessengerPopup.value = false;
+  navigate('/messages');
+};
+
+let searchDebounceTimer: number | null = null;
+const handleNavbarSearchChange = (query: string) => {
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer);
+  }
+  searchDebounceTimer = window.setTimeout(() => {
+    navbarSearchQuery.value = query;
+  }, 300);
+};
+
+// Chat box management
+const openConversation = async (conversation: Conversation) => {
+  showMessengerPopup.value = false;
+
+  // Check if already open
+  const existingIndex = openChatBoxes.value.findIndex(
+    cb => cb.conversation.userId === conversation.userId
+  );
+
+  if (existingIndex !== -1) {
+    // Unminimize if minimized
+    openChatBoxes.value[existingIndex].isMinimized = false;
+    return;
+  }
+
+  // Load messages
+  try {
+    const messages = await messageService.getConversationMessages(conversation.userId);
+
+    // Remove oldest if at limit (3)
+    if (openChatBoxes.value.length >= 3) {
+      openChatBoxes.value.shift();
+    }
+
+    openChatBoxes.value.push({
+      conversation: {
+        ...conversation,
+        messages
+      },
+      newMessage: '',
+      isMinimized: false,
+      newMessagesCount: 0,
+      isScrolledToBottom: true,
+      isOtherUserTyping: false
+    });
+
+    // Mark as read
+    await messageService.markConversationAsRead(conversation.userId);
+
+    // Update conversation unread count
+    const conv = conversations.value.find(c => c.userId === conversation.userId);
+    if (conv) {
+      conv.unreadCount = 0;
+    }
+  } catch (error) {
+    console.error('Failed to open conversation:', error);
+  }
+};
+
+const startConversationWithUser = async (user: any) => {
+  // Check if conversation already exists
+  let conversation = conversations.value.find(c => c.userId === user.id);
+
+  if (!conversation) {
+    // Create new conversation
+    conversation = {
+      userId: user.id,
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        profilePicture: user.profilePicture
+      },
+      latestMessage: null,
+      unreadCount: 0,
+      lastActivity: new Date().toISOString()
+    };
+    conversations.value.unshift(conversation);
+  }
+
+  openConversation(conversation);
+};
+
+const closeChatBox = (userId: string) => {
+  const index = openChatBoxes.value.findIndex(cb => cb.conversation.userId === userId);
+  if (index !== -1) {
+    openChatBoxes.value.splice(index, 1);
+  }
+};
+
+const toggleMinimizeChatBox = (userId: string) => {
+  const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === userId);
+  if (chatBox) {
+    chatBox.isMinimized = !chatBox.isMinimized;
+  }
+};
+
+const openInMessenger = (userId: string) => {
+  navigate(`/messages/${userId}`);
+};
+
+const deleteChatBoxConversation = (userId: string) => {
+  conversationToDelete.value = userId;
+  showDeleteDialog.value = true;
+};
+
+const confirmDeleteConversation = async () => {
+  if (!conversationToDelete.value) return;
+
+  try {
+    await messageService.deleteConversation(conversationToDelete.value);
+
+    // Remove from conversations
+    const convIndex = conversations.value.findIndex(c => c.userId === conversationToDelete.value);
+    if (convIndex !== -1) {
+      conversations.value.splice(convIndex, 1);
+    }
+
+    // Close chat box if open
+    closeChatBox(conversationToDelete.value);
+
+    showDeleteDialog.value = false;
+    conversationToDelete.value = null;
+  } catch (error) {
+    console.error('Failed to delete conversation:', error);
+  }
+};
+
+const updateChatBoxMessage = (userId: string, message: string) => {
+  const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === userId);
+  if (chatBox) {
+    chatBox.newMessage = message;
+  }
+};
+
+const sendMessageInChatBox = async (userId: string) => {
+  const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === userId);
+  if (!chatBox || !chatBox.newMessage.trim()) return;
+
+  const content = chatBox.newMessage.trim();
+  chatBox.newMessage = '';
+
+  try {
+    const message = await messageService.sendMessage({
+      recipientId: userId,
+      content
+    });
+
+    // Add to chat box messages
+    chatBox.conversation.messages.push(message);
+
+    // Update conversation
+    const conv = conversations.value.find(c => c.userId === userId);
+    if (conv) {
+      conv.latestMessage = message;
+      conv.lastActivity = message.createdAt;
+    }
+
+    // Scroll to bottom
+    nextTick(() => {
+      scrollChatBoxToBottom(userId);
+    });
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    chatBox.newMessage = content;
+  }
+};
+
+const handleChatBoxScroll = (userId: string, isAtBottom: boolean) => {
+  const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === userId);
+  if (chatBox) {
+    chatBox.isScrolledToBottom = isAtBottom;
+    if (isAtBottom) {
+      chatBox.newMessagesCount = 0;
+    }
+  }
+};
+
+const scrollChatBoxToBottom = async (userId: string) => {
+  const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === userId);
+  if (chatBox) {
+    chatBox.newMessagesCount = 0;
+    chatBox.isScrolledToBottom = true;
+
+    // Mark messages as read
+    const unreadMessages = chatBox.conversation.messages.filter(
+      m => !m.isRead && m.recipient.id === session.user?.id
+    );
+
+    for (const message of unreadMessages) {
+      try {
+        await messageService.markAsRead(message.id);
+      } catch (error) {
+        console.error('Failed to mark message as read:', error);
+      }
+    }
+  }
+};
+
+const handleChatBoxTyping = (userId: string) => {
+  const socket = socketService.getSocket();
+  if (!socket) return;
+
+  socket.emit('typing', { recipientId: userId, isTyping: true });
+
+  const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === userId);
+  if (chatBox) {
+    if (chatBox.typingTimeout) {
+      clearTimeout(chatBox.typingTimeout);
+    }
+    chatBox.typingTimeout = window.setTimeout(() => {
+      socket.emit('typing', { recipientId: userId, isTyping: false });
+    }, 1000);
+  }
+};
+
+const handleEditMessage = async (messageId: string, newContent: string) => {
+  try {
+    const updatedMessage = await messageService.updateMessage(messageId, newContent);
+
+    // Update in all open chat boxes
+    for (const chatBox of openChatBoxes.value) {
+      const index = chatBox.conversation.messages.findIndex(m => m.id === messageId);
+      if (index !== -1) {
+        chatBox.conversation.messages.splice(index, 1, updatedMessage);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to edit message:', error);
+  }
+};
+
+const handleDeleteMessage = async (messageId: string) => {
+  // For now, just delete for me
+  try {
+    await messageService.deleteMessage(messageId, 'me');
+
+    // Remove from all open chat boxes
+    for (const chatBox of openChatBoxes.value) {
+      const index = chatBox.conversation.messages.findIndex(m => m.id === messageId);
+      if (index !== -1) {
+        chatBox.conversation.messages.splice(index, 1);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to delete message:', error);
+  }
+};
+
+// WebSocket handlers
+const handleNewMessage = (message: Message) => {
+  const isSentByMe = message.sender.id === session.user?.id;
+  const isForMe = message.recipient.id === session.user?.id;
+
+  // Update conversations
+  let conv = conversations.value.find(
+    c => c.userId === (isSentByMe ? message.recipient.id : message.sender.id)
+  );
+
+  if (conv) {
+    conv.latestMessage = message;
+    conv.lastActivity = message.createdAt;
+    if (isForMe) {
+      conv.unreadCount += 1;
+    }
+  } else if (isForMe) {
+    // New conversation
+    conv = {
+      userId: message.sender.id,
+      user: message.sender,
+      latestMessage: message,
+      unreadCount: 1,
+      lastActivity: message.createdAt
+    };
+    conversations.value.unshift(conv);
+  }
+
+  // Update open chat boxes
+  const chatBox = openChatBoxes.value.find(
+    cb => cb.conversation.userId === (isSentByMe ? message.recipient.id : message.sender.id)
+  );
+
+  if (chatBox) {
+    chatBox.conversation.messages.push(message);
+
+    if (isForMe) {
+      if (chatBox.isScrolledToBottom && !chatBox.isMinimized) {
+        // Mark as read automatically
+        messageService.markAsRead(message.id).catch(console.error);
+        if (conv) conv.unreadCount = 0;
+      } else {
+        chatBox.newMessagesCount += 1;
+      }
+    }
+
+    if (chatBox.isScrolledToBottom) {
+      nextTick(() => {
+        scrollChatBoxToBottom(chatBox.conversation.userId);
+      });
+    }
+  }
+};
+
+const handleMessageUpdated = (updatedMessage: Message) => {
+  // Update in conversations
+  const conv = conversations.value.find(
+    c => c.latestMessage?.id === updatedMessage.id
+  );
+  if (conv) {
+    conv.latestMessage = updatedMessage;
+  }
+
+  // Update in chat boxes
+  for (const chatBox of openChatBoxes.value) {
+    const index = chatBox.conversation.messages.findIndex(m => m.id === updatedMessage.id);
+    if (index !== -1) {
+      chatBox.conversation.messages.splice(index, 1, updatedMessage);
+    }
+  }
+};
+
+const handleMessageDeleted = (data: { messageId: string; deletedForEveryone: boolean }) => {
+  if (data.deletedForEveryone) {
+    // Update message to show as deleted
+    for (const chatBox of openChatBoxes.value) {
+      const message = chatBox.conversation.messages.find(m => m.id === data.messageId);
+      if (message) {
+        message.isDeletedForEveryone = true;
+        message.content = 'This message was deleted';
+      }
+    }
+  } else {
+    // Remove from chat boxes
+    for (const chatBox of openChatBoxes.value) {
+      const index = chatBox.conversation.messages.findIndex(m => m.id === data.messageId);
+      if (index !== -1) {
+        chatBox.conversation.messages.splice(index, 1);
+      }
+    }
+  }
+};
+
+const handleMessageRead = (data: { messageId: string; readAt: string }) => {
+  // Update in chat boxes
+  for (const chatBox of openChatBoxes.value) {
+    const message = chatBox.conversation.messages.find(m => m.id === data.messageId);
+    if (message) {
+      message.isRead = true;
+      message.readAt = data.readAt;
+    }
+  }
+};
+
+const handleTypingIndicator = (data: { userId: string; isTyping: boolean }) => {
+  const chatBox = openChatBoxes.value.find(cb => cb.conversation.userId === data.userId);
+  if (chatBox) {
+    chatBox.isOtherUserTyping = data.isTyping;
+  }
+};
+
+// Setup WebSocket
+const setupWebSocket = () => {
+  if (!session.isAuthenticated || !session.user) return;
+
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const socket = socketService.connect(token);
+
+  socket.on('message:new', handleNewMessage);
+  socket.on('message:updated', handleMessageUpdated);
+  socket.on('message:deleted', handleMessageDeleted);
+  socket.on('message:read', handleMessageRead);
+  socket.on('typing', handleTypingIndicator);
+};
+
+const cleanupWebSocket = () => {
+  const socket = socketService.getSocket();
+  if (!socket) return;
+
+  socket.off('message:new', handleNewMessage);
+  socket.off('message:updated', handleMessageUpdated);
+  socket.off('message:deleted', handleMessageDeleted);
+  socket.off('message:read', handleMessageRead);
+  socket.off('typing', handleTypingIndicator);
+};
+
+// Close popup when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.messenger-wrapper')) {
+    showMessengerPopup.value = false;
+  }
+};
+
+// Lifecycle
+onMounted(async () => {
+  if (session.isAuthenticated) {
+    await Promise.all([
+      loadConversations(),
+      loadUnreadCount(),
+      loadAvailableUsers()
+    ]);
+    setupWebSocket();
+  }
+
+  window.addEventListener('click', handleClickOutside);
+
+  const checkMobile = () => {
+    isMobile.value = window.innerWidth <= 768;
+  };
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', checkScreen);
+  cleanupWebSocket();
+  window.removeEventListener('click', handleClickOutside);
+
+  // Clear typing timeouts
+  for (const chatBox of openChatBoxes.value) {
+    if (chatBox.typingTimeout) {
+      clearTimeout(chatBox.typingTimeout);
+    }
+  }
+});
+
+// Watch for route changes to close chat boxes on messages page
+watch(() => route.path, (newPath) => {
+  if (newPath.startsWith('/messages')) {
+    showMessengerPopup.value = false;
+  }
 });
 
 const handleSelect = () => {
@@ -171,36 +777,136 @@ const handleSelect = () => {
 
 <style scoped>
 .nav-container {
-  width: 100%;
-  max-width: 1200px; /* Optional: Restrict navbar width */
-  margin: 0 auto; /* Center the navbar */
-  padding: 0 16px; /* Add padding for spacing */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.el-menu--horizontal > .el-menu-item:nth-child(1) {
-  /* Remove this rule to stop pushing Home to the far left */
-  margin-right: 0;
+.el-menu-demo {
+  border-bottom: none;
 }
 
 .right-desktop {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding-right: 10px;
-}
-
-.mobile-header {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
-  padding: 8px;
+  gap: 12px;
+  padding-right: 20px;
 }
 
 .user-name {
   display: flex;
   align-items: center;
   cursor: pointer;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.messenger-wrapper {
+  position: relative;
+}
+
+.messenger-button,
+.notifications-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background-color: #e4e6eb;
+  color: #050505;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  font-size: 20px;
+}
+
+.messenger-button:hover,
+.notifications-button:hover {
+  background-color: #d8dadf;
+}
+
+.messenger-button-active {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.messenger-button-active:hover {
+  background-color: #2563eb;
+}
+
+.messenger-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+}
+
+.messenger-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.messenger-footer {
+  padding: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.see-all-button {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.see-all-button:hover {
+  background-color: #f3f4f6;
+}
+
+.floating-chat-boxes {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.floating-chat-boxes > * {
+  pointer-events: all;
+}
+
+.mobile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: white;
 }
 
 .w-100 {
@@ -208,6 +914,6 @@ const handleSelect = () => {
 }
 
 .mb-2 {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 </style>
