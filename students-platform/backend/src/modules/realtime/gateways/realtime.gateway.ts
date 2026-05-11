@@ -107,6 +107,10 @@ export class RealtimeGateway {
     socket.join(userRoom);
     connectionInfo.rooms.push(userRoom);
 
+    console.log(`[RealtimeGateway] User ${userId} connected with socket ${socket.id}`);
+    console.log(`[RealtimeGateway] User ${userId} joined room: ${userRoom}`);
+    console.log(`[RealtimeGateway] Active connections: ${this.connections.size}`);
+
     socket.on('disconnect', () => this.handleDisconnection(socket));
   }
 
@@ -114,6 +118,7 @@ export class RealtimeGateway {
     socket.on('join:room', (room: RoomIdentifier, callback) => {
       try {
         if (!RealtimeValidator.validateRoomIdentifier(room)) {
+          console.log(`[RealtimeGateway] Invalid room identifier:`, room);
           callback?.({ success: false, error: REALTIME_ERROR.INVALID_ROOM });
           return;
         }
@@ -126,8 +131,10 @@ export class RealtimeGateway {
           connectionInfo.rooms.push(roomName);
         }
 
+        console.log(`[RealtimeGateway] Socket ${socket.id} (user ${socket.userId}) joined room: ${roomName}`);
         callback?.({ success: true, room: roomName });
       } catch (error) {
+        console.error(`[RealtimeGateway] Error joining room:`, error);
         callback?.({ success: false, error: REALTIME_ERROR.INVALID_ROOM });
       }
     });

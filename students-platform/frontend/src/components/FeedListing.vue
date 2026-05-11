@@ -201,6 +201,13 @@ const handlePostUpdated = () => {
   padding: 1rem;
 }
 
+/* Mobile responsive spacing */
+@media (max-width: 768px) {
+  .feed-listing {
+    padding: 0.5rem;
+  }
+}
+
 .loading-container,
 .error-container,
 .empty-container {
@@ -242,6 +249,25 @@ const handlePostUpdated = () => {
 .posts-container {
   display: flex;
   flex-direction: column;
+}
+
+/* Ensure spacing between posts on all screen sizes */
+.posts-container > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .posts-container > div {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .posts-container > div {
+    gap: 0.75rem;
+  }
 }
 
 .load-more-container {

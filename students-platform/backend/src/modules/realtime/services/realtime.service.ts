@@ -43,12 +43,21 @@ export class RealtimeService {
   }
 
   publishToMultipleRooms(rooms: Array<{ type: string; id: string }>, event: string, payload: BaseEventPayload): void {
+    const io = realtimeGateway.getIO();
+
     for (const room of rooms) {
       const dto = PublishEventBuilder.create()
         .setRoom(room.type, room.id)
         .setEvent(event)
         .setPayload(payload)
         .build();
+
+      const roomName = RealtimeValidator.buildRoomName(room);
+
+      // Log which sockets are in this room
+      const socketsInRoom = io?.sockets.adapter.rooms.get(roomName);
+      console.log(`[RealtimeService] Publishing event "${event}" to room: ${roomName}`);
+      console.log(`[RealtimeService] Sockets in room ${roomName}:`, socketsInRoom ? Array.from(socketsInRoom) : 'NONE');
 
       this.publishEvent(dto);
     }

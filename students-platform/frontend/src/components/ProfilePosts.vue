@@ -215,3 +215,33 @@ const createPost = () => {
   emit('focusCreatePost');
 };
 </script>
+
+<style scoped>
+/* Ensure consistent spacing between posts on all screen sizes */
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+
+  /* Reduce padding on mobile */
+  .px-6 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+@media (max-width: 375px) {
+  .space-y-4 > * + * {
+    margin-top: 0.5rem;
+  }
+
+  .px-6 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+</style>

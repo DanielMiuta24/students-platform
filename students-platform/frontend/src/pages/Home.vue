@@ -1,5 +1,5 @@
 <template>
-  <main class="home-page">
+  <main class="home-page pb-32">
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -20,7 +20,7 @@
           <div class="hero-actions">
             <router-link to="/universities">
               <el-button type="primary" size="large">
-                <el-icon><Search /></el-icon>
+                <el-icon style="margin-right: 8px;"><Search /></el-icon>
                 Search Universities
               </el-button>
             </router-link>
@@ -336,21 +336,52 @@ import { Search } from '@element-plus/icons-vue'
 
 :deep(.el-collapse) {
   border: none;
+  gap: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.el-collapse-item) {
+  border: 1px solid #e5efff;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-collapse-item:hover) {
+  border-color: #bfdbfe;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
 }
 
 :deep(.el-collapse-item__header) {
   font-weight: 600;
   color: #0f2a5f;
   font-size: 16px;
+  padding: 18px 20px;
+  background: #f8fbff;
+  border: none;
+  transition: background 0.2s ease;
+}
+
+:deep(.el-collapse-item__header:hover) {
+  background: #eff6ff;
+}
+
+:deep(.el-collapse-item.is-active .el-collapse-item__header) {
+  background: #eff6ff;
+  border-bottom: 1px solid #e5efff;
 }
 
 :deep(.el-collapse-item__wrap) {
-  border-bottom: 1px solid #e5e7eb;
+  border: none;
+  background: #ffffff;
 }
 
 :deep(.el-collapse-item__content) {
   color: #64748b;
-  line-height: 1.6;
+  line-height: 1.7;
+  padding: 18px 20px;
+  font-size: 15px;
 }
 
 /* Responsive */
@@ -370,6 +401,175 @@ import { Search } from '@element-plus/icons-vue'
 
   .hero-image-card {
     order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Container adjustments for mobile */
+  .container {
+    padding: 0 16px;
+  }
+
+  /* Hero section mobile adjustments */
+  .hero-section {
+    padding: 60px 0 50px;
+  }
+
+  .hero-container {
+    gap: 32px;
+    text-align: center;
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-badge {
+    font-size: 14px;
+    padding: 6px 14px;
+  }
+
+  .hero-content h1 {
+    font-size: 32px;
+    text-align: center;
+  }
+
+  .hero-text {
+    font-size: 16px;
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .hero-actions {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .hero-actions a {
+    width: 100%;
+  }
+
+  .hero-actions .el-button {
+    width: 100%;
+  }
+
+  .hero-image-card {
+    padding: 16px;
+  }
+
+  .hero-illustration {
+    min-height: 250px;
+  }
+
+  /* Quick links mobile */
+  .quick-links-section {
+    padding: 24px 0 50px;
+    margin-top: -32px;
+  }
+
+  .quick-links-grid {
+    gap: 16px;
+  }
+
+  .quick-card {
+    padding: 20px;
+    gap: 14px;
+  }
+
+  .quick-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+
+  .quick-card h3 {
+    font-size: 18px;
+  }
+
+  .quick-card p {
+    font-size: 14px;
+  }
+
+  /* FAQ mobile */
+  .faq-section {
+    padding: 60px 0;
+  }
+
+  .faq-container {
+    gap: 28px;
+    text-align: center;
+  }
+
+  .faq-intro h2 {
+    font-size: 28px;
+  }
+
+  .faq-intro p {
+    font-size: 15px;
+  }
+
+  .faq-card {
+    padding: 16px;
+  }
+
+  .faq-image {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 375px) {
+  /* Extra small mobile devices */
+  .container {
+    padding: 0 12px;
+  }
+
+  .hero-section {
+    padding: 40px 0 40px;
+  }
+
+  .hero-container {
+    gap: 24px;
+  }
+
+  .hero-content h1 {
+    font-size: 28px;
+  }
+
+  .hero-text {
+    font-size: 15px;
+  }
+
+  .hero-illustration {
+    min-height: 200px;
+  }
+
+  .quick-card {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .quick-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
+
+  .quick-card h3 {
+    font-size: 16px;
+  }
+
+  .quick-card p {
+    font-size: 13px;
+  }
+
+  .faq-intro h2 {
+    font-size: 24px;
+  }
+
+  .faq-card {
+    padding: 12px;
   }
 }
 </style>

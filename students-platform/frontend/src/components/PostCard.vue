@@ -830,12 +830,158 @@ const copyLink = async () => {
   overflow: hidden;
 }
 
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  article {
+    margin: 0 -4px;
+  }
+
+  .p-4 {
+    padding: 12px !important;
+  }
+
+  /* Author section */
+  .flex.items-center.gap-3 {
+    gap: 8px !important;
+  }
+
+  .w-12.h-12 {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .text-base {
+    font-size: 14px !important;
+  }
+
+  .text-xs {
+    font-size: 10px !important;
+  }
+
+  /* Badges and metadata - make them wrap properly */
+  .flex.items-center.gap-2.flex-wrap {
+    gap: 4px !important;
+  }
+
+  .flex.items-center.gap-2.text-xs {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* Status badges */
+  .text-xs.font-semibold.px-2.py-1 {
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+  }
+
+  /* Visibility badges */
+  .inline-flex.items-center.px-2.py-0\.5 {
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+  }
+
+  /* Title and content */
+  .text-xl.font-bold {
+    font-size: 16px !important;
+  }
+
+  .text-gray-700.text-base {
+    font-size: 14px !important;
+  }
+
+  .mt-4 {
+    margin-top: 12px !important;
+  }
+
+  .mb-3 {
+    margin-bottom: 8px !important;
+  }
+
+  /* Follow button */
+  .follow-btn {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* Images */
+  .h-\[500px\] {
+    height: 300px !important;
+  }
+
+  .h-\[400px\] {
+    height: 250px !important;
+  }
+
+  .h-\[300px\] {
+    height: 200px !important;
+  }
+}
+
+/* Extra small mobile screens */
+@media (max-width: 375px) {
+  .p-4 {
+    padding: 8px !important;
+  }
+
+  .w-12.h-12 {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .text-base {
+    font-size: 13px !important;
+  }
+
+  .text-xs {
+    font-size: 9px !important;
+  }
+
+  .text-xl.font-bold {
+    font-size: 15px !important;
+  }
+
+  /* Action buttons - smaller */
+  .action-btn {
+    padding: 4px 6px !important;
+    font-size: 12px !important;
+    gap: 4px !important;
+  }
+
+  .action-icon {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .action-text {
+    font-size: 12px !important;
+  }
+
+  /* Images - smaller on very small screens */
+  .h-\[500px\] {
+    height: 250px !important;
+  }
+
+  .h-\[400px\] {
+    height: 200px !important;
+  }
+
+  .h-\[300px\] {
+    height: 150px !important;
+  }
+}
+
 .engagement-stats {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 16px;
   border-top: 1px solid #e4e6eb;
+}
+
+@media (max-width: 768px) {
+  .engagement-stats {
+    padding: 6px 12px;
+  }
 }
 
 .stats-left {
@@ -856,6 +1002,12 @@ const copyLink = async () => {
   font-size: 15px;
 }
 
+@media (max-width: 768px) {
+  .stat-item {
+    font-size: 13px;
+  }
+}
+
 .stat-item:hover {
   text-decoration: underline;
 }
@@ -870,6 +1022,14 @@ const copyLink = async () => {
   justify-content: center;
   font-size: 10px;
   padding: 2px;
+}
+
+@media (max-width: 768px) {
+  .like-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+  }
 }
 
 .stat-count {
@@ -887,6 +1047,12 @@ const copyLink = async () => {
   color: #65676b;
   cursor: pointer;
   font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .stat-text {
+    font-size: 13px;
+  }
 }
 
 .stat-text:hover {
@@ -936,6 +1102,13 @@ const copyLink = async () => {
   border-top: 1px solid #e4e6eb;
 }
 
+@media (max-width: 768px) {
+  .action-buttons {
+    padding: 4px 12px 8px;
+    gap: 2px;
+  }
+}
+
 .action-btn {
   display: flex;
   align-items: center;
@@ -950,6 +1123,22 @@ const copyLink = async () => {
   color: #65676b;
   font-weight: 600;
   font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .action-btn {
+    padding: 6px 8px;
+    font-size: 13px;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 375px) {
+  .action-btn {
+    padding: 4px 6px;
+    font-size: 12px;
+    gap: 3px;
+  }
 }
 
 .action-btn:hover {
@@ -968,6 +1157,20 @@ const copyLink = async () => {
 .action-icon {
   width: 20px;
   height: 20px;
+}
+
+@media (max-width: 768px) {
+  .action-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 375px) {
+  .action-icon {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .action-text {
