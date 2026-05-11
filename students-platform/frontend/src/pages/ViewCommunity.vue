@@ -34,7 +34,7 @@
         <div class="relative -mt-12 sm:-mt-16 md:-mt-20">
           <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 md:gap-6 relative z-10">
             <div class="flex flex-col sm:flex-row items-center sm:items-end gap-0 w-full md:w-auto mx-auto md:mx-0 max-w-lg sm:max-w-none">
-              <div class="w-24 h-24 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 bg-gradient-to-br from-white to-gray-50 rounded-t-2xl sm:rounded-l-2xl sm:rounded-t-none flex items-center justify-center shadow-2xl border-4 border-white ring-2 ring-gray-100 z-20">
+              <div class="w-24 h-24 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 bg-gradient-to-br from-white to-gray-50 rounded-tl-2xl rounded-tr-2xl sm:rounded-tl-2xl sm:rounded-tr-none sm:rounded-bl-none flex items-center justify-center shadow-2xl border-4 border-white ring-2 ring-gray-100 z-20">
                 <svg class="w-12 h-12 sm:w-10 sm:h-10 md:w-16 md:h-16 lg:w-20 lg:h-20 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 4 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
