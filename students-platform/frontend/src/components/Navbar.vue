@@ -932,7 +932,7 @@ const handleSelect = () => {
 }
 
 .logo-img {
-  height: 80px;
+  height: 100px;
   width: auto;
   object-fit: contain;
 }
