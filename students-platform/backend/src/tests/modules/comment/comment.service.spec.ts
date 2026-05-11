@@ -1,9 +1,11 @@
 import { commentService } from '../../../modules/comment/services';
 import { CommentModel } from '../../../modules/comment/models';
 import { PostModel } from '../../../modules/post/models';
+import { LikeModel } from '../../../modules/like/models';
 
 jest.mock('../../../modules/comment/models');
 jest.mock('../../../modules/post/models');
+jest.mock('../../../modules/like/models');
 
 describe('CommentService', () => {
   beforeEach(() => {
@@ -26,6 +28,7 @@ describe('CommentService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       save: jest.fn().mockResolvedValue(this),
+      populate: jest.fn().mockReturnThis(),
     };
 
     it('should create a comment successfully', async () => {
@@ -126,7 +129,7 @@ describe('CommentService', () => {
 
       expect(CommentModel.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439013');
       expect(mockQuery.populate).toHaveBeenCalledWith('author', 'name username avatar');
-      expect(mockQuery.populate).toHaveBeenCalledWith('post', 'title');
+      expect(mockQuery.populate).toHaveBeenCalledWith('post', 'title author');
       expect(result).toEqual(mockComment);
     });
 
@@ -270,6 +273,9 @@ describe('CommentService', () => {
   describe('updateComment', () => {
     const mockUpdatedComment = {
       _id: '507f1f77bcf86cd799439013',
+      post: {
+        toString: () => '507f1f77bcf86cd799439011',
+      },
       content: 'Updated content',
       author: { name: 'John Doe' },
     };
@@ -331,11 +337,36 @@ describe('CommentService', () => {
 
   describe('deleteComment', () => {
     it('should delete comment and its replies', async () => {
-      (CommentModel.findByIdAndDelete as jest.Mock).mockResolvedValue({});
-      (CommentModel.deleteMany as jest.Mock).mockResolvedValue({ deletedCount: 3 });
+      const mockComment = {
+        _id: '507f1f77bcf86cd799439013',
+        post: '507f1f77bcf86cd799439011',
+      };
+
+      const mockChildComments = [
+        { _id: '507f1f77bcf86cd799439014' },
+        { _id: '507f1f77bcf86cd799439015' },
+      ];
+
+      const mockFindQuery = {
+        select: jest.fn().mockResolvedValue(mockChildComments),
+      };
+
+      const mockDeleteQuery = {
+        select: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockComment),
+      };
+
+      (CommentModel.findById as jest.Mock).mockResolvedValue(mockComment);
+      (CommentModel.find as jest.Mock).mockReturnValue(mockFindQuery);
+      (CommentModel.findByIdAndDelete as jest.Mock).mockReturnValue(mockDeleteQuery);
+      (CommentModel.deleteMany as jest.Mock).mockResolvedValue({ deletedCount: 2 });
+      (LikeModel.deleteMany as jest.Mock).mockResolvedValue({ deletedCount: 5 });
 
       await commentService.deleteComment('507f1f77bcf86cd799439013');
 
+      expect(CommentModel.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439013');
+      expect(CommentModel.find).toHaveBeenCalledWith({ parentComment: '507f1f77bcf86cd799439013' });
+      expect(mockFindQuery.select).toHaveBeenCalledWith('_id');
       expect(CommentModel.findByIdAndDelete).toHaveBeenCalledWith('507f1f77bcf86cd799439013');
       expect(CommentModel.deleteMany).toHaveBeenCalledWith({
         parentComment: '507f1f77bcf86cd799439013',
@@ -425,6 +456,7 @@ describe('CommentService', () => {
         },
         content: 'Test comment',
         parentComment: null,
+        likeCount: 0,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-02'),
       };
@@ -437,8 +469,10 @@ describe('CommentService', () => {
         authorId: '507f1f77bcf86cd799439012',
         content: 'Test comment',
         parentCommentId: null,
+        likeCount: 0,
         createdAt: mockComment.createdAt,
         updatedAt: mockComment.updatedAt,
+        author: undefined,
       });
     });
 
@@ -457,6 +491,7 @@ describe('CommentService', () => {
         parentComment: {
           toString: () => '507f1f77bcf86cd799439014',
         },
+        likeCount: 0,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-02'),
       };

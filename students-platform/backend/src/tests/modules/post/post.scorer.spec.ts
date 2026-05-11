@@ -14,7 +14,7 @@ describe('PostScorer', () => {
 
       const preferredCategories = ['cat123'];
 
-      const score = PostScorer.calculateScore(mockPost, preferredCategories);
+      const score = PostScorer.calculateScore(mockPost, { preferredCategories });
 
       // recencyScore = max(0, 100 - 2) = 98
       // engagementScore = 10*2 + 5*4 + 100*0.5 = 20 + 20 + 50 = 90
@@ -35,7 +35,7 @@ describe('PostScorer', () => {
 
       const preferredCategories = ['cat456']; // Different category
 
-      const score = PostScorer.calculateScore(mockPost, preferredCategories);
+      const score = PostScorer.calculateScore(mockPost, { preferredCategories });
 
       // recencyScore = max(0, 100 - 1) = 99
       // engagementScore = 5*2 + 2*4 + 50*0.5 = 10 + 8 + 25 = 43
@@ -54,7 +54,7 @@ describe('PostScorer', () => {
         category: 'cat123',
       } as unknown as PostDoc;
 
-      const score = PostScorer.calculateScore(mockPost, []);
+      const score = PostScorer.calculateScore(mockPost, { preferredCategories: [] });
 
       // recencyScore = max(0, 100 - 5) = 95
       // engagementScore = 20*2 + 10*4 + 200*0.5 = 40 + 40 + 100 = 180
@@ -211,8 +211,8 @@ describe('PostScorer', () => {
         category: 'cat123',
       } as unknown as PostDoc;
 
-      const viralScore = PostScorer.calculateScore(viralOldPost, []);
-      const newScore = PostScorer.calculateScore(newPost, []);
+      const viralScore = PostScorer.calculateScore(viralOldPost, { preferredCategories: [] });
+      const newScore = PostScorer.calculateScore(newPost, { preferredCategories: [] });
 
       // Viral: recency=50, engagement=(500*2 + 200*4 + 5000*0.5)=1000+800+2500=4300, category=0 = 4350
       // New: recency=100, engagement=0, category=0 = 100
@@ -231,8 +231,8 @@ describe('PostScorer', () => {
         category: 'cat123',
       } as unknown as PostDoc;
 
-      const scoreWithBonus = PostScorer.calculateScore(post, ['cat123']);
-      const scoreWithoutBonus = PostScorer.calculateScore(post, ['cat456']);
+      const scoreWithBonus = PostScorer.calculateScore(post, { preferredCategories: ['cat123'] });
+      const scoreWithoutBonus = PostScorer.calculateScore(post, { preferredCategories: ['cat456'] });
 
       expect(scoreWithBonus - scoreWithoutBonus).toBeCloseTo(50, 0);
     });
@@ -246,7 +246,7 @@ describe('PostScorer', () => {
         category: null,
       } as unknown as PostDoc;
 
-      const score = PostScorer.calculateScore(post, ['cat123']);
+      const score = PostScorer.calculateScore(post, { preferredCategories: ['cat123'] });
 
       // Should not throw and should calculate without category bonus
       expect(score).toBeGreaterThan(0);

@@ -78,7 +78,7 @@ export class PostService {
 
     const updateData = new PostUpdateBuilder()
       .fromDTO(data)
-      .setImages(imageIds.length > 0 ? (imageIds as any) : undefined)
+      .setImages(imageIds as any)
       .build();
 
     const post = await PostModel.findByIdAndUpdate(
@@ -171,7 +171,7 @@ export class PostService {
 
     if (files && files.length > 0) {
       const uploadedImages = await imageService.uploadImagesForPost(files, userId);
-      imageIds.push(...uploadedImages.map((img: UploadResult) => img.imageId));
+      imageIds.push(...uploadedImages.map(img => img.imageId));
     }
 
     if (existingImages && existingImages.length > 0) {
@@ -299,7 +299,7 @@ export class PostService {
       for (const image of post.images) {
         const imageDoc = typeof image === 'string' ? null : image;
         if (imageDoc && 'publicId' in imageDoc) {
-          await imageService.deleteImage(imageDoc.publicId);
+          await imageService.deleteImage(imageDoc.publicId as string);
           await imageService.deleteImageFromDb(imageDoc._id.toString());
         }
       }

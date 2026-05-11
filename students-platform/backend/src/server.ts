@@ -11,6 +11,7 @@ import { postRoutes } from './modules/post/routes';
 import { likeRoutes } from './modules/like/routes';
 import { commentRoutes } from './modules/comment/routes';
 import { followRoutes } from './modules/follow/routes';
+import { messageRoutes } from './modules/message/routes';
 import { realtimeGateway } from './modules/realtime';
 import cookieParser from 'cookie-parser';
 
@@ -35,6 +36,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/follow', followRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.get("/api", (_req, res) => {
   res.json({ ok: true, service: "api", ts: new Date().toISOString() });

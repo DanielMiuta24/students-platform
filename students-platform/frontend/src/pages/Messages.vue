@@ -1,99 +1,61 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-8">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="bg-white rounded-2xl shadow-lg overflow-hidden h-[720px] flex">
+  <div class="w-full bg-gradient-to-br from-blue-50 to-blue-100 flex" style="height: calc(100vh - 4rem - 250px); min-height: 500px;">
+    <div class="w-full h-full flex">
+      <div class="bg-white w-full h-full flex">
 
-        <!-- Sidebar -->
-        <aside class="w-1/3 border-r border-blue-100 bg-white overflow-y-auto">
-          <div class="p-5 border-b border-blue-100">
-            <h2 class="text-2xl font-bold text-blue-900">Messages</h2>
-            <p class="text-sm text-gray-500 mt-1">Your student conversations</p>
-          </div>
-
-          <ul>
-            <li
-              v-for="conversation in conversations"
-              :key="conversation.id"
-              @click="selectConversation(conversation)"
-              :class="[
-                'flex items-center p-4 cursor-pointer transition',
-                selectedConversation?.id === conversation.id
-                  ? 'bg-blue-50'
-                  : 'hover:bg-gray-50'
-              ]"
-            >
-              <img
-                :src="conversation.user.profilePicture"
-                alt="Profile Picture"
-                class="w-12 h-12 rounded-full mr-4 object-cover"
-              />
-
-              <div class="min-w-0">
-                <h3 class="text-base font-bold text-blue-900 truncate">
-                  {{ conversation.user.name }}
-                </h3>
-                <p class="text-sm text-gray-500 truncate">
-                  {{ conversation.latestMessage }}
-                </p>
-              </div>
-            </li>
-          </ul>
+        <!-- Sidebar using ConversationList component -->
+        <aside class="w-1/3 border-r border-blue-100 bg-white flex flex-col">
+          <ConversationList
+            :conversations="filteredConversations"
+            :selected-conversation-id="selectedConversation?.userId"
+            :empty-message="'No conversations yet'"
+            :show-header="true"
+            :title="'Messages'"
+            :show-new-button="true"
+            :show-search="true"
+            :search-query="searchQuery"
+            @update:search-query="searchQuery = $event"
+            :search-placeholder="'Search conversations...'"
+            :show-filter="true"
+            :filter="conversationFilter"
+            @update:filter="conversationFilter = $event"
+            @select="selectConversation"
+            @new-conversation="showNewConversationDialog = true"
+          />
         </aside>
 
         <!-- Chat Window -->
-        <main class="flex-1 flex flex-col">
+        <main class="flex-1 flex flex-col min-h-0">
           <template v-if="selectedConversation">
             <!-- Header -->
-            <div class="bg-white border-b border-blue-100 p-5 flex items-center">
-              <img
-                :src="selectedConversation.user.profilePicture"
-                alt="Profile Picture"
-                class="w-11 h-11 rounded-full mr-4 object-cover"
+            <ChatHeader
+              :user="selectedConversation.user"
+              :show-actions="true"
+              :show-minimize="false"
+              :show-close="false"
+              :show-messenger-button="false"
+              :show-delete="true"
+              @delete="handleDeleteConversation"
+            />
+
+            <!-- Chat Window Component -->
+            <div class="flex-1 min-h-0">
+              <ChatWindow
+                ref="chatWindowRef"
+                :messages="messages"
+                :current-user-id="currentUserId"
+                :new-message="newMessage"
+                :is-other-user-typing="isOtherUserTyping"
+                :placeholder="'Type a message...'"
+                :show-seen-status="true"
+                @update:new-message="newMessage = $event"
+                @send="sendMessage"
+                @scroll="isScrolledToBottom = $event"
+                @typing="handleTyping"
+                @edit-message="handleEditMessage"
+                @delete-message="handleDeleteMessageMenu"
+                @mark-as-read="markConversationAsRead"
               />
-
-              <div>
-                <h2 class="text-lg font-bold text-blue-900">
-                  {{ selectedConversation.user.name }}
-                </h2>
-                <p class="text-sm text-green-600">Online</p>
-              </div>
-            </div>
-
-            <!-- Messages -->
-            <div class="flex-1 overflow-y-auto p-6 bg-blue-50/40 space-y-4">
-              <div
-                v-for="message in selectedConversation.messages"
-                :key="message.id"
-                :class="message.senderId === currentUser.id ? 'text-right' : 'text-left'"
-              >
-                <div
-                  :class="[
-                    'inline-block px-4 py-3 rounded-2xl max-w-[70%] text-sm leading-relaxed',
-                    message.senderId === currentUser.id
-                      ? 'bg-blue-600 text-white rounded-br-sm'
-                      : 'bg-white text-gray-700 rounded-bl-sm shadow-sm'
-                  ]"
-                >
-                  {{ message.text }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Input -->
-            <div class="bg-white border-t border-blue-100 p-4 flex items-center gap-3">
-              <input
-                v-model="newMessage"
-                @keyup.enter="sendMessage"
-                placeholder="Type a message..."
-                class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-
-              <button
-                @click="sendMessage"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition"
-              >
-                Send
-              </button>
             </div>
           </template>
 
@@ -113,120 +75,539 @@
 
       </div>
     </div>
+
+  <!-- New Conversation Dialog -->
+    <NewConversationDialog
+      v-model="showNewConversationDialog"
+      :available-users="availableUsers"
+      :existing-conversation-user-ids="conversations.map(c => c.userId)"
+      @select="startConversationWithUser"
+    />
+
+    <!-- Delete Message Dialog -->
+    <div
+      v-if="showDeleteDialog"
+      class="fixed inset-0 flex items-center justify-center z-[9999]"
+      @click.self="closeDeleteDialog"
+      style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px);"
+    >
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Delete Message</h3>
+        <p class="text-gray-600 mb-6">Choose how you want to delete this message:</p>
+
+        <div class="space-y-3">
+          <button
+            @click="deleteMessage('me')"
+            class="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg transition font-medium"
+          >
+            Delete for Me
+          </button>
+          <button
+            v-if="canDeleteForEveryone"
+            @click="deleteMessage('everyone')"
+            class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
+          >
+            Delete for Everyone
+          </button>
+          <button
+            @click="closeDeleteDialog"
+            class="w-full px-4 py-3 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-lg transition font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Conversation Dialog -->
+    <div
+      v-if="showDeleteConversationDialog"
+      class="fixed inset-0 flex items-center justify-center z-[9999]"
+      @click.self="closeDeleteConversationDialog"
+      style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px);"
+    >
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Delete Conversation</h3>
+        <p class="text-gray-600 mb-6">
+          Are you sure you want to delete this conversation? This will remove all messages from your view.
+        </p>
+
+        <div class="space-y-3">
+          <button
+            @click="confirmDeleteConversation"
+            class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
+          >
+            Delete Conversation
+          </button>
+          <button
+            @click="closeDeleteConversationDialog"
+            class="w-full px-4 py-3 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-lg transition font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useSessionStore } from '../store/session';
+import { messageService, type Message, type Conversation } from '../services/message.service';
+import { socketService } from '../services/socket';
+import { getAvatarUrl } from '../utils/avatar';
+import { api } from '../services/api';
+import ChatWindow from '../components/ChatWindow.vue';
+import ChatHeader from '../components/ChatHeader.vue';
+import ConversationList from '../components/ConversationList.vue';
+import NewConversationDialog from '../components/NewConversationDialog.vue';
 
-interface Message {
-  id: number;
-  senderId: number;
-  text: string;
-}
+const route = useRoute();
+const router = useRouter();
+const sessionStore = useSessionStore();
 
-interface Conversation {
-  id: number;
-  user: {
-    id: number;
-    name: string;
-    profilePicture: string;
-  };
-  latestMessage: string;
-  messages: Message[];
-}
+const conversations = ref<Conversation[]>([]);
+const selectedConversation = ref<Conversation | null>(null);
+const messages = ref<Message[]>([]);
+const newMessage = ref('');
+const isOtherUserTyping = ref(false);
+const chatWindowRef = ref<InstanceType<typeof ChatWindow> | null>(null);
+const showDeleteDialog = ref(false);
+const messageToDelete = ref<Message | null>(null);
+const showDeleteConversationDialog = ref(false);
+const searchQuery = ref('');
+const conversationFilter = ref('all');
+const showNewConversationDialog = ref(false);
+const availableUsers = ref<any[]>([]);
+const isScrolledToBottom = ref(true);
 
-export default defineComponent({
-  name: "Messages",
+const currentUserId = computed(() => sessionStore.user?.id || '');
+const canDeleteForEveryone = computed(() =>
+  messageToDelete.value ? messageService.canDeleteForEveryone(messageToDelete.value) : false
+);
 
-  data() {
-    return {
-      currentUser: {
-        id: 1,
-        name: "John Doe",
-      },
+const filteredConversations = computed(() => {
+  let filtered = conversations.value;
 
-      conversations: [
-        {
-          id: 1,
-          user: {
-            id: 2,
-            name: "Jane Smith",
-            profilePicture: "https://via.placeholder.com/150",
-          },
-          latestMessage: "Hey, how are you?",
-          messages: [
-            { id: 1, senderId: 1, text: "Hi Jane!" },
-            { id: 2, senderId: 2, text: "Hey, how are you?" },
-          ],
-        },
-        {
-          id: 2,
-          user: {
-            id: 3,
-            name: "Alice Johnson",
-            profilePicture: "https://via.placeholder.com/150",
-          },
-          latestMessage: "Let's catch up soon!",
-          messages: [
-            { id: 1, senderId: 1, text: "Hi Alice!" },
-            { id: 2, senderId: 3, text: "Let's catch up soon!" },
-          ],
-        },
-      ] as Conversation[],
+  // Filter by search query
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(c =>
+      c.user.name.toLowerCase().includes(query) ||
+      c.user.username.toLowerCase().includes(query)
+    );
+  }
 
-      selectedConversation: null as Conversation | null,
-      newMessage: "",
-    };
-  },
+  // Filter by unread status
+  if (conversationFilter.value === 'unread') {
+    filtered = filtered.filter(c => c.unreadCount > 0);
+  }
 
-  mounted() {
-    const routeUserId = Number(this.$route.params.id);
+  return filtered;
+});
 
+let typingTimeout: number | null = null;
+
+const loadConversations = async () => {
+  try {
+    conversations.value = await messageService.getConversations();
+
+    // If route has a user ID, select that conversation
+    const routeUserId = route.params.id as string;
     if (routeUserId) {
-      let conversation = this.conversations.find(
-        (conversation) => conversation.user.id === routeUserId
-      );
+      const conversation = conversations.value.find(c => c.userId === routeUserId);
+      if (conversation) {
+        await selectConversation(conversation);
+      }
+    } else if (conversations.value.length > 0) {
+      await selectConversation(conversations.value[0]);
+    }
+  } catch (error) {
+    console.error('Failed to load conversations:', error);
+  }
+};
 
-      if (!conversation) {
-        conversation = {
-          id: Date.now(),
-          user: {
-            id: routeUserId,
-            name: `User ${routeUserId}`,
-            profilePicture: "https://via.placeholder.com/150",
-          },
-          latestMessage: "Start a new conversation",
-          messages: [],
+const loadAvailableUsers = async () => {
+  try {
+    // Use empty search to get all users
+    const users = await messageService.searchUsers('');
+    availableUsers.value = users;
+  } catch (error) {
+    console.error('Failed to load users:', error);
+  }
+};
+
+const selectConversation = async (conversation: Conversation) => {
+  selectedConversation.value = conversation;
+  router.push(`/messages/${conversation.userId}`);
+
+  try {
+    const result = await messageService.getConversation(conversation.userId);
+    messages.value = result.messages.reverse();
+    await messageService.markConversationAsRead(conversation.userId);
+
+    // Update conversation unread count
+    const conv = conversations.value.find(c => c.userId === conversation.userId);
+    if (conv) {
+      conv.unreadCount = 0;
+    }
+
+    nextTick(() => {
+      scrollToBottom();
+    });
+  } catch (error) {
+    console.error('Failed to load messages:', error);
+  }
+};
+
+const startConversationWithUser = async (user: any) => {
+  // Check if conversation already exists
+  let conversation = conversations.value.find(c => c.userId === user.id);
+
+  if (!conversation) {
+    // Create new conversation
+    conversation = {
+      userId: user.id,
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        profilePicture: user.profilePicture
+      },
+      latestMessage: null,
+      unreadCount: 0,
+      lastActivity: new Date().toISOString()
+    };
+    conversations.value.unshift(conversation);
+  }
+
+  selectConversation(conversation);
+};
+
+const sendMessage = async () => {
+  if (!newMessage.value.trim() || !selectedConversation.value) return;
+
+  const content = newMessage.value.trim();
+  newMessage.value = '';
+
+  try {
+    const message = await messageService.sendMessage({
+      recipientId: selectedConversation.value.userId,
+      content,
+    });
+
+    const conv = conversations.value.find(c => c.userId === selectedConversation.value?.userId);
+    if (conv) {
+      conv.latestMessage = message;
+    }
+
+    nextTick(() => {
+      scrollToBottom();
+    });
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    newMessage.value = content;
+  }
+};
+
+const handleEditMessage = async (messageId: string, newContent: string) => {
+  try {
+    const updatedMessage = await messageService.updateMessage(messageId, newContent);
+    const index = messages.value.findIndex(m => m.id === messageId);
+    if (index !== -1) {
+      messages.value.splice(index, 1, updatedMessage);
+    }
+  } catch (error) {
+    console.error('Failed to edit message:', error);
+    if (error instanceof Error || (typeof error === 'object' && error !== null && 'response' in error)) {
+      const axiosError = error as any;
+      const errorMessage = axiosError.response?.data?.error || 'Failed to edit message';
+      alert(errorMessage);
+    }
+  }
+};
+
+const handleDeleteMessageMenu = (message: Message) => {
+  messageToDelete.value = message;
+  showDeleteDialog.value = true;
+};
+
+const deleteMessage = async (deleteFor: 'me' | 'everyone') => {
+  if (!messageToDelete.value) return;
+
+  try {
+    await messageService.deleteMessage(messageToDelete.value.id, deleteFor);
+
+    if (deleteFor === 'me') {
+      const index = messages.value.findIndex(m => m.id === messageToDelete.value?.id);
+      if (index !== -1) {
+        messages.value.splice(index, 1);
+      }
+    }
+
+    closeDeleteDialog();
+  } catch (error) {
+    console.error('Failed to delete message:', error);
+  }
+};
+
+const closeDeleteDialog = () => {
+  showDeleteDialog.value = false;
+  messageToDelete.value = null;
+};
+
+const handleDeleteConversation = () => {
+  if (!selectedConversation.value) return;
+  showDeleteConversationDialog.value = true;
+};
+
+const confirmDeleteConversation = async () => {
+  if (!selectedConversation.value) return;
+
+  try {
+    await messageService.deleteConversation(selectedConversation.value.userId);
+
+    const index = conversations.value.findIndex(c => c.userId === selectedConversation.value?.userId);
+    if (index !== -1) {
+      conversations.value.splice(index, 1);
+    }
+
+    selectedConversation.value = null;
+    messages.value = [];
+
+    closeDeleteConversationDialog();
+
+    router.push('/messages');
+  } catch (error) {
+    console.error('Failed to delete conversation:', error);
+  }
+};
+
+const closeDeleteConversationDialog = () => {
+  showDeleteConversationDialog.value = false;
+};
+
+const handleTyping = () => {
+  if (!selectedConversation.value) return;
+
+  const socket = socketService.getSocket();
+  if (!socket) return;
+
+  socket.emit('typing', { recipientId: selectedConversation.value.userId, isTyping: true });
+
+  if (typingTimeout) {
+    clearTimeout(typingTimeout);
+  }
+
+  typingTimeout = window.setTimeout(() => {
+    socket.emit('typing', { recipientId: selectedConversation.value?.userId, isTyping: false });
+  }, 1000);
+};
+
+const scrollToBottom = () => {
+  chatWindowRef.value?.scrollToBottom();
+};
+
+const markConversationAsRead = async () => {
+  if (!selectedConversation.value) return;
+
+  try {
+    await messageService.markConversationAsRead(selectedConversation.value.userId);
+
+    const conv = conversations.value.find(c => c.userId === selectedConversation.value?.userId);
+    if (conv) {
+      conv.unreadCount = 0;
+    }
+
+    messages.value = messages.value.map(msg => {
+      if (msg.recipient.id === currentUserId.value && !msg.isRead) {
+        return {
+          ...msg,
+          isRead: true,
+          readAt: new Date().toISOString()
         };
+      }
+      return msg;
+    });
+  } catch (error) {
+    console.error('Failed to mark conversation as read:', error);
+  }
+};
 
-        this.conversations.unshift(conversation);
+// WebSocket event handlers
+const handleNewMessage = async (payload: any) => {
+  const message = payload.data || payload;
+
+  if (!message || !message.sender || !message.recipient) {
+    return;
+  }
+
+  if (selectedConversation.value) {
+    const isSentByMe = message.sender.id === currentUserId.value;
+    const isForMe = message.recipient.id === currentUserId.value;
+    const isSentToSelectedUser = message.recipient.id === selectedConversation.value.userId;
+    const isFromSelectedUser = message.sender.id === selectedConversation.value.userId;
+
+    if ((isSentByMe && isSentToSelectedUser) || (isForMe && isFromSelectedUser)) {
+      const messageExists = messages.value.some(m => m.id === message.id);
+      if (!messageExists) {
+        messages.value.push(message);
+
+        if (isSentByMe || isScrolledToBottom.value) {
+          nextTick(() => {
+            scrollToBottom();
+          });
+        }
       }
 
-      this.selectedConversation = conversation;
-    } else {
-      this.selectedConversation = this.conversations[0] || null;
+      if (isForMe && isScrolledToBottom.value) {
+        await messageService.markConversationAsRead(selectedConversation.value.userId);
+      }
     }
-  },
+  }
 
-  methods: {
-    selectConversation(conversation: Conversation) {
-      this.selectedConversation = conversation;
-      this.$router.push(`/messages/${conversation.user.id}`);
-    },
+  const conv = conversations.value.find(c =>
+    c.userId === message.sender?.id || c.userId === message.recipient?.id
+  );
+  if (conv) {
+    conv.latestMessage = message;
+  }
+};
 
-    sendMessage() {
-      if (!this.newMessage.trim() || !this.selectedConversation) return;
+const handleMessageUpdated = (payload: any) => {
+  const updatedMessage = payload.data || payload;
+  const index = messages.value.findIndex(m => m.id === updatedMessage.id);
+  if (index !== -1) {
+    messages.value.splice(index, 1, updatedMessage);
+  }
+};
 
-      this.selectedConversation.messages.push({
-        id: Date.now(),
-        senderId: this.currentUser.id,
-        text: this.newMessage,
+const handleMessageDeleted = (payload: any) => {
+  const data = payload.data || payload;
+
+  if (data.deletedForEveryone) {
+    const index = messages.value.findIndex(m => m.id === data.messageId);
+    if (index !== -1) {
+      messages.value[index].isDeletedForEveryone = true;
+      messages.value[index].content = 'This message was deleted';
+    }
+  } else {
+    // Message was deleted for the other user only
+    const index = messages.value.findIndex(m => m.id === data.messageId);
+    if (index !== -1) {
+      messages.value.splice(index, 1);
+    }
+  }
+};
+
+const handleTypingStatus = (payload: any) => {
+  const data = payload.data || payload;
+  if (selectedConversation.value && data.userId === selectedConversation.value.userId) {
+    isOtherUserTyping.value = data.isTyping;
+  }
+};
+
+const handleMessageRead = (payload: any) => {
+  const data = payload.data || payload;
+
+  if (data.messageId) {
+    messages.value = messages.value.map(msg => {
+      if (msg.id === data.messageId) {
+        return {
+          ...msg,
+          isRead: true,
+          readAt: data.readAt || new Date().toISOString()
+        };
+      }
+      return msg;
+    });
+  }
+  else if (data.otherUserId && data.userId) {
+    const iAmTheSender = data.otherUserId === currentUserId.value;
+
+    if (iAmTheSender) {
+      messages.value = messages.value.map(msg => {
+        if (msg.sender.id === currentUserId.value && !msg.isRead) {
+          return {
+            ...msg,
+            isRead: true,
+            readAt: new Date().toISOString()
+          };
+        }
+        return msg;
       });
+    }
+  }
+};
 
-      this.selectedConversation.latestMessage = this.newMessage;
-      this.newMessage = "";
-    },
-  },
+onMounted(async () => {
+  await Promise.all([
+    loadConversations(),
+    loadAvailableUsers()
+  ]);
+
+  let socket = socketService.getSocket();
+
+  if (!socket) {
+    socket = socketService.connect();
+
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Socket connection timeout'));
+      }, 5000);
+
+      if (socket!.connected) {
+        clearTimeout(timeout);
+        resolve();
+      } else {
+        socket!.once('connect', () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+        socket!.once('connect_error', (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        });
+      }
+    });
+  }
+
+  if (currentUserId.value && socket) {
+    const result = await socketService.joinRoom('user', currentUserId.value);
+    if (!result.success) {
+      console.error('Failed to join user room:', result.error);
+    }
+  }
+
+  if (socket) {
+    socket.on('message:new', handleNewMessage);
+    socket.on('message:updated', handleMessageUpdated);
+    socket.on('message:deleted', handleMessageDeleted);
+    socket.on('typing', handleTypingStatus);
+    socket.on('message:read', handleMessageRead);
+  }
+});
+
+onUnmounted(() => {
+  const socket = socketService.getSocket();
+  if (!socket) return;
+
+  // Clean up WebSocket listeners
+  socket.off('message:new', handleNewMessage);
+  socket.off('message:updated', handleMessageUpdated);
+  socket.off('message:deleted', handleMessageDeleted);
+  socket.off('typing', handleTypingStatus);
+  socket.off('message:read', handleMessageRead);
+
+  if (typingTimeout) {
+    clearTimeout(typingTimeout);
+  }
 });
 </script>
+
+<style scoped>
+/* Component styles handled by child components */
+</style>

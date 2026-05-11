@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 pb-32">
 
     <!-- Hero -->
     <section class="max-w-6xl mx-auto px-4 py-16">
@@ -81,7 +81,7 @@
     </section>
 
     <!-- Results -->
-    <section class="max-w-6xl mx-auto px-4 py-5 pb-16" v-if="hasSearched">
+    <section class="max-w-6xl mx-auto px-4 py-5" v-if="hasSearched">
       <div class="bg-white rounded-xl shadow-lg p-8">
 
         <div v-if="isLoading" class="text-center text-gray-600 text-lg py-10">

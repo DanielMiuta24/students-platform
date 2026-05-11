@@ -43,12 +43,16 @@ export class RealtimeService {
   }
 
   publishToMultipleRooms(rooms: Array<{ type: string; id: string }>, event: string, payload: BaseEventPayload): void {
+    const io = realtimeGateway.getIO();
+
     for (const room of rooms) {
       const dto = PublishEventBuilder.create()
         .setRoom(room.type, room.id)
         .setEvent(event)
         .setPayload(payload)
         .build();
+
+      const roomName = RealtimeValidator.buildRoomName(room);
 
       this.publishEvent(dto);
     }

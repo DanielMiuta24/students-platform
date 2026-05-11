@@ -128,6 +128,7 @@ export class RealtimeGateway {
 
         callback?.({ success: true, room: roomName });
       } catch (error) {
+        console.error(`[RealtimeGateway] Error joining room:`, error);
         callback?.({ success: false, error: REALTIME_ERROR.INVALID_ROOM });
       }
     });
@@ -150,6 +151,31 @@ export class RealtimeGateway {
         callback?.({ success: true, room: roomName });
       } catch (error) {
         callback?.({ success: false, error: REALTIME_ERROR.INVALID_ROOM });
+      }
+    });
+
+    // Handle typing indicator
+    socket.on('typing', (data: { recipientId: string; isTyping: boolean }) => {
+      try {
+        const { recipientId, isTyping } = data;
+        const userId = socket.userId!;
+
+        // Emit to recipient's room
+        const recipientRoom = RealtimeValidator.buildRoomName({ type: 'user', id: recipientId });
+
+        const payload = {
+          id: `typing-${userId}-${recipientId}`,
+          timestamp: new Date(),
+          data: {
+            userId,
+            recipientId,
+            isTyping,
+          },
+        };
+
+        this.io?.to(recipientRoom).emit('typing', payload);
+      } catch (error) {
+        console.error(`[RealtimeGateway] Error handling typing event:`, error);
       }
     });
   }
