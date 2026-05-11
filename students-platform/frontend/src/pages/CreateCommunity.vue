@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
     <div class="max-w-3xl mx-auto">
-      <!-- Header -->
       <div class="text-center mb-10">
         <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
           <div class="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 font-semibold px-4 py-2 rounded-full">
@@ -28,9 +27,7 @@
         </p>
       </div>
 
-      <!-- Progress Steps -->
       <div class="mb-8 px-2">
-        <!-- Mobile: 2x2 Grid -->
         <div class="grid grid-cols-2 gap-4 sm:hidden">
           <div
             v-for="(step, index) in steps"
@@ -110,9 +107,7 @@
         </div>
       </div>
 
-      <!-- Form Card -->
       <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border-2 border-blue-100">
-        <!-- Step 1: Basic Info -->
         <div v-if="currentStep === 0" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
@@ -150,19 +145,20 @@
                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
                 >
                   <option value="">Choose a category</option>
-                  <option>Country</option>
-                  <option>Scholarships</option>
-                  <option>University Applications</option>
-                  <option>Visa</option>
-                  <option>Student Life</option>
-                  <option>Career</option>
+                  <option v-if="loadingCategories" disabled>Loading categories...</option>
+                  <option
+                    v-for="category in categories"
+                    :key="category.id"
+                    :value="category.name"
+                  >
+                    {{ category.name }}
+                  </option>
                 </select>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Step 2: Description -->
         <div v-if="currentStep === 1" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
@@ -211,7 +207,6 @@
           </div>
         </div>
 
-        <!-- Step 3: Cover Image -->
         <div v-if="currentStep === 2" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
@@ -292,7 +287,6 @@
           </div>
         </div>
 
-        <!-- Step 4: Invite People -->
         <div v-if="currentStep === 3" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
@@ -308,7 +302,6 @@
             </div>
 
             <div class="space-y-5">
-              <!-- Invite Method Tabs -->
               <div class="flex gap-2 bg-gray-100 p-1 rounded-xl">
                 <button
                   v-for="tab in inviteTabs"
@@ -325,7 +318,6 @@
                 </button>
               </div>
 
-              <!-- Email Invite Tab -->
               <div v-if="activeInviteTab === 'email'">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                   Email Addresses
@@ -349,7 +341,6 @@
                 <p class="text-xs text-gray-500 mt-1">Press Enter or click Add to include an email</p>
               </div>
 
-              <!-- Friends/Followers List Tab -->
               <div v-if="activeInviteTab === 'friends'">
                 <div class="mb-3">
                   <div class="relative">
@@ -469,7 +460,6 @@
           </div>
         </div>
 
-        <!-- Step 5: Review & Create -->
         <div v-if="currentStep === 4" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
@@ -485,7 +475,6 @@
             </div>
 
             <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-200">
-              <!-- Cover Image Preview -->
               <div v-if="formData.coverImage" class="mb-4 -mt-4 -mx-4 sm:-mt-6 sm:-mx-6">
                 <img
                   :src="formData.coverImage"
@@ -570,7 +559,6 @@
           </div>
         </div>
 
-        <!-- Navigation Buttons -->
         <div class="flex flex-col sm:flex-row gap-3 mt-8 pt-6 border-t-2 border-gray-100">
           <button
             v-if="currentStep > 0"
@@ -608,7 +596,6 @@
         </div>
       </div>
 
-      <!-- Back to Browse Link -->
       <div class="text-center mt-8">
         <button
           @click="router.push('/community/join')"
@@ -622,7 +609,6 @@
       </div>
     </div>
 
-    <!-- Success Modal -->
     <ConfirmationModal
       :is-open="showSuccessModal"
       variant="success"
@@ -640,8 +626,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { getActiveCategories } from '../api/category';
+import type { Category } from '../types/category';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 
 const router = useRouter();
@@ -664,6 +652,9 @@ const currentStep = ref(0);
 const showSuccessModal = ref(false);
 const createdCommunityId = ref<number | null>(null);
 
+const categories = ref<Category[]>([]);
+const loadingCategories = ref(false);
+
 const formData = ref({
   name: '',
   category: '',
@@ -683,6 +674,21 @@ const inviteTabs = [
 ];
 
 const fileInput = ref<HTMLInputElement | null>(null);
+
+onMounted(async () => {
+  await fetchCategories();
+});
+
+const fetchCategories = async () => {
+  loadingCategories.value = true;
+  try {
+    categories.value = await getActiveCategories();
+  } catch (err) {
+    console.error('Failed to load categories:', err);
+  } finally {
+    loadingCategories.value = false;
+  }
+};
 
 const friendsList = ref<Friend[]>([
   { username: 'sarah_lee', name: 'Sarah Lee', type: 'Friend' },
