@@ -8,6 +8,13 @@
         :ellipsis="false"
         @select="handleSelect"
     >
+      <!-- Logo -->
+      <div class="navbar-logo">
+        <router-link to="/">
+          <img src="../images/logo_transparent.png" alt="Logo" class="logo-img" />
+        </router-link>
+      </div>
+
       <!-- Home Button -->
       <el-menu-item index="0">
         <router-link to="/">Home</router-link>
@@ -915,5 +922,18 @@ const handleSelect = () => {
 
 .mb-2 {
   margin-bottom: 8px;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  cursor: pointer;
+}
+
+.logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 </style>
