@@ -116,12 +116,17 @@ The system uses a physical **Client-Server Architecture**.
 
 ---
 
-## 8. Data View
-Our persistent data is managed in a NoSQL format to support the flexible nature of international university data.
+## 8. Implementation View
+The system is implemented using a Monorepo structure to simplify Docker orchestration.
 
-* **User Collection:** Stores credentials and profile metadata.
-* **Message Collection:** Stores real-time chat history.
+root/: Contains the docker-compose.yml and environment configurations.
 
+/frontend: Vue.js application using Vite for optimized builds.
+
+/backend: Node.js/Express server.
+
+/docs: Contains the SAD, SRS, and API contracts (Swagger/Bruno).
+![Overall Use Case Diagram](./Visualizations/package.png)
 ---
 
 ## 9. Quality
@@ -129,5 +134,15 @@ The architecture is designed to support a 99.5% uptime and sub-500ms API respons
 Load Capacity: Support for 500 concurrent users without degradation.
 
 Scalability: Horizontal scaling capabilities via VPS clustering.
----
 
+### 10. Size and Performance
+
+Efficiency: The frontend utilizes lazy-loading for routes (SearchView.vue, ChatComponent.vue) to keep the initial DOM content load under 1.5 seconds.
+
+Memory Constraint: The Node.js API is configured to run within a 512MB RAM container, ensuring it remains performant on low-cost VPS instances.
+
+Database Indexing: MongoDB indexes are applied to UniversityName and Location to ensure query results are returned in <200ms for datasets up to 10,000 entries.
+
+---
+### 11. Architecture MetricsEfferent Coupling ($Ce$): 
+Target < 10 for all core logic packages to ensure high maintainability.Component Dependency: Monitored via Madge to prevent circular dependencies between the API and Database models.
