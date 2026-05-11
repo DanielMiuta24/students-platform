@@ -574,14 +574,14 @@ const handleEditMessage = async (messageId: string, newContent: string) => {
   }
 };
 
-const handleDeleteMessage = async (messageId: string) => {
+const handleDeleteMessage = async (message: Message) => {
   // For now, just delete for me
   try {
-    await messageService.deleteMessage(messageId, 'me');
+    await messageService.deleteMessage(message.id, 'me');
 
     // Remove from all open chat boxes
     for (const chatBox of openChatBoxes.value) {
-      const index = chatBox.conversation.messages.findIndex(m => m.id === messageId);
+      const index = chatBox.conversation.messages.findIndex(m => m.id === message.id);
       if (index !== -1) {
         chatBox.conversation.messages.splice(index, 1);
       }
