@@ -2031,8 +2031,7 @@ const route = useRoute();
 const router = useRouter();
 const sessionStore = useSessionStore();
 
-// Get community ID from route
-const communityIdStr = computed(() => route.params.id as string);
+const communitySlug = computed(() => route.params.slug as string);
 
 // Use community composable
 const {
@@ -2050,9 +2049,8 @@ const {
   fetchCommunity,
   toggleJoin,
   updateCommunityData,
-} = useCommunity(communityIdStr.value);
+} = useCommunity(communitySlug.value);
 
-// Use community members composable
 const {
   members,
   filteredMembers,
@@ -2062,7 +2060,7 @@ const {
   searchQuery: membersSearchQuery,
   fetchMembers,
   setSearch: setMembersSearch,
-} = useCommunityMembers(communityIdStr.value);
+} = useCommunityMembers(communitySlug.value);
 
 const adminMembers = computed(() => {
   return filteredMembers.value.filter(
@@ -2152,7 +2150,7 @@ const unbanningUserId = ref<string | null>(null);
 const pinnedPosts = ref<SafePost[]>([]);
 
 // Computed properties based on backend data
-const communityId = computed(() => communityIdStr.value);
+const communityId = computed(() => community.value?.id || '');
 
 const communityName = computed(() => community.value?.name || 'Community');
 
@@ -2296,7 +2294,7 @@ const fetchPosts = async (cursor?: string | null) => {
     error.value = null;
 
     const result = await getCommunityScoredFeed(
-      communityIdStr.value,
+      communityId.value,
       cursor || undefined,
       10
     );
@@ -2432,7 +2430,7 @@ const handleSendInvites = async (userIds: string[]) => {
 
   try {
     const payload: InviteUsersPayload = { userIds };
-    await sendInvitations(communityIdStr.value, payload);
+    await sendInvitations(communityId.value, payload);
 
     showInviteModal.value = false;
     showInviteSuccess.value = true;

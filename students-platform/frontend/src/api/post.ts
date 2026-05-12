@@ -145,6 +145,25 @@ export const getPostsByAuthor = async (
   }
 };
 
+export const getCommunityScoredFeed = async (
+  communityId: string,
+  cursor?: string,
+  limit: number = 10
+): Promise<CursorPostsResult> => {
+  try {
+    const params = new URLSearchParams();
+    if (cursor) params.append('cursor', cursor);
+    params.append('limit', limit.toString());
+
+    const response = await api.get<CursorPostsResult>(
+      `/posts/community/${communityId}/feed?${params.toString()}`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch community posts');
+  }
+};
+
 export const deletePost = async (postId: string): Promise<void> => {
   try {
     await secureApi.delete(`/posts/${postId}`);

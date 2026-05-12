@@ -48,8 +48,12 @@ export class CommunityService {
     return savedCommunity;
   }
 
-  async getCommunityById(communityId: string, userId?: string): Promise<CommunityDoc> {
-    const community = await CommunityModel.findById(communityId)
+  async getCommunityById(idOrSlug: string, userId?: string): Promise<CommunityDoc> {
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
+
+    const community = await CommunityModel.findOne(
+      isObjectId ? { _id: idOrSlug } : { slug: idOrSlug }
+    )
       .populate('founder', 'name username avatar')
       .populate('category', 'name slug')
       .populate('coverImage', 'url')

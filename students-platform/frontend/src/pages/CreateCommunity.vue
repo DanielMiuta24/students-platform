@@ -149,7 +149,7 @@
                   <option
                     v-for="category in categories"
                     :key="category.id"
-                    :value="category.name"
+                    :value="category.id"
                   >
                     {{ category.name }}
                   </option>
@@ -222,9 +222,9 @@
             </div>
 
             <div class="space-y-5">
-              <div v-if="formData.coverImage" class="relative rounded-2xl border-2 border-blue-200 overflow-hidden group">
+              <div v-if="coverImagePreview" class="relative rounded-2xl border-2 border-blue-200 overflow-hidden group">
                 <img
-                  :src="formData.coverImage"
+                  :src="coverImagePreview"
                   alt="Cover preview"
                   class="w-full h-48 sm:h-64 object-cover block"
                 />
@@ -475,15 +475,15 @@
             </div>
 
             <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-200">
-              <div v-if="formData.coverImage" class="mb-4 -mt-4 -mx-4 sm:-mt-6 sm:-mx-6">
+              <div v-if="coverImagePreview" class="mb-4 -mt-4 -mx-4 sm:-mt-6 sm:-mx-6">
                 <img
-                  :src="formData.coverImage"
+                  :src="coverImagePreview"
                   alt="Community cover"
                   class="w-full h-32 sm:h-40 object-cover rounded-t-xl sm:rounded-t-2xl"
                 />
               </div>
 
-              <div :class="['flex flex-col sm:flex-row items-start sm:items-start gap-3 sm:gap-4 mb-4', formData.coverImage ? 'mt-4' : '']">
+              <div :class="['flex flex-col sm:flex-row items-start sm:items-start gap-3 sm:gap-4 mb-4', coverImagePreview ? 'mt-4' : '']">
                 <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-lg flex-shrink-0 mx-auto sm:mx-0">
                   {{ formData.name.charAt(0).toUpperCase() || '?' }}
                 </div>
@@ -589,9 +589,15 @@
           <button
             v-if="currentStep === 4"
             @click="createCommunity"
-            class="w-full sm:flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg order-1 sm:order-2"
+            :disabled="isCreating"
+            :class="[
+              'w-full sm:flex-1 px-6 py-3 font-bold rounded-xl transition-all shadow-lg order-1 sm:order-2',
+              isCreating
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+            ]"
           >
-            🎉 Create Community
+            {{ isCreating ? 'Creating...' : '🎉 Create Community' }}
           </button>
         </div>
       </div>
@@ -631,6 +637,7 @@ import { useRouter } from 'vue-router';
 import { getActiveCategories } from '../api/category';
 import type { Category } from '../types/category';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
+import { createCommunity as createCommunityAPI } from '../api/community';
 
 const router = useRouter();
 
@@ -650,7 +657,8 @@ interface InvitedUser {
 const steps = ['Basic Info', 'Description', 'Cover Image', 'Invite People', 'Review'];
 const currentStep = ref(0);
 const showSuccessModal = ref(false);
-const createdCommunityId = ref<number | null>(null);
+const createdCommunitySlug = ref<string | null>(null);
+const isCreating = ref(false);
 
 const categories = ref<Category[]>([]);
 const loadingCategories = ref(false);
@@ -659,7 +667,7 @@ const formData = ref({
   name: '',
   category: '',
   description: '',
-  coverImage: null as string | null,
+  coverImage: null as File | null,
   invites: [] as string[],
   invitedUsers: [] as string[],
 });
@@ -730,6 +738,11 @@ const allInvitedUsers = computed<InvitedUser[]>(() => {
   });
 
   return [...emailInvites, ...userInvites];
+});
+
+const coverImagePreview = computed(() => {
+  if (!formData.value.coverImage) return null;
+  return URL.createObjectURL(formData.value.coverImage);
 });
 
 const canProceed = computed(() => {
@@ -807,18 +820,7 @@ const handleFileUpload = (event: Event) => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      console.log('Image loaded, data URL length:', result?.length);
-      console.log('Data URL starts with:', result?.substring(0, 50));
-      formData.value.coverImage = result;
-    };
-    reader.onerror = (e) => {
-      console.error('FileReader error:', e);
-      alert('Failed to read the image file');
-    };
-    reader.readAsDataURL(file);
+    formData.value.coverImage = file;
   } else {
     alert('Please select a valid image file');
   }
@@ -831,14 +833,53 @@ const removeCoverImage = () => {
   }
 };
 
-const createCommunity = () => {
-  createdCommunityId.value = Math.floor(Math.random() * 10000) + 100;
-  showSuccessModal.value = true;
+const createCommunity = async () => {
+  if (isCreating.value) return;
+
+  try {
+    isCreating.value = true;
+
+    // Create FormData to send to API
+    const apiFormData = new FormData();
+    apiFormData.append('name', formData.value.name);
+    apiFormData.append('category', formData.value.category);
+    apiFormData.append('description', formData.value.description);
+
+    // Add cover image if present
+    if (formData.value.coverImage) {
+      apiFormData.append('coverImage', formData.value.coverImage);
+    }
+
+    // Add invitations if present
+    if (formData.value.invites.length > 0 || formData.value.invitedUsers.length > 0) {
+      const invitations: { emails?: string[]; userIds?: string[] } = {};
+
+      if (formData.value.invites.length > 0) {
+        invitations.emails = formData.value.invites;
+      }
+
+      if (formData.value.invitedUsers.length > 0) {
+        invitations.userIds = formData.value.invitedUsers;
+      }
+
+      apiFormData.append('invitations', JSON.stringify(invitations));
+    }
+
+    // Call API
+    const result = await createCommunityAPI(apiFormData);
+
+    createdCommunitySlug.value = result.community.slug;
+    showSuccessModal.value = true;
+  } catch (err: any) {
+    alert(err.message || 'Failed to create community');
+  } finally {
+    isCreating.value = false;
+  }
 };
 
 const handleGoToCommunity = () => {
-  if (createdCommunityId.value) {
-    router.push(`/community/${createdCommunityId.value}`);
+  if (createdCommunitySlug.value) {
+    router.push(`/community/${createdCommunitySlug.value}`);
   }
 };
 
@@ -855,7 +896,7 @@ const handleCreateAnother = () => {
   };
   inviteEmail.value = '';
   friendSearchQuery.value = '';
-  createdCommunityId.value = null;
+  createdCommunitySlug.value = null;
   if (fileInput.value) {
     fileInput.value.value = '';
   }

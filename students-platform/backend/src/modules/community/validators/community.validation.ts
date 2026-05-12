@@ -45,7 +45,16 @@ const validateOptionalCategory = () =>
     .isMongoId().withMessage('Invalid category ID');
 
 const validateIdParam = () =>
-  param('id').isMongoId().withMessage('Invalid community ID');
+  param('id').custom((value) => {
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(value);
+    const isSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
+
+    if (!isObjectId && !isSlug) {
+      throw new Error('Invalid community ID or slug');
+    }
+
+    return true;
+  });
 
 export const validateCreateCommunity = [
   validateName(),

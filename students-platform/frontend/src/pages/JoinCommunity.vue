@@ -68,7 +68,48 @@
             </p>
           </div>
 
-          <div v-if="filteredCommunities.length === 0" class="bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-blue-100">
+          <div v-if="loading" class="bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-blue-100">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Loading communities...</h3>
+          </div>
+
+          <div v-else-if="error" class="bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-red-100">
+            <div class="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Failed to load communities</h3>
+            <p class="text-gray-600 mb-4">{{ error }}</p>
+            <button
+              @click="refresh"
+              class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+
+          <div v-else-if="isEmpty" class="bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-blue-100">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">No communities yet</h3>
+            <p class="text-gray-600 mb-4">Be the first to create a community!</p>
+            <button
+              @click="router.push('/community/create')"
+              class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all"
+            >
+              Create Community
+            </button>
+          </div>
+
+          <div v-else-if="filteredCommunities.length === 0" class="bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-blue-100">
             <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -78,137 +119,194 @@
             <p class="text-gray-600">Try adjusting your search or category filter</p>
           </div>
 
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <CommunityCard
-              v-for="community in filteredCommunities"
-              :key="community.id"
-              :community="community"
-              @toggle-join="toggleJoin"
-              @view="viewCommunity"
-            />
+          <div v-else>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CommunityCard
+                v-for="community in filteredCommunities"
+                :key="community.id"
+                :community="community"
+                @toggle-join="handleToggleJoin"
+                @view="viewCommunity"
+              />
+            </div>
+
+            <div v-if="hasMore" class="mt-8 text-center">
+              <button
+                @click="loadMore"
+                :disabled="loading"
+                class="px-8 py-3 bg-white text-blue-600 font-semibold rounded-xl border-2 border-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ loading ? 'Loading...' : 'Load More' }}
+              </button>
+            </div>
           </div>
         </main>
       </div>
     </section>
+
+    <!-- Leave Confirmation Modal -->
+    <ConfirmationModal
+      :is-open="showLeaveConfirmation"
+      variant="warning"
+      title="Leave Community?"
+      subtitle="This action cannot be undone"
+      :message="`Are you sure you want to leave ${selectedCommunityToLeave?.name}?`"
+      :info-box="{
+        icon: '<svg fill=\'currentColor\' viewBox=\'0 0 20 20\'><path fill-rule=\'evenodd\' d=\'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z\' clip-rule=\'evenodd\' /></svg>',
+        title: 'You will lose access to:',
+        items: [
+          'Community posts and discussions',
+          'Member connections and network',
+          'Community events and updates'
+        ]
+      }"
+      confirm-text="Leave Community"
+      cancel-text="Cancel"
+      :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1\' /></svg>'"
+      @close="cancelLeave"
+      @confirm="confirmLeave"
+    />
+
+    <!-- Join Request Success Modal -->
+    <ConfirmationModal
+      :is-open="showJoinRequestSuccess"
+      variant="info"
+      title="Join Request Sent!"
+      subtitle="Waiting for approval"
+      :message="`Your request to join ${selectedJoinedCommunity?.name} has been sent to the community administrators.`"
+      :info-box="{
+        icon: '<svg fill=\'currentColor\' viewBox=\'0 0 20 20\'><path fill-rule=\'evenodd\' d=\'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z\' clip-rule=\'evenodd\' /></svg>',
+        title: 'What happens next?',
+        items: [
+          'Community admins will review your request',
+          'You\'ll be notified when your request is approved',
+          'You can cancel the request anytime'
+        ]
+      }"
+      confirm-text="Got it"
+      :show-cancel="false"
+      :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg>'"
+      @close="showJoinRequestSuccess = false"
+      @confirm="showJoinRequestSuccess = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import CategoryFilter from "../components/CategoryFilter.vue";
 import CommunityCard from "../components/CommunityCard.vue";
-
-interface Community {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-  members: number;
-  joined: boolean;
-}
+import ConfirmationModal from "../components/ConfirmationModal.vue";
+import { useCommunities } from "../composables/useCommunities";
 
 const router = useRouter();
 
 const searchInput = ref("");
 const selectedCategory = ref<string | null>(null);
+const showLeaveConfirmation = ref(false);
+const selectedCommunityToLeave = ref<any>(null);
+const showJoinRequestSuccess = ref(false);
+const selectedJoinedCommunity = ref<any>(null);
 
-const communities = ref<Community[]>([
-  {
-    id: 1,
-    name: "Study in Germany",
-    description: "For students applying to German universities, Ausbildung, scholarships, and student visas.",
-    category: "Country",
-    members: 1240,
-    joined: false,
-  },
-  {
-    id: 2,
-    name: "Scholarship Seekers",
-    description: "Share scholarship opportunities, tips, deadlines, and application advice.",
-    category: "Scholarships",
-    members: 980,
-    joined: true,
-  },
-  {
-    id: 3,
-    name: "International Nursing Students",
-    description: "A space for nursing students planning to study or work abroad.",
-    category: "Career",
-    members: 430,
-    joined: false,
-  },
-  {
-    id: 4,
-    name: "Visa Support Circle",
-    description: "Ask questions about visa documents, appointments, and embassy processes.",
-    category: "Visa",
-    members: 760,
-    joined: false,
-  },
-  {
-    id: 5,
-    name: "University Applications",
-    description: "Help with SOPs, documents, application portals, and admission requirements.",
-    category: "University Applications",
-    members: 690,
-    joined: false,
-  },
-  {
-    id: 6,
-    name: "Study in USA",
-    description: "Connect with students applying to US universities, discussing F-1 visas, GRE/TOEFL, and campus life.",
-    category: "Country",
-    members: 1580,
-    joined: false,
-  },
-  {
-    id: 7,
-    name: "Master's in Europe",
-    description: "Community for students pursuing Master's degrees in European universities.",
-    category: "University Applications",
-    members: 850,
-    joined: false,
-  },
-  {
-    id: 8,
-    name: "Student Housing Abroad",
-    description: "Tips on finding accommodation, sharing rent, and navigating housing contracts.",
-    category: "Student Life",
-    members: 620,
-    joined: false,
-  },
-]);
+const {
+  communities,
+  loading,
+  error,
+  hasMore,
+  isEmpty,
+  fetchCommunities,
+  loadMore,
+  refresh,
+  setCategory,
+  setSearch,
+  toggleJoin,
+} = useCommunities();
 
 const filteredCommunities = computed(() => {
+  if (!searchInput.value) {
+    return communities.value;
+  }
+
   const query = searchInput.value.toLowerCase();
-
   return communities.value.filter((community) => {
-    const matchesSearch =
-      community.name.toLowerCase().includes(query) ||
-      community.description.toLowerCase().includes(query) ||
-      community.category.toLowerCase().includes(query);
+    const name = community.name.toLowerCase();
+    const description = community.description?.toLowerCase() || '';
+    const categoryName = typeof community.category === 'string'
+      ? ''
+      : community.category.name.toLowerCase();
 
-    const matchesCategory =
-      selectedCategory.value === null ||
-      community.category === selectedCategory.value;
-
-    return matchesSearch && matchesCategory;
+    return name.includes(query) ||
+           description.includes(query) ||
+           categoryName.includes(query);
   });
 });
 
 const handleCategoryChange = (categoryId: string | null) => {
   selectedCategory.value = categoryId;
+  setCategory(categoryId);
 };
 
-const toggleJoin = (community: Community) => {
-  community.joined = !community.joined;
-  community.members += community.joined ? 1 : -1;
+const handleToggleJoin = async (community: any) => {
+  // Check if user is trying to leave the community
+  if (community.joined && !community.hasPendingRequest) {
+    // Show confirmation modal for leaving
+    selectedCommunityToLeave.value = community;
+    showLeaveConfirmation.value = true;
+    return;
+  }
+
+  // For join or cancel request, proceed directly
+  try {
+    const wasNotMember = !community.joined && !community.hasPendingRequest;
+    const requiresApproval = community.requiresApproval;
+
+    await toggleJoin(community.id);
+
+    // If community required approval and user just requested to join
+    if (wasNotMember && requiresApproval) {
+      selectedJoinedCommunity.value = community;
+      showJoinRequestSuccess.value = true;
+      setTimeout(() => {
+        showJoinRequestSuccess.value = false;
+      }, 3000);
+    }
+  } catch (err: any) {
+    alert(err.message || 'Failed to join/leave community');
+  }
 };
 
-const viewCommunity = (community: Community) => {
-  router.push(`/community/${community.id}`);
+const confirmLeave = async () => {
+  if (!selectedCommunityToLeave.value) return;
+
+  try {
+    await toggleJoin(selectedCommunityToLeave.value.id);
+    showLeaveConfirmation.value = false;
+    selectedCommunityToLeave.value = null;
+  } catch (err: any) {
+    alert(err.message || 'Failed to leave community');
+  }
 };
+
+const cancelLeave = () => {
+  showLeaveConfirmation.value = false;
+  selectedCommunityToLeave.value = null;
+};
+
+const viewCommunity = (community: any) => {
+  router.push(`/community/${community.slug}`);
+};
+
+// Debounce search input
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(searchInput, () => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  // Use client-side filtering, so no need to call API
+});
+
+onMounted(() => {
+  fetchCommunities(true);
+});
 </script>
 
 <style scoped>

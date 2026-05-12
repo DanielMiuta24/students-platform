@@ -496,6 +496,42 @@ export class PostService {
     await PostModel.deleteMany({ community: communityId });
   }
 
+  async deletePostsByAuthorInCommunity(communityId: string, authorId: string): Promise<number> {
+    const posts = await PostModel.find({
+      community: communityId,
+      author: authorId
+    }).populate('images').select('_id images');
+
+    let deletedCount = 0;
+
+    for (const post of posts) {
+      const postId = post._id.toString();
+
+      await commentService.deleteCommentsByPost(postId);
+      await likeService.deleteLikesByPost(postId);
+
+      if (post.images && post.images.length > 0) {
+        for (const image of post.images) {
+          const imageDoc = typeof image === 'string' ? null : image;
+          if (imageDoc && 'publicId' in imageDoc) {
+            await imageService.deleteImage(imageDoc.publicId as string);
+            await imageService.deleteImageFromDb(imageDoc._id.toString());
+          }
+        }
+      }
+
+      deletedCount++;
+    }
+
+    await PostModel.deleteMany({ community: communityId, author: authorId });
+
+    if (deletedCount > 0) {
+      await communityService.decrementPostCount(communityId, deletedCount);
+    }
+
+    return deletedCount;
+  }
+
   private async validateCommunityPostPermission(communityId: string, userId: string): Promise<void> {
     await communityService.validatePostPermission(communityId, userId);
   }

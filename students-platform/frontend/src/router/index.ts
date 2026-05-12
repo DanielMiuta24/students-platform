@@ -22,7 +22,7 @@ const routes = [
 
   { path: '/login', component: Login, meta: { guestOnly: true } },
   { path: '/register', component: Register, meta: { guestOnly: true } },
-  { path: '/community/:id', component: ViewCommunity, name: 'ViewCommunity' },
+  { path: '/community/:slug', component: ViewCommunity, name: 'ViewCommunity' },
   { path: '/edit-profile', component: EditProfile, name: 'EditProfile', meta: { requiresAuth: true } },
   { path: '/change-password', component: ChangePassword, name: 'ChangePassword', meta: { requiresAuth: true } },
   { path: '/posts/:id/edit', component: EditPost, name: 'EditPost', meta: { requiresAuth: true } },
