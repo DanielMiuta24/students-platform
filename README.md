@@ -1,6 +1,5 @@
 # students-platform
-![Logo]([./Visualizations/class_diagram.png](https://github.com/DanielMiuta24/students-platform/blob/main/students-platform/frontend/src/images/logo.png))
-🌍 International Student Compass (ISC)
+### 🌍 International Student Compass (ISC)
 Simplifying the Global Education Journey
 The International Student Compass (ISC) is a comprehensive, three-tier web application designed to be the definitive ecosystem for students navigating the complexities of studying abroad. Our mission is to transform a fragmented, stressful process into a streamlined, community-driven experience that begins long before a student steps onto an airplane.
 
