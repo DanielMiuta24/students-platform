@@ -8,9 +8,9 @@
       <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 px-6 py-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </div>
             <div>
@@ -126,7 +126,25 @@
         </div>
 
         <div class="max-h-96 overflow-y-auto">
-          <div v-if="filteredPeople.length === 0" class="p-12 text-center">
+          <div v-if="loading" class="p-12 text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-600">Loading people...</p>
+          </div>
+
+          <div v-else-if="error" class="p-12 text-center">
+            <svg class="w-16 h-16 mx-auto text-red-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-gray-500 mb-4">{{ error }}</p>
+            <button
+              @click="fetchPeople"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Retry
+            </button>
+          </div>
+
+          <div v-else-if="filteredPeople.length === 0" class="p-12 text-center">
             <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
@@ -168,7 +186,7 @@
 
                 <div
                   :class="[
-                    'w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all',
+                    'w-6 h-6 rounded border-2 flex items-center justify-center transition-all',
                     selectedIds.has(person.id)
                       ? 'bg-blue-600 border-blue-600'
                       : 'border-gray-300 hover:border-blue-400'
@@ -228,7 +246,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { useSessionStore } from '../store/session';
+import { getFriends, getFollowers, getFollowing } from '../api/follow';
 
 interface Person {
   id: string;
@@ -241,7 +261,6 @@ interface Person {
 
 interface Props {
   isOpen: boolean;
-  people: Person[];
   subtitle?: string;
 }
 
@@ -251,20 +270,115 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   close: [];
-  sendInvites: [data: { userIds: string[]; emails: string[] }];
+  sendInvites: [data: { userIds: string[]; emails: string[]; users: Array<{ id: string; name: string; username: string }> }];
 }>();
+
+const session = useSessionStore();
 
 const activeTab = ref<'people' | 'email'>('people');
 const searchQuery = ref('');
 const selectedIds = ref<Set<string>>(new Set());
 const selectedEmails = ref<string[]>([]);
 const emailInput = ref('');
+const people = ref<Person[]>([]);
+const loading = ref(false);
+const error = ref<string | null>(null);
+
+// Fetch friends, followers, and following when modal opens
+const fetchPeople = async () => {
+  console.log('[InvitePeopleModal] fetchPeople called');
+  console.log('[InvitePeopleModal] isAuthenticated:', session.isAuthenticated);
+  console.log('[InvitePeopleModal] user:', session.user);
+
+  if (!session.isAuthenticated || !session.user?.id) {
+    console.error('User not authenticated or user ID not available');
+    return;
+  }
+
+  try {
+    loading.value = true;
+    error.value = null;
+
+    console.log('[InvitePeopleModal] Fetching data from APIs...');
+    const [friendsRes, followersRes, followingRes] = await Promise.all([
+      getFriends(session.user.id, 1, 100),
+      getFollowers(session.user.id, 1, 100),
+      getFollowing(session.user.id, 1, 100)
+    ]);
+
+    console.log('[InvitePeopleModal] API responses:', {
+      friends: friendsRes.users?.length || 0,
+      followers: followersRes.users?.length || 0,
+      following: followingRes.users?.length || 0
+    });
+
+    // Combine and deduplicate by user ID
+    const peopleMap = new Map<string, Person>();
+
+    // Add friends
+    (friendsRes.users || []).forEach((user: any) => {
+      peopleMap.set(user.id, {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        avatar: user.avatar,
+        type: 'friend',
+        mutualFriends: 0
+      });
+    });
+
+    // Add followers (if not already added as friend)
+    (followersRes.users || []).forEach((user: any) => {
+      if (!peopleMap.has(user.id)) {
+        peopleMap.set(user.id, {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          avatar: user.avatar,
+          type: 'follower',
+          mutualFriends: 0
+        });
+      }
+    });
+
+    // Add following (if not already added as friend or follower)
+    (followingRes.users || []).forEach((user: any) => {
+      if (!peopleMap.has(user.id)) {
+        peopleMap.set(user.id, {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          avatar: user.avatar,
+          type: 'following',
+          mutualFriends: 0
+        });
+      }
+    });
+
+    people.value = Array.from(peopleMap.values());
+    console.log('[InvitePeopleModal] Fetched people:', people.value.length);
+    console.log('[InvitePeopleModal] People data:', people.value);
+  } catch (err: any) {
+    console.error('[InvitePeopleModal] Error fetching people:', err);
+    error.value = err.message || 'Failed to load people';
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Fetch people when modal opens
+watch(() => props.isOpen, (isOpen) => {
+  console.log('[InvitePeopleModal] isOpen changed to:', isOpen);
+  if (isOpen) {
+    fetchPeople();
+  }
+});
 
 const filteredPeople = computed(() => {
-  if (!searchQuery.value) return props.people;
+  if (!searchQuery.value) return people.value;
 
   const query = searchQuery.value.toLowerCase();
-  return props.people.filter(person =>
+  return people.value.filter(person =>
     person.name.toLowerCase().includes(query) ||
     person.username.toLowerCase().includes(query)
   );
@@ -331,9 +445,20 @@ const handleClose = () => {
 
 const handleSendInvites = () => {
   if (totalSelected.value === 0) return;
+
+  // Get full user data for selected users
+  const selectedUsers = people.value
+    .filter(person => selectedIds.value.has(person.id))
+    .map(person => ({
+      id: person.id,
+      name: person.name,
+      username: person.username
+    }));
+
   emit('sendInvites', {
     userIds: Array.from(selectedIds.value),
     emails: selectedEmails.value,
+    users: selectedUsers,
   });
   searchQuery.value = '';
   selectedIds.value.clear();

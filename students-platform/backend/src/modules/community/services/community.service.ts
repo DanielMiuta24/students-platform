@@ -16,12 +16,37 @@ import type { UploadedFile } from '../../image/services';
 import { toSlug } from '../../../shared/utils/slug';
 
 export class CommunityService {
-  async createCommunity(data: CreateCommunityDTO, coverImageFile?: UploadedFile): Promise<CommunityDoc> {
-    const slug = toSlug(data.name);
-    const slugExists = await CommunityModel.exists({ slug });
-    if (slugExists) {
-      throw new Error(COMMUNITY_ERROR.SLUG_EXISTS);
+  private async generateUniqueSlug(baseName: string): Promise<string> {
+    let slug = toSlug(baseName);
+    let counter = 1;
+
+    // Check if base slug exists
+    const baseSlugExists = await CommunityModel.exists({ slug });
+
+    if (!baseSlugExists) {
+      return slug;
     }
+
+    // If base slug exists, find a unique one by appending numbers
+    while (true) {
+      const candidateSlug = `${slug}-${counter}`;
+      const exists = await CommunityModel.exists({ slug: candidateSlug });
+
+      if (!exists) {
+        return candidateSlug;
+      }
+
+      counter++;
+
+      // Safety limit to prevent infinite loops
+      if (counter > 1000) {
+        throw new Error('Unable to generate unique slug');
+      }
+    }
+  }
+
+  async createCommunity(data: CreateCommunityDTO, coverImageFile?: UploadedFile): Promise<CommunityDoc> {
+    const slug = await this.generateUniqueSlug(data.name);
 
     const isCategoryActive = await categoryService.isActiveCategory(data.category);
     if (!isCategoryActive) {

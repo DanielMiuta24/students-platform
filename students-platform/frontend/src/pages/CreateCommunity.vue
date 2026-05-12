@@ -427,29 +427,47 @@
               </div>
             </div>
 
-            <div v-if="allInvitedUsers.length > 0" class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-green-200 mt-4">
+            <div v-if="invitedUsersList.length > 0" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border-2 border-blue-200 mt-4">
+              <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+                Member Invitations ({{ invitedUsersList.length }})
+              </h4>
+              <div class="space-y-1.5 max-h-32 overflow-y-auto">
+                <div
+                  v-for="(invite, index) in invitedUsersList"
+                  :key="index"
+                  class="bg-white rounded-lg px-3 py-2 text-sm font-medium border border-blue-200 flex items-center gap-2"
+                >
+                  <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                    {{ invite.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <span class="text-gray-700 flex-1 truncate">{{ invite.display }}</span>
+                  <span class="text-xs text-gray-500">@{{ invite.username }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="invitedEmailsList.length > 0" class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-green-200 mt-4">
               <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
-                Email Invitations Ready ({{ allInvitedUsers.length }})
+                Email Invitations ({{ invitedEmailsList.length }})
               </h4>
               <div class="space-y-1.5 max-h-32 overflow-y-auto">
                 <div
-                  v-for="(invite, index) in allInvitedUsers"
+                  v-for="(invite, index) in invitedEmailsList"
                   :key="index"
                   class="bg-white rounded-lg px-3 py-2 text-sm font-medium border border-green-200 flex items-center gap-2"
                 >
-                  <div v-if="invite.type === 'user'" class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                    {{ invite.name.charAt(0).toUpperCase() }}
-                  </div>
-                  <svg v-else class="w-4 h-4 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                   </svg>
                   <span class="text-gray-700 flex-1 truncate">{{ invite.display }}</span>
-                  <span v-if="invite.type === 'user'" class="text-xs text-gray-500">@{{ invite.username }}</span>
                 </div>
               </div>
             </div>
@@ -545,7 +563,6 @@
     <!-- Invite People Modal -->
     <InvitePeopleModal
       :is-open="showInviteModal"
-      :people="friendsAndFollowing"
       @close="showInviteModal = false"
       @send-invites="handleSendInvites"
     />
@@ -574,6 +591,7 @@ interface InvitedUser {
   display: string;
   name: string;
   username?: string;
+  userId?: string;
 }
 
 const steps = ['Basic Info', 'Description', 'Cover Image', 'Invite People', 'Review'];
@@ -594,6 +612,9 @@ const formData = ref({
   invites: [] as string[],
   invitedUsers: [] as string[],
 });
+
+// Store user data for invited users (id -> {name, username})
+const invitedUsersData = ref<Map<string, { name: string; username: string }>>(new Map());
 
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -634,17 +655,6 @@ const filteredFriends = computed(() => {
   );
 });
 
-// Transform friendsList to format expected by InvitePeopleModal
-const friendsAndFollowing = computed(() => {
-  return friendsList.value.map(friend => ({
-    id: friend.username,
-    name: friend.name,
-    username: friend.username,
-    type: friend.type.toLowerCase() as 'friend' | 'following' | 'follower',
-    mutualFriends: Math.floor(Math.random() * 20), // Mock data
-  }));
-});
-
 const allInvitedUsers = computed<InvitedUser[]>(() => {
   const emailInvites: InvitedUser[] = formData.value.invites.map(email => ({
     type: 'email',
@@ -652,17 +662,39 @@ const allInvitedUsers = computed<InvitedUser[]>(() => {
     name: email,
   }));
 
-  const userInvites: InvitedUser[] = formData.value.invitedUsers.map(username => {
-    const friend = friendsList.value.find(f => f.username === username);
+  const userInvites: InvitedUser[] = formData.value.invitedUsers.map(userId => {
+    const userData = invitedUsersData.value.get(userId);
     return {
       type: 'user',
-      display: friend?.name || username,
-      name: friend?.name || username,
-      username: username,
+      display: userData?.name || userId,
+      name: userData?.name || userId,
+      username: userData?.username || userId,
+      userId: userId,
     };
   });
 
   return [...emailInvites, ...userInvites];
+});
+
+const invitedUsersList = computed<InvitedUser[]>(() => {
+  return formData.value.invitedUsers.map(userId => {
+    const userData = invitedUsersData.value.get(userId);
+    return {
+      type: 'user',
+      display: userData?.name || userId,
+      name: userData?.name || userId,
+      username: userData?.username || userId,
+      userId: userId,
+    };
+  });
+});
+
+const invitedEmailsList = computed<InvitedUser[]>(() => {
+  return formData.value.invites.map(email => ({
+    type: 'email',
+    display: email,
+    name: email,
+  }));
 });
 
 const coverImagePreview = computed(() => {
@@ -723,15 +755,17 @@ const removeInviteByIndex = (index: number) => {
     if (emailIndex !== -1) {
       formData.value.invites.splice(emailIndex, 1);
     }
-  } else if (invite.type === 'user' && invite.username) {
-    const userIndex = formData.value.invitedUsers.indexOf(invite.username);
+  } else if (invite.type === 'user' && invite.userId) {
+    const userIndex = formData.value.invitedUsers.indexOf(invite.userId);
     if (userIndex !== -1) {
       formData.value.invitedUsers.splice(userIndex, 1);
+      // Also remove from the user data map
+      invitedUsersData.value.delete(invite.userId);
     }
   }
 };
 
-const handleSendInvites = (data: { userIds: string[]; emails: string[] }) => {
+const handleSendInvites = (data: { userIds: string[]; emails: string[]; users: Array<{ id: string; name: string; username: string }> }) => {
   console.log('handleSendInvites received:', data);
 
   // Add emails to formData
@@ -741,15 +775,20 @@ const handleSendInvites = (data: { userIds: string[]; emails: string[] }) => {
     }
   });
 
-  // Add userIds (usernames) to formData
-  data.userIds.forEach(userId => {
-    if (!formData.value.invitedUsers.includes(userId)) {
-      formData.value.invitedUsers.push(userId);
+  // Add userIds and store user data
+  data.users.forEach(user => {
+    if (!formData.value.invitedUsers.includes(user.id)) {
+      formData.value.invitedUsers.push(user.id);
+      invitedUsersData.value.set(user.id, {
+        name: user.name,
+        username: user.username
+      });
     }
   });
 
   console.log('formData.invites:', formData.value.invites);
   console.log('formData.invitedUsers:', formData.value.invitedUsers);
+  console.log('invitedUsersData:', invitedUsersData.value);
   console.log('allInvitedUsers:', allInvitedUsers.value);
 
   showInviteModal.value = false;

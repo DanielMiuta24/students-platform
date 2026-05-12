@@ -32,7 +32,7 @@ class CommunityController {
     },
     [COMMUNITY_ERROR.SLUG_EXISTS]: {
       status: 409,
-      message: 'A community with this name already exists',
+      message: 'A community with a similar name already exists. Please choose a different name.',
     },
     [COMMUNITY_ERROR.CATEGORY_NOT_FOUND]: {
       status: 404,

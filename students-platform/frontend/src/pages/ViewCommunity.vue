@@ -1782,7 +1782,6 @@
     <!-- Invite People Modal -->
     <InvitePeopleModal
       :is-open="showInviteModal"
-      :people="friendsAndFollowing"
       @close="showInviteModal = false"
       @send-invites="handleSendInvites"
     />
@@ -2247,25 +2246,6 @@ const recentImages = computed(() => {
 });
 
 // Mock data for friends, following, and followers (TODO: Replace with actual API call)
-const friendsAndFollowing = computed(() => {
-  const mockData = [
-    { id: '1', name: 'Sarah Johnson', username: 'sarahj', avatar: null, type: 'friend', mutualFriends: 12 },
-    { id: '2', name: 'Michael Chen', username: 'mchen', avatar: null, type: 'following', mutualFriends: 8 },
-    { id: '3', name: 'Emma Williams', username: 'emmaw', avatar: null, type: 'friend', mutualFriends: 15 },
-    { id: '4', name: 'David Brown', username: 'dbrown', avatar: null, type: 'following', mutualFriends: 5 },
-    { id: '5', name: 'Lisa Anderson', username: 'lisaa', avatar: null, type: 'friend', mutualFriends: 20 },
-    { id: '6', name: 'James Wilson', username: 'jwilson', avatar: null, type: 'follower', mutualFriends: 3 },
-    { id: '7', name: 'Sophia Martinez', username: 'sophiam', avatar: null, type: 'friend', mutualFriends: 18 },
-    { id: '8', name: 'Robert Taylor', username: 'rtaylor', avatar: null, type: 'following', mutualFriends: 7 },
-    { id: '9', name: 'Jennifer Lee', username: 'jlee', avatar: null, type: 'follower', mutualFriends: 6 },
-    { id: '10', name: 'Kevin Park', username: 'kpark', avatar: null, type: 'follower', mutualFriends: 9 },
-    { id: '11', name: 'Amanda Garcia', username: 'agarcia', avatar: null, type: 'friend', mutualFriends: 14 },
-    { id: '12', name: 'Christopher Moore', username: 'cmoore', avatar: null, type: 'follower', mutualFriends: 4 },
-  ];
-
-  return mockData;
-});
-
 const isPostOwner = (post: SafePost): boolean => {
   if (!sessionStore.user) return false;
 
@@ -2415,7 +2395,7 @@ const handleInvitePeople = () => {
   showInviteModal.value = true;
 };
 
-const handleSendInvites = async (data: { userIds: string[]; emails: string[] }) => {
+const handleSendInvites = async (data: { userIds: string[]; emails: string[]; users: Array<{ id: string; name: string; username: string }> }) => {
   invitedCount.value = data.userIds.length + data.emails.length;
 
   try {
