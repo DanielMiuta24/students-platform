@@ -291,8 +291,12 @@ export class CommunityService {
     });
   }
 
-  async getCommunityMembers(communityId: string) {
-    const community = await CommunityModel.findById(communityId)
+  async getCommunityMembers(communityIdOrSlug: string) {
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(communityIdOrSlug);
+
+    const community = await CommunityModel.findOne(
+      isObjectId ? { _id: communityIdOrSlug } : { slug: communityIdOrSlug }
+    )
       .populate('members.user', 'name username avatar type')
       .exec();
 
@@ -314,6 +318,13 @@ export class CommunityService {
       })),
       total: community.memberCount,
     };
+  }
+
+  private async findCommunityByIdOrSlug(idOrSlug: string): Promise<CommunityDoc | null> {
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
+    return await CommunityModel.findOne(
+      isObjectId ? { _id: idOrSlug } : { slug: idOrSlug }
+    ).exec();
   }
 
   private isAdmin(community: CommunityDoc, userId: string): boolean {
@@ -589,8 +600,8 @@ export class CommunityService {
     return { message: 'Join request rejected successfully' };
   }
 
-  async removeMember(communityId: string, memberId: string, userId: string) {
-    const community = await CommunityModel.findById(communityId);
+  async removeMember(communityIdOrSlug: string, memberId: string, userId: string) {
+    const community = await this.findCommunityByIdOrSlug(communityIdOrSlug);
 
     if (!community) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
@@ -606,14 +617,14 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.CANNOT_REMOVE_FOUNDER);
     }
 
-    await CommunityModel.findByIdAndUpdate(communityId, {
+    await CommunityModel.findByIdAndUpdate(community._id, {
       $pull: { members: { user: memberId } },
       $inc: { memberCount: -1 },
     });
   }
 
-  async banUser(communityId: string, userId: string, adminId: string) {
-    const community = await CommunityModel.findById(communityId);
+  async banUser(communityIdOrSlug: string, userId: string, adminId: string) {
+    const community = await this.findCommunityByIdOrSlug(communityIdOrSlug);
 
     if (!community) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
@@ -630,17 +641,17 @@ export class CommunityService {
 
     // Delete all posts by the user in this community
     const { postService } = await import('../../post/services');
-    await postService.deletePostsByAuthorInCommunity(communityId, userId);
+    await postService.deletePostsByAuthorInCommunity(community._id.toString(), userId);
 
-    await CommunityModel.findByIdAndUpdate(communityId, {
+    await CommunityModel.findByIdAndUpdate(community._id, {
       $pull: { members: { user: userId } },
       $addToSet: { bannedUsers: userId },
       $inc: { memberCount: -1 },
     });
   }
 
-  async unbanUser(communityId: string, userId: string, adminId: string) {
-    const community = await CommunityModel.findById(communityId);
+  async unbanUser(communityIdOrSlug: string, userId: string, adminId: string) {
+    const community = await this.findCommunityByIdOrSlug(communityIdOrSlug);
 
     if (!community) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
@@ -650,15 +661,19 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
     }
 
-    await CommunityModel.findByIdAndUpdate(communityId, {
+    await CommunityModel.findByIdAndUpdate(community._id, {
       $pull: { bannedUsers: userId },
     });
   }
 
-  async getBannedUsers(communityId: string, adminId: string) {
-    const community = await CommunityModel.findById(communityId)
+  async getBannedUsers(communityIdOrSlug: string, adminId: string) {
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(communityIdOrSlug);
+    const community = await CommunityModel.findOne(
+      isObjectId ? { _id: communityIdOrSlug } : { slug: communityIdOrSlug }
+    )
       .populate('bannedUsers', 'name username avatar type')
-      .select('bannedUsers members founder');
+      .select('bannedUsers members founder')
+      .exec();
 
     if (!community) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
@@ -671,8 +686,8 @@ export class CommunityService {
     return community.bannedUsers || [];
   }
 
-  async updateMemberRole(communityId: string, memberId: string, role: 'admin' | 'member', adminId: string) {
-    const community = await CommunityModel.findById(communityId);
+  async updateMemberRole(communityIdOrSlug: string, memberId: string, role: 'admin' | 'member', adminId: string) {
+    const community = await this.findCommunityByIdOrSlug(communityIdOrSlug);
 
     if (!community) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
@@ -689,7 +704,7 @@ export class CommunityService {
     }
 
     await CommunityModel.findOneAndUpdate(
-      { _id: communityId, 'members.user': memberId },
+      { _id: community._id, 'members.user': memberId },
       { $set: { 'members.$.role': role } }
     );
   }
