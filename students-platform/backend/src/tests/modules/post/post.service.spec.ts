@@ -1,10 +1,14 @@
 import { PostService } from '../../../modules/post/services/post.service';
 import { PostModel } from '../../../modules/post/models/post.model';
-import { CategoryModel } from '../../../modules/category/models';
+import { categoryService } from '../../../modules/category/services';
 import { POST_ERROR } from '../../../modules/post/constants/post.constants';
 
 jest.mock('../../../modules/post/models/post.model');
-jest.mock('../../../modules/category/models');
+jest.mock('../../../modules/category/services', () => ({
+  categoryService: {
+    isActiveCategory: jest.fn(),
+  },
+}));
 
 describe('PostService', () => {
   let postService: PostService;
@@ -16,7 +20,6 @@ describe('PostService', () => {
 
   describe('createPost', () => {
     it('should create post successfully', async () => {
-      const mockCategory = { _id: 'cat123', name: 'Tech', isActive: true };
       const mockPostData = {
         title: 'Test Post',
         content: 'Test content',
@@ -30,12 +33,12 @@ describe('PostService', () => {
         save: jest.fn().mockResolvedValue({ _id: 'post123', ...mockPostData }),
       };
 
-      (CategoryModel.findById as jest.Mock).mockResolvedValue(mockCategory);
+      (categoryService.isActiveCategory as jest.Mock).mockResolvedValue(true);
       (PostModel as any).mockImplementation(() => mockPost);
 
       await postService.createPost(mockPostData);
 
-      expect(CategoryModel.findById).toHaveBeenCalledWith('cat123');
+      expect(categoryService.isActiveCategory).toHaveBeenCalledWith('cat123');
       expect(mockPost.save).toHaveBeenCalled();
     });
 
@@ -47,7 +50,7 @@ describe('PostService', () => {
         authorId: 'user123',
       };
 
-      (CategoryModel.findById as jest.Mock).mockResolvedValue(null);
+      (categoryService.isActiveCategory as jest.Mock).mockResolvedValue(false);
 
       await expect(postService.createPost(mockPostData)).rejects.toThrow(
         POST_ERROR.CATEGORY_NOT_FOUND
@@ -55,7 +58,6 @@ describe('PostService', () => {
     });
 
     it('should throw error when category is inactive', async () => {
-      const mockCategory = { _id: 'cat123', name: 'Tech', isActive: false };
       const mockPostData = {
         title: 'Test Post',
         content: 'Test content',
@@ -63,7 +65,7 @@ describe('PostService', () => {
         authorId: 'user123',
       };
 
-      (CategoryModel.findById as jest.Mock).mockResolvedValue(mockCategory);
+      (categoryService.isActiveCategory as jest.Mock).mockResolvedValue(false);
 
       await expect(postService.createPost(mockPostData)).rejects.toThrow(
         POST_ERROR.CATEGORY_NOT_FOUND
@@ -86,7 +88,7 @@ describe('PostService', () => {
 
       (PostModel.findById as jest.Mock).mockReturnValue(mockQuery);
 
-      const result = await postService.getPostById('post123');
+      const result = await postService.getPostById('post123', 'user123');
 
       expect(PostModel.findById).toHaveBeenCalledWith('post123');
       expect(mockQuery.populate).toHaveBeenCalledWith('author', 'name username avatar email type');
@@ -102,7 +104,7 @@ describe('PostService', () => {
 
       (PostModel.findById as jest.Mock).mockReturnValue(mockQuery);
 
-      const result = await postService.getPostById('nonexistent');
+      const result = await postService.getPostById('nonexistent', 'user123');
 
       expect(result).toBeNull();
     });
@@ -116,7 +118,6 @@ describe('PostService', () => {
         author: 'user123',
       };
 
-      const mockCategory = { _id: 'cat123', name: 'Tech', isActive: true };
       const mockUpdatedPost = {
         _id: 'post123',
         title: 'New Title',
@@ -129,7 +130,7 @@ describe('PostService', () => {
       };
 
       (PostModel.findById as jest.Mock).mockResolvedValue(mockExistingPost);
-      (CategoryModel.findById as jest.Mock).mockResolvedValue(mockCategory);
+      (categoryService.isActiveCategory as jest.Mock).mockResolvedValue(true);
       (PostModel.findByIdAndUpdate as jest.Mock).mockReturnValue(mockQuery);
 
       const result = await postService.updatePost(
@@ -145,7 +146,7 @@ describe('PostService', () => {
       );
 
       expect(PostModel.findById).toHaveBeenCalledWith('post123');
-      expect(CategoryModel.findById).toHaveBeenCalledWith('cat123');
+      expect(categoryService.isActiveCategory).toHaveBeenCalledWith('cat123');
       expect(result).toEqual(mockUpdatedPost);
     });
 
@@ -191,7 +192,7 @@ describe('PostService', () => {
       };
 
       (PostModel.findById as jest.Mock).mockResolvedValue(mockExistingPost);
-      (CategoryModel.findById as jest.Mock).mockResolvedValue(null);
+      (categoryService.isActiveCategory as jest.Mock).mockResolvedValue(false);
 
       await expect(
         postService.updatePost('post123', {
@@ -211,10 +212,8 @@ describe('PostService', () => {
         author: 'user123',
       };
 
-      const mockCategory = { _id: 'cat123', name: 'Tech', isActive: false };
-
       (PostModel.findById as jest.Mock).mockResolvedValue(mockExistingPost);
-      (CategoryModel.findById as jest.Mock).mockResolvedValue(mockCategory);
+      (categoryService.isActiveCategory as jest.Mock).mockResolvedValue(false);
 
       await expect(
         postService.updatePost('post123', {
@@ -230,13 +229,21 @@ describe('PostService', () => {
 
   describe('incrementViewCount', () => {
     it('should increment view count', async () => {
+      (PostModel.exists as jest.Mock).mockResolvedValue(false);
       (PostModel.findByIdAndUpdate as jest.Mock).mockResolvedValue({ viewCount: 101 });
 
-      await postService.incrementViewCount('post123');
+      await postService.incrementViewCount('post123', 'user123');
 
+      expect(PostModel.exists).toHaveBeenCalledWith({
+        _id: 'post123',
+        viewedBy: 'user123'
+      });
       expect(PostModel.findByIdAndUpdate).toHaveBeenCalledWith(
         'post123',
-        { $inc: { viewCount: 1 } }
+        {
+          $inc: { viewCount: 1 },
+          $addToSet: { viewedBy: 'user123' }
+        }
       );
     });
   });

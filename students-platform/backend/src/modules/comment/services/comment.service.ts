@@ -256,6 +256,22 @@ export class CommentService {
       },
     });
   }
+
+  async deleteCommentsByPost(postId: string): Promise<void> {
+    const comments = await CommentModel.find({ post: postId }).select('_id');
+    const commentIds = comments.map(c => c._id);
+
+    if (commentIds.length === 0) {
+      return;
+    }
+
+    await LikeModel.deleteMany({
+      likeable: { $in: commentIds },
+      likeableType: 'Comment'
+    });
+
+    await CommentModel.deleteMany({ post: postId });
+  }
 }
 
 export const commentService = new CommentService();

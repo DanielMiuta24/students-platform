@@ -85,6 +85,7 @@ const validateExistingImages = () =>
     .optional()
     .isArray().withMessage('Existing images must be an array')
     .custom(validateImageList);
+
 const validateStatus = () =>
   body('status')
     .notEmpty().withMessage('Status is required')
@@ -105,7 +106,6 @@ const validateOptionalVisibility = () =>
     .optional()
     .isIn(VALID_VISIBILITIES).withMessage(`Invalid visibility. Must be one of: ${VALID_VISIBILITIES.join(', ')}`);
 
-// Custom middleware to validate total image count (existing + new uploads)
 export const validateTotalImageCount = (req: UploadRequest, res: Response, next: NextFunction) => {
   const existingImagesCount = Array.isArray(req.body.existingImages) ? req.body.existingImages.length : 0;
   const newFilesCount = req.files ? req.files.length : 0;

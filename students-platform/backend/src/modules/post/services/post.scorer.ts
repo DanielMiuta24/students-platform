@@ -64,4 +64,52 @@ export class PostScorer {
 
     return score;
   }
+
+  static calculateCommunityScore(post: PostDoc, currentUserId?: string): number {
+    const recencyScore = this.calculateCommunityRecencyScore(post.createdAt);
+    const engagementScore = this.calculateCommunityEngagementScore(
+      post.likeCount,
+      post.commentCount,
+      post.viewCount
+    );
+    const authorScore = this.calculateAuthorScore(post, currentUserId);
+
+    return recencyScore + engagementScore + authorScore;
+  }
+
+  private static calculateCommunityRecencyScore(createdAt: Date): number {
+    const now = new Date();
+    const hoursAgo = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+
+    if (hoursAgo < 1) return 100;
+    if (hoursAgo < 6) return 80;
+    if (hoursAgo < 24) return 60;
+    if (hoursAgo < 72) return 40;
+    if (hoursAgo < 168) return 20;
+    return 10;
+  }
+
+  private static calculateCommunityEngagementScore(likeCount: number, commentCount: number, viewCount: number): number {
+    const likeScore = likeCount * 3;
+    const commentScore = commentCount * 5;
+    const viewScore = Math.min(viewCount * 0.3, 50);
+
+    const engagementRate = viewCount > 0
+      ? ((likeCount + commentCount) / viewCount) * 100
+      : 0;
+
+    return likeScore + commentScore + viewScore + engagementRate;
+  }
+
+  private static calculateAuthorScore(post: PostDoc, currentUserId?: string): number {
+    if (!currentUserId) return 0;
+
+    const authorId = typeof post.author === 'string'
+      ? post.author
+      : post.author?._id?.toString();
+
+    if (!authorId) return 0;
+
+    return authorId === currentUserId ? 50 : 0;
+  }
 }

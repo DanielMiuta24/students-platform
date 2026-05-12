@@ -111,6 +111,10 @@ export class LikeService {
         break;
     }
   }
+
+  async deleteLikesByPost(postId: string): Promise<void> {
+    await LikeModel.deleteMany({ likeable: postId, likeableType: 'Post' });
+  }
 }
 
 export const likeService = new LikeService();

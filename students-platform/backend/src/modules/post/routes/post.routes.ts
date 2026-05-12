@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { postController } from '../controllers/post.controller';
-import { authMiddleware, optionalAuthMiddleware } from '../../../shared/middleware/auth.middleware';
+import { authMiddleware } from '../../../shared/middleware/auth.middleware';
 import { busboyUploadMiddleware } from '../../image/middleware';
 import { IMAGE_VALIDATION } from '../../image/services';
 import {
@@ -14,31 +14,35 @@ import {
 
 const router = Router();
 
-router.get('/feed', postController.getFeed);
+router.get('/feed', authMiddleware, postController.getFeed);
 
-router.get('/feed/scored', postController.getScoredFeed);
+router.get('/feed/scored', authMiddleware, postController.getScoredFeed);
+
+router.get('/community/:communityId/feed', authMiddleware, postController.getCommunityScoredFeed);
 
 router.get(
   '/category/:categoryId',
+  authMiddleware,
   validateCategoryIdParam,
   postController.getPostsByCategory
 );
 
 router.get(
   '/author/:authorId',
+  authMiddleware,
   validateAuthorId,
   postController.getPostsByAuthor
 );
 
 router.get(
   '/slug/:slug',
-  optionalAuthMiddleware,
+  authMiddleware,
   postController.getPostBySlug
 );
 
 router.get(
   '/:postId',
-  optionalAuthMiddleware,
+  authMiddleware,
   validatePostId,
   postController.getPostById
 );

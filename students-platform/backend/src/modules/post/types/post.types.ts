@@ -7,6 +7,7 @@ export interface CreatePostDTO {
   title: string;
   content: PostContent;
   category: string;
+  communityId?: string;
   status?: PostStatus;
   visibility?: PostVisibility;
   images?: ImageMetadata[];
@@ -16,6 +17,7 @@ export interface UpdatePostDTO {
   title: string;
   content: PostContent;
   category: string;
+  communityId?: string;
   status: PostStatus;
   visibility?: PostVisibility;
   images?: ImageMetadata[];
@@ -35,6 +37,7 @@ export interface GetPostsDTO {
   status?: PostStatus;
   visibility?: PostVisibility;
   categoryId?: string;
+  communityId?: string;
   authorId?: string;
 }
 

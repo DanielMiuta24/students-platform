@@ -3,14 +3,7 @@ import type { SafePost, ImageMetadata, SafeAuthor } from '../types/post.types';
 import type { PostContent } from '../types/post-content.types';
 import type { ImageDoc } from '../../image/image.model';
 
-/**
- * Mapper for converting PostDoc to SafePost (API response format)
- * Handles data transformation and serialization
- */
 export class PostMapper {
-  /**
-   * Converts PostDoc to safe API response format
-   */
   static toSafePost(post: PostDoc): SafePost {
     return {
       id: this.extractId(post._id),
@@ -30,16 +23,10 @@ export class PostMapper {
     };
   }
 
-  /**
-   * Converts array of PostDocs to SafePosts
-   */
   static toSafePosts(posts: PostDoc[]): SafePost[] {
     return posts.map(post => this.toSafePost(post));
   }
 
-  /**
-   * Maps author - returns full object if populated, or just ID
-   */
   private static mapAuthor(value: any): string | SafeAuthor {
     if (!value) return '';
     if (typeof value === 'string') return value;

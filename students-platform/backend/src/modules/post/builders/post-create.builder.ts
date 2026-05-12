@@ -40,6 +40,11 @@ export class PostCreateBuilder {
     return this;
   }
 
+  setCommunity(communityId?: string): this {
+    this.data.community = communityId || undefined;
+    return this;
+  }
+
   setStatus(status?: PostStatus): this {
     this.data.status = status || POST_STATUS.DRAFT;
     return this;
@@ -62,6 +67,7 @@ export class PostCreateBuilder {
       .setSlug(dto.title)
       .setContent(dto.content)
       .setCategory(dto.category)
+      .setCommunity(dto.communityId)
       .setStatus(dto.status)
       .setVisibility(dto.visibility)
       .setImages(dto.images);

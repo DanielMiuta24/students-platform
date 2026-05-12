@@ -22,6 +22,9 @@ const PostSchema = new Schema(
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: false } as {
       type: typeof Schema.Types.ObjectId; ref: 'Category';
     },
+    community: { type: Schema.Types.ObjectId, ref: 'Community', required: false } as {
+      type: typeof Schema.Types.ObjectId; ref: 'Community';
+    },
     status: {
       type: String,
       enum: Object.values(POST_STATUS),
@@ -54,5 +57,6 @@ PostSchema.index({ slug: 1 });
 PostSchema.index({ status: 1, visibility: 1, _id: -1 });
 PostSchema.index({ author: 1, _id: -1 });
 PostSchema.index({ category: 1, status: 1, visibility: 1, _id: -1 });
+PostSchema.index({ community: 1, status: 1, visibility: 1, _id: -1 });
 
 export const PostModel: Model<Post> = model<Post>('Post', PostSchema);

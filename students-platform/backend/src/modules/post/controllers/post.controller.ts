@@ -79,16 +79,16 @@ class PostController {
   ) => {
     try {
       const { postId } = req.params;
-      const post = await postService.getPostById(postId);
+      const userId = (req as AuthenticatedRequest).user!.id;
+      const post = await postService.getPostById(postId, userId);
 
       if (!post) {
         return res.status(PostController.HTTP_STATUS.NOT_FOUND).json({ message: 'Post not found' });
       }
 
       if (req.query.incrementView === 'true') {
-        const userId = (req as AuthenticatedRequest).user?.id;
         await postService.incrementViewCount(postId, userId);
-        if (!userId || !(post as any).viewedBy?.includes(userId)) {
+        if (!(post as any).viewedBy?.includes(userId)) {
           post.viewCount += 1;
         }
       }
@@ -108,16 +108,16 @@ class PostController {
   ) => {
     try {
       const { slug } = req.params;
-      const post = await postService.getPostBySlug(slug);
+      const userId = (req as AuthenticatedRequest).user!.id;
+      const post = await postService.getPostBySlug(slug, userId);
 
       if (!post) {
         return res.status(PostController.HTTP_STATUS.NOT_FOUND).json({ message: 'Post not found' });
       }
 
       if (req.query.incrementView === 'true') {
-        const userId = (req as AuthenticatedRequest).user?.id;
         await postService.incrementViewCount(post._id.toString(), userId);
-        if (!userId || !(post as any).viewedBy?.includes(userId)) {
+        if (!(post as any).viewedBy?.includes(userId)) {
           post.viewCount += 1;
         }
       }
@@ -202,8 +202,11 @@ class PostController {
         req.query.cursor as string,
         req.query.limit as string
       );
+      const viewerId = (req as AuthenticatedRequest).user!.id;
+
       const result = await postService.getPostsByAuthor(
         req.params.authorId,
+        viewerId,
         cursor,
         limit
       );
@@ -238,6 +241,35 @@ class PostController {
         preferredCategories: categories,
         userId,
       });
+
+      return res.status(PostController.HTTP_STATUS.OK).json(result);
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  getCommunityScoredFeed = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const communityId = req.params.communityId;
+      const cursor = req.query.cursor as string | undefined;
+      const limitQuery = req.query.limit as string;
+      const limit = parseInt(limitQuery || String(POST_VALIDATION.DEFAULT_PAGINATION_LIMIT), 10);
+      const safeLimit = Number.isNaN(limit) || limit <= 0
+        ? POST_VALIDATION.DEFAULT_PAGINATION_LIMIT
+        : limit;
+
+      const userId = req.user!.id;
+
+      const result = await postService.getCommunityScoredFeed(
+        communityId,
+        userId,
+        cursor,
+        safeLimit
+      );
 
       return res.status(PostController.HTTP_STATUS.OK).json(result);
     } catch (err: unknown) {
