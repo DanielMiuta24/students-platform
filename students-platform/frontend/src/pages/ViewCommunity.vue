@@ -3016,8 +3016,8 @@ watch(communitySlug, async (newSlug, oldSlug) => {
 });
 
 // Watch for tab changes to load data as needed
-watch(activeTab, (newTab) => {
-  if (newTab === 'members' && members.value.length === 0) {
+watch(activeTab, (newTab, oldTab) => {
+  if (newTab === 'members' && oldTab !== 'members') {
     fetchMembers();
   }
   if (newTab === 'settings') {
