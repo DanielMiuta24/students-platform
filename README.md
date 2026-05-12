@@ -3,6 +3,12 @@
 Simplifying the Global Education Journey
 The International Student Compass (ISC) is a comprehensive, three-tier web application designed to be the definitive ecosystem for students navigating the complexities of studying abroad. Our mission is to transform a fragmented, stressful process into a streamlined, community-driven experience that begins long before a student steps onto an airplane.
 
+### Supporting Information & Project Links
+
+*   **Project Blog:** [International Student Compass Blog](https://education4849.wordpress.com/)
+*   **Software Architecture Document (SAD):** [View SAD on GitHub](https://github.com/DanielMiuta24/students-platform/blob/main/SAD.md)
+*   **Software Requirements Specification (SRS):** [View SRS on GitHub](https://github.com/DanielMiuta24/students-platform/blob/main/SRS.md)
+
 # 🚀 Key Features
 🤝 Global Student Community
 The journey is less lonely when you have friends waiting for you.
