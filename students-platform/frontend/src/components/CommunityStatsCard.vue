@@ -1,17 +1,17 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <div
       v-for="(stat, index) in stats"
       :key="index"
-      class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200"
+      class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200 hover:shadow-lg transition-shadow"
     >
-      <div class="flex items-center gap-3 mb-2">
-        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-          <div v-html="stat.icon" class="w-5 h-5 text-white"></div>
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+          <div v-html="stat.icon" class="w-6 h-6 text-white"></div>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-600 font-medium">{{ stat.label }}</p>
-          <p class="text-2xl font-bold text-gray-900 truncate">{{ formatValue(stat.value) }}</p>
+          <p class="text-sm font-medium text-gray-600 mb-1">{{ stat.label }}</p>
+          <p class="text-3xl font-extrabold text-gray-900 break-words">{{ formatValue(stat.value) }}</p>
         </div>
       </div>
     </div>

@@ -454,25 +454,72 @@
           gradient-to="#4f46e5"
         />
 
-        <div class="p-4 sm:p-6 md:p-8">
-          <div class="space-y-6">
+        <div class="p-4 sm:p-6 lg:p-8">
+          <div class="max-w-4xl mx-auto space-y-8">
+            <!-- Description Section -->
             <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-              <p class="text-gray-700 leading-relaxed">
-                {{ communityDescription }}
-              </p>
+              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                Description
+              </h3>
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <p class="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                  {{ communityDescription }}
+                </p>
+              </div>
             </div>
 
-            <div class="border-t pt-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-4">Community Stats</h3>
+            <!-- Community Stats Section -->
+            <div class="border-t border-gray-200 pt-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Community Stats
+              </h3>
               <CommunityStatsCard :stats="aboutStats" />
             </div>
 
-            <div class="border-t pt-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">Category</h3>
-              <span class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+            <!-- Category Section -->
+            <div class="border-t border-gray-200 pt-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Category
+              </h3>
+              <div class="inline-flex items-center px-5 py-3 rounded-xl text-base font-semibold bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 border-2 border-blue-200 shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                </svg>
                 {{ communityCategory }}
-              </span>
+              </div>
+            </div>
+
+            <!-- Founder Section -->
+            <div v-if="community?.founder" class="border-t border-gray-200 pt-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Founded By
+              </h3>
+              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                <div class="flex items-center gap-4">
+                  <div v-if="community.founder.avatar" class="w-16 h-16 rounded-full overflow-hidden ring-4 ring-white shadow-lg">
+                    <img :src="community.founder.avatar" :alt="community.founder.name" class="w-full h-full object-cover" />
+                  </div>
+                  <div v-else class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-2xl ring-4 ring-white shadow-lg">
+                    {{ community.founder.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-lg font-bold text-gray-900 truncate">{{ community.founder.name }}</p>
+                    <p class="text-sm text-gray-600">@{{ community.founder.username }}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
