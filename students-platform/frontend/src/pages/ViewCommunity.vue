@@ -2249,27 +2249,19 @@ const recentImages = computed(() => {
 // Mock data for friends, following, and followers (TODO: Replace with actual API call)
 const friendsAndFollowing = computed(() => {
   const mockData = [
-    { id: '1', name: 'Sarah Johnson', avatar: null, type: 'friend', mutualFriends: 12 },
-    { id: '2', name: 'Michael Chen', avatar: null, type: 'following', mutualFriends: 8 },
-    { id: '3', name: 'Emma Williams', avatar: null, type: 'friend', mutualFriends: 15 },
-    { id: '4', name: 'David Brown', avatar: null, type: 'following', mutualFriends: 5 },
-    { id: '5', name: 'Lisa Anderson', avatar: null, type: 'friend', mutualFriends: 20 },
-    { id: '6', name: 'James Wilson', avatar: null, type: 'follower', mutualFriends: 3 },
-    { id: '7', name: 'Sophia Martinez', avatar: null, type: 'friend', mutualFriends: 18 },
-    { id: '8', name: 'Robert Taylor', avatar: null, type: 'following', mutualFriends: 7 },
-    { id: '9', name: 'Jennifer Lee', avatar: null, type: 'follower', mutualFriends: 6 },
-    { id: '10', name: 'Kevin Park', avatar: null, type: 'follower', mutualFriends: 9 },
-    { id: '11', name: 'Amanda Garcia', avatar: null, type: 'friend', mutualFriends: 14 },
-    { id: '12', name: 'Christopher Moore', avatar: null, type: 'follower', mutualFriends: 4 },
+    { id: '1', name: 'Sarah Johnson', username: 'sarahj', avatar: null, type: 'friend', mutualFriends: 12 },
+    { id: '2', name: 'Michael Chen', username: 'mchen', avatar: null, type: 'following', mutualFriends: 8 },
+    { id: '3', name: 'Emma Williams', username: 'emmaw', avatar: null, type: 'friend', mutualFriends: 15 },
+    { id: '4', name: 'David Brown', username: 'dbrown', avatar: null, type: 'following', mutualFriends: 5 },
+    { id: '5', name: 'Lisa Anderson', username: 'lisaa', avatar: null, type: 'friend', mutualFriends: 20 },
+    { id: '6', name: 'James Wilson', username: 'jwilson', avatar: null, type: 'follower', mutualFriends: 3 },
+    { id: '7', name: 'Sophia Martinez', username: 'sophiam', avatar: null, type: 'friend', mutualFriends: 18 },
+    { id: '8', name: 'Robert Taylor', username: 'rtaylor', avatar: null, type: 'following', mutualFriends: 7 },
+    { id: '9', name: 'Jennifer Lee', username: 'jlee', avatar: null, type: 'follower', mutualFriends: 6 },
+    { id: '10', name: 'Kevin Park', username: 'kpark', avatar: null, type: 'follower', mutualFriends: 9 },
+    { id: '11', name: 'Amanda Garcia', username: 'agarcia', avatar: null, type: 'friend', mutualFriends: 14 },
+    { id: '12', name: 'Christopher Moore', username: 'cmoore', avatar: null, type: 'follower', mutualFriends: 4 },
   ];
-
-  // Filter by search query
-  if (inviteSearchQuery.value.trim()) {
-    const query = inviteSearchQuery.value.toLowerCase();
-    return mockData.filter(person =>
-      person.name.toLowerCase().includes(query)
-    );
-  }
 
   return mockData;
 });
@@ -2421,8 +2413,6 @@ const handleInvitePeople = () => {
     return;
   }
   showInviteModal.value = true;
-  selectedInvites.value.clear();
-  inviteSearchQuery.value = '';
 };
 
 const handleSendInvites = async (userIds: string[]) => {
