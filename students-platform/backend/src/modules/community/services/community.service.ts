@@ -16,33 +16,39 @@ import type { UploadedFile } from '../../image/services';
 import { toSlug } from '../../../shared/utils/slug';
 
 export class CommunityService {
+  private generateRandomSuffix(length: number = 6): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
   private async generateUniqueSlug(baseName: string): Promise<string> {
-    let slug = toSlug(baseName);
-    let counter = 1;
+    const baseSlug = toSlug(baseName);
 
-    // Check if base slug exists
-    const baseSlugExists = await CommunityModel.exists({ slug });
-
-    if (!baseSlugExists) {
-      return slug;
+    // Try base slug first
+    const baseExists = await CommunityModel.exists({ slug: baseSlug });
+    if (!baseExists) {
+      return baseSlug;
     }
 
-    // If base slug exists, find a unique one by appending numbers
-    while (true) {
-      const candidateSlug = `${slug}-${counter}`;
-      const exists = await CommunityModel.exists({ slug: candidateSlug });
+    // If base slug exists, append random suffix and retry up to 5 times
+    const maxRetries = 5;
+    for (let i = 0; i < maxRetries; i++) {
+      const randomSuffix = this.generateRandomSuffix(6);
+      const candidateSlug = `${baseSlug}-${randomSuffix}`;
 
+      const exists = await CommunityModel.exists({ slug: candidateSlug });
       if (!exists) {
         return candidateSlug;
       }
-
-      counter++;
-
-      // Safety limit to prevent infinite loops
-      if (counter > 1000) {
-        throw new Error('Unable to generate unique slug');
-      }
     }
+
+    // Fallback to timestamp-based suffix if random fails
+    const timestampSuffix = Date.now().toString(36);
+    return `${baseSlug}-${timestampSuffix}`;
   }
 
   async createCommunity(data: CreateCommunityDTO, coverImageFile?: UploadedFile): Promise<CommunityDoc> {
