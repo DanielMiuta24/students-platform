@@ -2415,11 +2415,11 @@ const handleInvitePeople = () => {
   showInviteModal.value = true;
 };
 
-const handleSendInvites = async (userIds: string[]) => {
-  invitedCount.value = userIds.length;
+const handleSendInvites = async (data: { userIds: string[]; emails: string[] }) => {
+  invitedCount.value = data.userIds.length + data.emails.length;
 
   try {
-    const payload: InviteUsersPayload = { userIds };
+    const payload: InviteUsersPayload = { userIds: data.userIds };
     await sendInvitations(communityId.value, payload);
 
     showInviteModal.value = false;

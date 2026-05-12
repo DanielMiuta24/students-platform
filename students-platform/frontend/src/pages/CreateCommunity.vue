@@ -302,106 +302,19 @@
             </div>
 
             <div class="space-y-5">
-              <div class="flex gap-2 bg-gray-100 p-1 rounded-xl">
-                <button
-                  v-for="tab in inviteTabs"
-                  :key="tab.id"
-                  @click="activeInviteTab = tab.id"
-                  :class="[
-                    'flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all',
-                    activeInviteTab === tab.id
-                      ? 'bg-white text-blue-600 shadow-md'
-                      : 'text-gray-600 hover:text-gray-900'
-                  ]"
-                >
-                  {{ tab.label }}
-                </button>
-              </div>
+              <!-- Invite Button -->
+              <button
+                @click="showInviteModal = true"
+                type="button"
+                class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md flex items-center justify-center gap-3"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Add Invitations
+              </button>
 
-              <div v-if="activeInviteTab === 'email'">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Addresses
-                </label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                  <input
-                    v-model="inviteEmail"
-                    type="email"
-                    placeholder="Enter email address"
-                    @keyup.enter="addInvite"
-                    class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                  />
-                  <button
-                    @click="addInvite"
-                    type="button"
-                    class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md"
-                  >
-                    Add
-                  </button>
-                </div>
-                <p class="text-xs text-gray-500 mt-1">Press Enter or click Add to include an email</p>
-              </div>
-
-              <div v-if="activeInviteTab === 'friends'">
-                <div class="mb-3">
-                  <div class="relative">
-                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      v-model="friendSearchQuery"
-                      placeholder="Search friends, followers, following..."
-                      class="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div class="bg-gray-50 rounded-xl border-2 border-gray-200 max-h-72 overflow-y-auto">
-                  <div v-if="filteredFriends.length === 0" class="text-center py-8 px-4">
-                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <p class="text-sm text-gray-500">No friends found</p>
-                  </div>
-                  <div
-                    v-for="friend in filteredFriends"
-                    :key="friend.username"
-                    class="flex items-center justify-between p-3 hover:bg-white transition-colors border-b border-gray-200 last:border-b-0"
-                  >
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                        {{ friend.name.charAt(0).toUpperCase() }}
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-gray-900 text-sm truncate">{{ friend.name }}</p>
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <p class="text-xs text-gray-500">@{{ friend.username }}</p>
-                          <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
-                            {{ friend.type }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      v-if="!isUserInvited(friend.username)"
-                      @click="inviteUser(friend)"
-                      class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all flex-shrink-0"
-                    >
-                      Invite
-                    </button>
-                    <button
-                      v-else
-                      class="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-lg flex items-center gap-1 flex-shrink-0"
-                      disabled
-                    >
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                      </svg>
-                      Invited
-                    </button>
-                  </div>
-                </div>
-              </div>
-
+              <!-- Invited Users List -->
               <div v-if="allInvitedUsers.length > 0" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border-2 border-blue-200">
                 <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -628,6 +541,14 @@
       @close="handleCreateAnother"
       @confirm="handleGoToCommunity"
     />
+
+    <!-- Invite People Modal -->
+    <InvitePeopleModal
+      :is-open="showInviteModal"
+      :people="friendsAndFollowing"
+      @close="showInviteModal = false"
+      @send-invites="handleSendInvites"
+    />
   </div>
 </template>
 
@@ -637,6 +558,7 @@ import { useRouter } from 'vue-router';
 import { getActiveCategories } from '../api/category';
 import type { Category } from '../types/category';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
+import InvitePeopleModal from '../components/InvitePeopleModal.vue';
 import { createCommunity as createCommunityAPI } from '../api/community';
 
 const router = useRouter();
@@ -657,6 +579,7 @@ interface InvitedUser {
 const steps = ['Basic Info', 'Description', 'Cover Image', 'Invite People', 'Review'];
 const currentStep = ref(0);
 const showSuccessModal = ref(false);
+const showInviteModal = ref(false);
 const createdCommunitySlug = ref<string | null>(null);
 const isCreating = ref(false);
 
@@ -671,15 +594,6 @@ const formData = ref({
   invites: [] as string[],
   invitedUsers: [] as string[],
 });
-
-const inviteEmail = ref('');
-const activeInviteTab = ref<'email' | 'friends'>('email');
-const friendSearchQuery = ref('');
-
-const inviteTabs = [
-  { id: 'email' as const, label: 'By Email' },
-  { id: 'friends' as const, label: 'Friends & Followers' },
-];
 
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -718,6 +632,17 @@ const filteredFriends = computed(() => {
     friend.username.toLowerCase().includes(query) ||
     friend.type.toLowerCase().includes(query)
   );
+});
+
+// Transform friendsList to format expected by InvitePeopleModal
+const friendsAndFollowing = computed(() => {
+  return friendsList.value.map(friend => ({
+    id: friend.username,
+    name: friend.name,
+    username: friend.username,
+    type: friend.type.toLowerCase() as 'friend' | 'following' | 'follower',
+    mutualFriends: Math.floor(Math.random() * 20), // Mock data
+  }));
 });
 
 const allInvitedUsers = computed<InvitedUser[]>(() => {
@@ -804,6 +729,24 @@ const removeInviteByIndex = (index: number) => {
       formData.value.invitedUsers.splice(userIndex, 1);
     }
   }
+};
+
+const handleSendInvites = (data: { userIds: string[]; emails: string[] }) => {
+  // Add emails to formData
+  data.emails.forEach(email => {
+    if (!formData.value.invites.includes(email)) {
+      formData.value.invites.push(email);
+    }
+  });
+
+  // Add userIds (usernames) to formData
+  data.userIds.forEach(userId => {
+    if (!formData.value.invitedUsers.includes(userId)) {
+      formData.value.invitedUsers.push(userId);
+    }
+  });
+
+  showInviteModal.value = false;
 };
 
 const triggerFileInput = () => {
