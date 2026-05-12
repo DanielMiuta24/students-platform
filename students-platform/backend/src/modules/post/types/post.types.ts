@@ -57,6 +57,7 @@ export interface SafePost {
   slug: string;
   content: PostContent;
   category?: string;
+  community?: string | SafeCommunity;
   status: PostStatus;
   visibility: PostVisibility;
   images: ImageMetadata[];
@@ -65,6 +66,14 @@ export interface SafePost {
   viewCount: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface SafeCommunity {
+  id: string;
+  name: string;
+  slug: string;
+  coverImage?: string;
+  visibility?: string;
 }
 
 export interface CursorPostsResult {

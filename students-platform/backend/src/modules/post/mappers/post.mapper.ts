@@ -1,5 +1,5 @@
 import type { PostDoc } from '../models/post.model';
-import type { SafePost, ImageMetadata, SafeAuthor } from '../types/post.types';
+import type { SafePost, ImageMetadata, SafeAuthor, SafeCommunity } from '../types/post.types';
 import type { PostContent } from '../types/post-content.types';
 import type { ImageDoc } from '../../image/image.model';
 
@@ -12,6 +12,7 @@ export class PostMapper {
       slug: post.slug,
       content: post.content as PostContent,
       category: post.category ? this.extractId(post.category) : undefined,
+      community: post.community ? this.mapCommunity(post.community) : undefined,
       status: post.status,
       visibility: post.visibility,
       images: this.mapImages(post.images),
@@ -63,6 +64,37 @@ export class PostMapper {
       return value.toString();
     }
     return '';
+  }
+
+  private static mapCommunity(value: any): string | SafeCommunity {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+
+    // Check if community is populated with community data
+    if (value._id && value.name) {
+      return {
+        id: value._id.toString(),
+        name: value.name,
+        slug: value.slug || '',
+        coverImage: this.extractImageUrl(value.coverImage),
+        visibility: value.visibility,
+      };
+    }
+
+    // Just an ObjectId
+    if (value._id) return value._id.toString();
+    if (typeof value.toString === 'function' && value.constructor.name === 'ObjectId') {
+      return value.toString();
+    }
+
+    return '';
+  }
+
+  private static extractImageUrl(image: any): string | undefined {
+    if (!image) return undefined;
+    if (typeof image === 'string') return image;
+    if (image.url) return image.url;
+    return undefined;
   }
 
   private static mapImages(images: any[]): ImageMetadata[] {

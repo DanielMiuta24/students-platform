@@ -63,7 +63,14 @@ export class PostService {
     const post = await PostModel.findById(postId)
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
-      .populate('community', 'name slug coverImage visibility')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .exec();
 
@@ -89,7 +96,14 @@ export class PostService {
     const post = await PostModel.findOne({ slug })
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
-      .populate('community', 'name slug coverImage visibility')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .exec();
 
@@ -162,7 +176,14 @@ export class PostService {
     )
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
-      .populate('community', 'name slug coverImage')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .exec();
 
@@ -224,7 +245,14 @@ export class PostService {
     const posts = await PostModel.find(query)
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
-      .populate('community', 'name slug visibility')
+      .populate({
+        path: 'community',
+        select: 'name slug visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .sort({ _id: -1 })
       .limit(safeLimit + 1)
@@ -330,7 +358,14 @@ export class PostService {
     const posts = await PostModel.find(query)
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
-      .populate('community', 'name slug visibility')
+      .populate({
+        path: 'community',
+        select: 'name slug visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .sort({ _id: -1 })
       .limit(limit * 3)
@@ -382,7 +417,14 @@ export class PostService {
     const posts = await PostModel.find(query)
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
-      .populate('community', 'name slug coverImage visibility')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .sort({ _id: -1 })
       .limit(safeLimit * 3)

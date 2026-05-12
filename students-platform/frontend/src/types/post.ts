@@ -24,6 +24,14 @@ export interface SafeAuthor {
   type?: string;
 }
 
+export interface SafeCommunity {
+  id: string;
+  name: string;
+  slug: string;
+  coverImage?: string;
+  visibility?: string;
+}
+
 export interface CreatePostPayload {
   title: string;
   content: string | LexicalEditorState;
@@ -49,6 +57,7 @@ export interface SafePost {
   slug: string;
   content: string | LexicalEditorState;
   category?: string | { id: string; name: string; slug: string };
+  community?: string | SafeCommunity;
   status: PostStatus;
   visibility: PostVisibility;
   images: ImageMetadata[];
