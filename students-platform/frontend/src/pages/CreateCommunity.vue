@@ -732,6 +732,8 @@ const removeInviteByIndex = (index: number) => {
 };
 
 const handleSendInvites = (data: { userIds: string[]; emails: string[] }) => {
+  console.log('handleSendInvites received:', data);
+
   // Add emails to formData
   data.emails.forEach(email => {
     if (!formData.value.invites.includes(email)) {
@@ -745,6 +747,10 @@ const handleSendInvites = (data: { userIds: string[]; emails: string[] }) => {
       formData.value.invitedUsers.push(userId);
     }
   });
+
+  console.log('formData.invites:', formData.value.invites);
+  console.log('formData.invitedUsers:', formData.value.invitedUsers);
+  console.log('allInvitedUsers:', allInvitedUsers.value);
 
   showInviteModal.value = false;
 };
