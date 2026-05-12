@@ -827,13 +827,21 @@
               <div
                 v-for="(image, index) in recentImages"
                 :key="index"
-                class="aspect-square rounded-xl overflow-hidden bg-gray-100 hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                @click="openPostModal(image.post)"
+                class="aspect-square rounded-xl overflow-hidden bg-gray-100 hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer group relative"
               >
                 <img
                   :src="image.url"
                   :alt="image.alt || 'Community image'"
                   class="w-full h-full object-cover group-hover:brightness-95"
                 />
+                <!-- Overlay on hover -->
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
@@ -1833,6 +1841,12 @@
       @send-invites="handleSendInvites"
     />
 
+    <PostModal
+      :show="showPostModal"
+      :post="selectedPost"
+      @close="closePostModal"
+    />
+
     <div
       v-if="showInviteSuccess"
       class="fixed inset-0 flex items-center justify-center z-50 px-4 pointer-events-none"
@@ -2061,6 +2075,7 @@ import { useSessionStore } from '../store/session';
 import CategoryFilter from '../components/CategoryFilter.vue';
 import CreatePostForm from '../components/CreatePostForm.vue';
 import PostCard from '../components/PostCard.vue';
+import PostModal from '../components/PostModal.vue';
 import TabContentHeader from '../components/TabContentHeader.vue';
 import CommunityStatsCard from '../components/CommunityStatsCard.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
@@ -2176,6 +2191,8 @@ const invitedCount = ref(0);
 const settingsSaving = ref(false);
 const settingsSuccess = ref(false);
 const hoveredRequestButton = ref(false);
+const showPostModal = ref(false);
+const selectedPost = ref<SafePost | null>(null);
 const hoveredJoinButton = ref(false);
 const showDeleteConfirmModal = ref(false);
 const deleteConfirmText = ref('');
@@ -2271,22 +2288,25 @@ const filteredPosts = computed(() => {
 });
 
 const recentImages = computed(() => {
-  const images: Array<{ url: string; alt?: string }> = [];
+  const images: Array<{ url: string; alt?: string; post: SafePost; imageIndex: number }> = [];
 
   // Extract images from posts
   for (const post of filteredPosts.value) {
     if (post.images && Array.isArray(post.images)) {
-      for (const img of post.images) {
+      for (let i = 0; i < post.images.length; i++) {
+        const img = post.images[i];
         if (typeof img === 'object' && img !== null && 'url' in img) {
           images.push({
             url: img.url,
             alt: img.alt || 'Post image',
+            post: post,
+            imageIndex: i,
           });
         }
-        if (images.length >= 9) break; // Show max 9 images (3x3 grid)
+        if (images.length >= 12) break; // Show max 12 images (4x3 grid)
       }
     }
-    if (images.length >= 9) break;
+    if (images.length >= 12) break;
   }
 
   return images;
@@ -2357,6 +2377,16 @@ const handlePostUpdate = (updatedPost: SafePost) => {
 
 const handlePostDelete = (postId: string) => {
   posts.value = posts.value.filter(p => p.id !== postId);
+};
+
+const openPostModal = (post: SafePost) => {
+  selectedPost.value = post;
+  showPostModal.value = true;
+};
+
+const closePostModal = () => {
+  showPostModal.value = false;
+  selectedPost.value = null;
 };
 
 const toggleJoinedDropdown = () => {
