@@ -5,6 +5,7 @@ import { CommunityMapper } from '../mappers';
 import { COMMUNITY_ERROR } from '../constants';
 import { parseCursorParams } from '../validators';
 import type { UploadRequest } from '../../image/services';
+import { CommunityJoinRequestModel } from '../models';
 
 class CommunityController {
   private static readonly HTTP_STATUS = {
@@ -136,8 +137,21 @@ class CommunityController {
       const userId = (req as AuthenticatedRequest).user?.id;
       const community = await communityService.getCommunityById(req.params.id, userId);
 
+      // Check if user has a pending join request for this community
+      let pendingRequestCommunityIds: string[] = [];
+      if (userId) {
+        const pendingRequest = await CommunityJoinRequestModel.findOne({
+          user: userId,
+          community: community._id,
+          status: 'pending',
+        });
+        if (pendingRequest) {
+          pendingRequestCommunityIds = [community._id.toString()];
+        }
+      }
+
       return res.status(CommunityController.HTTP_STATUS.OK).json({
-        community: CommunityMapper.toSafeCommunity(community, userId),
+        community: CommunityMapper.toSafeCommunity(community, userId, pendingRequestCommunityIds),
       });
     } catch (err: unknown) {
       return this.handleError(err, res, next);
@@ -357,6 +371,23 @@ class CommunityController {
     }
   };
 
+  cancelJoinRequest = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await communityService.cancelJoinRequest(
+        req.params.id,
+        req.user!.id
+      );
+
+      return res.status(CommunityController.HTTP_STATUS.OK).json(result);
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
   getJoinRequests = async (
     req: AuthenticatedRequest,
     res: Response,
@@ -466,6 +497,35 @@ class CommunityController {
 
       return res.status(CommunityController.HTTP_STATUS.OK).json({
         message: 'User unbanned successfully',
+      });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  getBannedUsers = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const bannedUsers = await communityService.getBannedUsers(
+        req.params.id,
+        req.user!.id
+      );
+
+      // Map _id to id for frontend compatibility
+      const formattedBannedUsers = bannedUsers.map((user: any) => ({
+        id: user._id?.toString() || user.id,
+        name: user.name,
+        username: user.username,
+        avatar: user.avatar,
+        type: user.type,
+      }));
+
+      return res.status(CommunityController.HTTP_STATUS.OK).json({
+        bannedUsers: formattedBannedUsers,
+        total: formattedBannedUsers.length,
       });
     } catch (err: unknown) {
       return this.handleError(err, res, next);

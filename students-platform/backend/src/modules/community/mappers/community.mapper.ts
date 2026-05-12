@@ -2,14 +2,27 @@ import type { CommunityDoc } from '../models';
 import type { SafeCommunity, SafeFounder, SafeCategory } from '../types';
 
 export class CommunityMapper {
-  static toSafeCommunity(community: CommunityDoc, userId?: string): SafeCommunity {
+  static toSafeCommunity(community: CommunityDoc, userId?: string, pendingRequestCommunityIds?: string[]): SafeCommunity {
     let joined: boolean | undefined;
     let role: string | undefined;
+    let hasPendingRequest: boolean | undefined;
+    let isBanned: boolean | undefined;
 
     if (userId) {
       const member = community.members?.find((m: any) => m.user && (typeof m.user === 'string' ? m.user : m.user._id?.toString()) === userId);
       joined = !!member;
       role = member?.role;
+
+      // Check if user is banned
+      isBanned = community.bannedUsers?.some((bannedUserId: any) => {
+        const bannedId = typeof bannedUserId === 'string' ? bannedUserId : bannedUserId._id?.toString();
+        return bannedId === userId;
+      });
+
+      // Check if user has a pending join request for this community
+      if (pendingRequestCommunityIds) {
+        hasPendingRequest = pendingRequestCommunityIds.includes(community._id.toString());
+      }
     }
 
     return {
@@ -30,13 +43,15 @@ export class CommunityMapper {
       allowMemberInvites: community.allowMemberInvites,
       joined,
       role,
+      hasPendingRequest,
+      isBanned,
       createdAt: community.createdAt,
       updatedAt: community.updatedAt,
     };
   }
 
-  static toSafeCommunities(communities: CommunityDoc[], userId?: string): SafeCommunity[] {
-    return communities.map(c => this.toSafeCommunity(c, userId));
+  static toSafeCommunities(communities: CommunityDoc[], userId?: string, pendingRequestCommunityIds?: string[]): SafeCommunity[] {
+    return communities.map(c => this.toSafeCommunity(c, userId, pendingRequestCommunityIds));
   }
 
   private static mapFounder(founder: any): string | SafeFounder {

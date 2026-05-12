@@ -26,6 +26,13 @@ router.get(
   communityController.getCommunityMembers
 );
 
+router.get(
+  '/:id/banned-users',
+  authMiddleware,
+  validateCommunityId,
+  communityController.getBannedUsers
+);
+
 router.post(
   '/',
   authMiddleware,
@@ -106,6 +113,13 @@ router.post(
   authMiddleware,
   validateCommunityId,
   communityController.createJoinRequest
+);
+
+router.delete(
+  '/:id/join-requests/cancel',
+  authMiddleware,
+  validateCommunityId,
+  communityController.cancelJoinRequest
 );
 
 router.get(

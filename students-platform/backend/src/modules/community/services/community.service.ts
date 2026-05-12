@@ -146,6 +146,11 @@ export class CommunityService {
     const builder = new CommunityQueryBuilder().fromDTO(dto);
     const query = builder.build();
 
+    // Exclude communities where user is banned (only if userId is a valid string)
+    if (userId && userId !== 'undefined' && typeof userId === 'string') {
+      query.bannedUsers = { $ne: userId };
+    }
+
     const safeLimit = dto.limit && dto.limit > 0 && dto.limit <= 100 ? dto.limit : 10;
 
     const communities = await CommunityModel.find(query)
@@ -164,14 +169,27 @@ export class CommunityService {
         ? resultCommunities[resultCommunities.length - 1]._id.toString()
         : null;
 
+    // Fetch pending join requests for the user
+    let pendingRequestCommunityIds: string[] = [];
+    if (userId) {
+      const pendingRequests = await CommunityJoinRequestModel.find({
+        user: userId,
+        status: 'pending',
+      }).select('community').exec();
+
+      pendingRequestCommunityIds = pendingRequests
+        .filter(req => req.community)
+        .map(req => req.community!.toString());
+    }
+
     return {
-      communities: CommunityMapper.toSafeCommunities(resultCommunities, userId),
+      communities: CommunityMapper.toSafeCommunities(resultCommunities, userId, pendingRequestCommunityIds),
       nextCursor,
       hasMore,
     };
   }
 
-  async joinCommunity(communityId: string, userId: string): Promise<CommunityDoc> {
+  async joinCommunity(communityId: string, userId: string, bypassApproval: boolean = false): Promise<CommunityDoc> {
     const community = await CommunityModel.findById(communityId);
 
     if (!community) {
@@ -187,7 +205,7 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.ALREADY_MEMBER);
     }
 
-    if (community.requiresApproval) {
+    if (community.requiresApproval && !bypassApproval) {
       throw new Error(COMMUNITY_ERROR.REQUIRES_APPROVAL);
     }
 
@@ -264,9 +282,10 @@ export class CommunityService {
   }
 
   private isAdmin(community: CommunityDoc, userId: string): boolean {
-    const founderId = typeof community.founder === 'string' ? community.founder : community.founder!.toString();
-
-    if (founderId === userId) return true;
+    if (community.founder) {
+      const founderId = typeof community.founder === 'string' ? community.founder : community.founder.toString();
+      if (founderId === userId) return true;
+    }
 
     const member = community.members?.find((m: any) => m.user.toString() === userId);
     return member?.role === COMMUNITY_ROLE.ADMIN;
@@ -403,7 +422,7 @@ export class CommunityService {
 
     await CommunityInvitationModel.findByIdAndUpdate(invitationId, { status: 'accepted' });
 
-    return this.joinCommunity(invitation.community!.toString(), userId);
+    return this.joinCommunity(invitation.community!.toString(), userId, true);
   }
 
   async createJoinRequest(communityId: string, userId: string, message?: string) {
@@ -411,6 +430,10 @@ export class CommunityService {
 
     if (!community) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
+    }
+
+    if (community.bannedUsers?.some((u) => u.toString() === userId)) {
+      throw new Error(COMMUNITY_ERROR.USER_BANNED);
     }
 
     if (!community.requiresApproval) {
@@ -436,6 +459,21 @@ export class CommunityService {
 
     await joinRequest.save();
     return { message: 'Join request submitted successfully' };
+  }
+
+  async cancelJoinRequest(communityId: string, userId: string) {
+    const joinRequest = await CommunityJoinRequestModel.findOne({
+      community: communityId,
+      user: userId,
+      status: 'pending',
+    });
+
+    if (!joinRequest) {
+      throw new Error('No pending join request found');
+    }
+
+    await CommunityJoinRequestModel.deleteOne({ _id: joinRequest._id });
+    return { message: 'Join request cancelled successfully' };
   }
 
   async getJoinRequests(communityId: string, userId: string) {
@@ -488,11 +526,11 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
     }
 
-    await CommunityJoinRequestModel.findByIdAndUpdate(requestId, { status: 'approved' });
+    await CommunityJoinRequestModel.findByIdAndDelete(requestId);
 
     const requestUserId = typeof request.user === 'string' ? request.user : request.user!.toString();
 
-    return this.joinCommunity(request.community!.toString(), requestUserId);
+    return this.joinCommunity(request.community!.toString(), requestUserId, true);
   }
 
   async rejectJoinRequest(requestId: string, userId: string) {
@@ -512,7 +550,8 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
     }
 
-    await CommunityJoinRequestModel.findByIdAndUpdate(requestId, { status: 'rejected' });
+    await CommunityJoinRequestModel.findByIdAndDelete(requestId);
+    return { message: 'Join request rejected successfully' };
   }
 
   async removeMember(communityId: string, memberId: string, userId: string) {
@@ -554,6 +593,10 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.CANNOT_BAN_ADMIN);
     }
 
+    // Delete all posts by the user in this community
+    const { postService } = await import('../../post/services');
+    await postService.deletePostsByAuthorInCommunity(communityId, userId);
+
     await CommunityModel.findByIdAndUpdate(communityId, {
       $pull: { members: { user: userId } },
       $addToSet: { bannedUsers: userId },
@@ -575,6 +618,22 @@ export class CommunityService {
     await CommunityModel.findByIdAndUpdate(communityId, {
       $pull: { bannedUsers: userId },
     });
+  }
+
+  async getBannedUsers(communityId: string, adminId: string) {
+    const community = await CommunityModel.findById(communityId)
+      .populate('bannedUsers', 'name username avatar type')
+      .select('bannedUsers members founder');
+
+    if (!community) {
+      throw new Error(COMMUNITY_ERROR.NOT_FOUND);
+    }
+
+    if (!this.isAdmin(community, adminId)) {
+      throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
+    }
+
+    return community.bannedUsers || [];
   }
 
   async updateMemberRole(communityId: string, memberId: string, role: 'admin' | 'member', adminId: string) {
@@ -648,7 +707,14 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
     }
 
-    if (!this.isFounder(community, userId)) {
+    // Check if user is a member of the community
+    const member = community.members?.find((m: any) => m.user.toString() === userId);
+    if (!member) {
+      throw new Error(COMMUNITY_ERROR.NOT_MEMBER);
+    }
+
+    // Only founders and admins can view pending transfers
+    if (!this.isFounder(community, userId) && !this.isAdmin(community, userId)) {
       throw new Error(COMMUNITY_ERROR.UNAUTHORIZED);
     }
 
@@ -661,19 +727,38 @@ export class CommunityService {
       .exec();
 
     if (!transfer) {
-      return null;
+      return { transfer: null };
+    }
+
+    // Only return transfer data if user is the founder (who sent it) or the target (who should accept/reject it)
+    const currentOwnerId = typeof transfer.currentOwner === 'object'
+      ? (transfer.currentOwner as any)._id.toString()
+      : transfer.currentOwner.toString();
+    const newOwnerId = typeof transfer.newOwner === 'object'
+      ? (transfer.newOwner as any)._id.toString()
+      : transfer.newOwner.toString();
+
+    if (userId !== currentOwnerId && userId !== newOwnerId) {
+      return { transfer: null };
     }
 
     return {
-      id: transfer._id.toString(),
-      newOwner: {
-        id: (transfer.newOwner as any)._id.toString(),
-        name: (transfer.newOwner as any).name,
-        username: (transfer.newOwner as any).username,
-        avatar: (transfer.newOwner as any).avatar,
-      },
-      expiresAt: transfer.expiresAt,
-      createdAt: transfer.createdAt,
+      transfer: {
+        id: transfer._id.toString(),
+        fromUser: userId === newOwnerId ? {
+          id: currentOwnerId,
+          name: (transfer.currentOwner as any).name,
+          username: (transfer.currentOwner as any).username,
+        } : undefined,
+        newOwner: userId === currentOwnerId ? {
+          id: newOwnerId,
+          name: (transfer.newOwner as any).name,
+          username: (transfer.newOwner as any).username,
+          avatar: (transfer.newOwner as any).avatar,
+        } : undefined,
+        expiresAt: transfer.expiresAt,
+        createdAt: transfer.createdAt,
+      }
     };
   }
 
@@ -767,12 +852,34 @@ export class CommunityService {
       {
         $set: {
           'members.$.role': COMMUNITY_ROLE.FOUNDER,
-          founder: newOwnerId
         }
       }
     );
 
-    return { message: 'Ownership transferred successfully' };
+    // Update the founder field at the community level
+    await CommunityModel.findByIdAndUpdate(
+      communityId,
+      { $set: { founder: newOwnerId } }
+    );
+
+    // Get updated community data
+    const updatedCommunity = await this.getCommunityById(communityId, userId);
+
+    // Check for pending join request
+    let pendingRequestCommunityIds: string[] = [];
+    const pendingRequest = await CommunityJoinRequestModel.findOne({
+      user: userId,
+      community: communityId,
+      status: 'pending',
+    });
+    if (pendingRequest) {
+      pendingRequestCommunityIds = [communityId];
+    }
+
+    return {
+      message: 'Ownership transferred successfully',
+      community: CommunityMapper.toSafeCommunity(updatedCommunity, userId, pendingRequestCommunityIds)
+    };
   }
 
   async rejectOwnershipTransfer(transferId: string, userId: string) {
@@ -831,8 +938,8 @@ export class CommunityService {
     await CommunityModel.findByIdAndUpdate(communityId, { $inc: { postCount: 1 } });
   }
 
-  async decrementPostCount(communityId: string): Promise<void> {
-    await CommunityModel.findByIdAndUpdate(communityId, { $inc: { postCount: -1 } });
+  async decrementPostCount(communityId: string, count: number = 1): Promise<void> {
+    await CommunityModel.findByIdAndUpdate(communityId, { $inc: { postCount: -count } });
   }
 
   async validatePostPermission(communityId: string, userId: string): Promise<void> {

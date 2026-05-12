@@ -1,40 +1,9 @@
-import type { CommunityDoc } from '../models';
-import type { CommunityVisibility } from '../constants';
+/**
+ * Frontend types matching backend Community API
+ * Based on backend/src/modules/community/types/community.types.ts
+ */
 
-export interface CreateCommunityDTO {
-  name: string;
-  description: string;
-  category: string;
-  founderId: string;
-  coverImage?: string;
-  rules?: string;
-  visibility?: CommunityVisibility;
-  requiresApproval?: boolean;
-  invitations?: {
-    emails?: string[];
-    userIds?: string[];
-  };
-}
-
-export interface UpdateCommunityDTO {
-  name?: string;
-  description?: string;
-  category?: string;
-  coverImage?: string;
-  rules?: string;
-  visibility?: CommunityVisibility;
-  requiresApproval?: boolean;
-  allowMemberPosts?: boolean;
-  allowMemberInvites?: boolean;
-}
-
-export interface GetCommunitiesDTO {
-  cursor?: string;
-  limit?: number;
-  category?: string;
-  search?: string;
-  founderId?: string;
-}
+export type CommunityVisibility = 'public' | 'private';
 
 export interface SafeFounder {
   id: string;
@@ -94,7 +63,33 @@ export interface CommunityMembersResult {
   total: number;
 }
 
-export interface InviteUsersDTO {
+export interface CreateCommunityPayload {
+  name: string;
+  description: string;
+  category: string;
+  coverImage?: string;
+  rules?: string;
+  visibility?: CommunityVisibility;
+  requiresApproval?: boolean;
+  invitations?: {
+    emails?: string[];
+    userIds?: string[];
+  };
+}
+
+export interface UpdateCommunityPayload {
+  name?: string;
+  description?: string;
+  category?: string;
+  coverImage?: string;
+  rules?: string;
+  visibility?: CommunityVisibility;
+  requiresApproval?: boolean;
+  allowMemberPosts?: boolean;
+  allowMemberInvites?: boolean;
+}
+
+export interface InviteUsersPayload {
   emails?: string[];
   userIds?: string[];
 }
@@ -124,14 +119,32 @@ export interface SafeJoinRequest {
   createdAt: Date;
 }
 
-export interface UpdateMemberRoleDTO {
-  role: 'admin' | 'member';
-}
-
-export interface CreateJoinRequestDTO {
+export interface CreateJoinRequestPayload {
   message?: string;
 }
 
-export interface TransferOwnershipDTO {
+export interface UpdateMemberRolePayload {
+  role: 'admin' | 'member';
+}
+
+export interface TransferOwnershipPayload {
   newOwnerId: string;
 }
+
+/**
+ * Validation constraints
+ */
+export const COMMUNITY_VALIDATION = {
+  NAME_MIN_LENGTH: 3,
+  NAME_MAX_LENGTH: 50,
+  DESCRIPTION_MAX_LENGTH: 300,
+  RULES_MAX_LENGTH: 1000,
+} as const;
+
+/**
+ * Visibility options
+ */
+export const COMMUNITY_VISIBILITY = {
+  PUBLIC: 'public' as CommunityVisibility,
+  PRIVATE: 'private' as CommunityVisibility,
+};
