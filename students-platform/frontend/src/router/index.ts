@@ -22,7 +22,6 @@ const routes = [
 
   { path: '/login', component: Login, meta: { guestOnly: true } },
   { path: '/register', component: Register, meta: { guestOnly: true } },
-  { path: '/community/:slug', component: ViewCommunity, name: 'ViewCommunity' },
   { path: '/edit-profile', component: EditProfile, name: 'EditProfile', meta: { requiresAuth: true } },
   { path: '/change-password', component: ChangePassword, name: 'ChangePassword', meta: { requiresAuth: true } },
   { path: '/posts/:id/edit', component: EditPost, name: 'EditPost', meta: { requiresAuth: true } },
@@ -30,6 +29,7 @@ const routes = [
   { path: '/community', component: Community, meta: { requiresAuth: true }},
   { path: '/community/join', component: JoinCommunity, name: 'JoinCommunity', meta: { requiresAuth: true }},
   { path: '/community/create', component: CreateCommunity, name: 'CreateCommunity', meta: { requiresAuth: true }},
+  { path: '/community/:slug', component: ViewCommunity, name: 'ViewCommunity' },
   { path: '/universities', component: Universities },
   { path: '/scholarships', component: Scholarships },
   { path: '/feed', component: Feed, name: 'Feed', meta: { requiresAuth: true } },

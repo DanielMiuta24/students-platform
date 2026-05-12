@@ -1,13 +1,18 @@
-import { ref, computed } from 'vue';
+import { ref, computed, type Ref } from 'vue';
 import { getCommunityMembers, removeMember, banUser, unbanUser, updateMemberRole } from '../api/community';
 import type { CommunityMember, CommunityMembersResult, UpdateMemberRolePayload } from '../types/community';
 
-export const useCommunityMembers = (communityId: string) => {
+export const useCommunityMembers = (communityIdOrSlug: string | Ref<string>) => {
   const members = ref<CommunityMember[]>([]);
   const total = ref(0);
   const loading = ref(false);
   const error = ref<string | null>(null);
   const searchQuery = ref<string>('');
+
+  // Convert to ref if it's a plain string
+  const communityIdOrSlugRef = typeof communityIdOrSlug === 'string'
+    ? ref(communityIdOrSlug)
+    : communityIdOrSlug;
 
   const isEmpty = computed(() => {
     return !loading.value && members.value.length === 0;
@@ -31,7 +36,7 @@ export const useCommunityMembers = (communityId: string) => {
       loading.value = true;
       error.value = null;
 
-      const result: CommunityMembersResult = await getCommunityMembers(communityId);
+      const result: CommunityMembersResult = await getCommunityMembers(communityIdOrSlugRef.value);
       members.value = result.members;
       total.value = result.total;
     } catch (err: any) {
@@ -51,7 +56,7 @@ export const useCommunityMembers = (communityId: string) => {
 
   const removeMemberFromList = async (memberId: string) => {
     try {
-      await removeMember(communityId, memberId);
+      await removeMember(communityIdOrSlugRef.value, memberId);
       members.value = members.value.filter((m) => m.id !== memberId);
       total.value = Math.max(0, total.value - 1);
     } catch (err: any) {
@@ -61,7 +66,7 @@ export const useCommunityMembers = (communityId: string) => {
 
   const banMember = async (memberId: string) => {
     try {
-      await banUser(communityId, memberId);
+      await banUser(communityIdOrSlugRef.value, memberId);
       members.value = members.value.filter((m) => m.id !== memberId);
       total.value = Math.max(0, total.value - 1);
     } catch (err: any) {
@@ -71,7 +76,7 @@ export const useCommunityMembers = (communityId: string) => {
 
   const unbanMember = async (memberId: string) => {
     try {
-      await unbanUser(communityId, memberId);
+      await unbanUser(communityIdOrSlugRef.value, memberId);
       // Optionally refresh to show the unbanned user
       await refresh();
     } catch (err: any) {
@@ -82,7 +87,7 @@ export const useCommunityMembers = (communityId: string) => {
   const updateRole = async (memberId: string, role: 'admin' | 'member') => {
     try {
       const payload: UpdateMemberRolePayload = { role };
-      await updateMemberRole(communityId, memberId, payload);
+      await updateMemberRole(communityIdOrSlugRef.value, memberId, payload);
 
       // Update the member's role in the list
       const member = members.value.find((m) => m.id === memberId);

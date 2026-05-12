@@ -2049,7 +2049,7 @@ const {
   fetchCommunity,
   toggleJoin,
   updateCommunityData,
-} = useCommunity(communitySlug.value);
+} = useCommunity(communitySlug);
 
 const {
   members,
@@ -2060,7 +2060,7 @@ const {
   searchQuery: membersSearchQuery,
   fetchMembers,
   setSearch: setMembersSearch,
-} = useCommunityMembers(communitySlug.value);
+} = useCommunityMembers(communitySlug);
 
 const adminMembers = computed(() => {
   return filteredMembers.value.filter(
@@ -2969,6 +2969,33 @@ onMounted(async () => {
       openMemberDropdown.value = null;
     }
   });
+});
+
+// Watch for slug changes to reload community data
+watch(communitySlug, async (newSlug, oldSlug) => {
+  if (newSlug && newSlug !== oldSlug) {
+    try {
+      await fetchCommunity();
+
+      if (community.value?.isBanned) {
+        router.push('/');
+        return;
+      }
+
+      fetchPosts();
+
+      if (activeTab.value === 'members') {
+        fetchMembers();
+      }
+      if (activeTab.value === 'settings') {
+        fetchJoinRequests();
+        fetchBannedUsers();
+        fetchPendingOwnershipTransfer();
+      }
+    } catch (err: any) {
+      console.error('Failed to load community:', err);
+    }
+  }
 });
 
 // Watch for tab changes to load data as needed

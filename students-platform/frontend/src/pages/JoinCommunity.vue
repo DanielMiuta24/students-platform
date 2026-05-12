@@ -294,7 +294,13 @@ const cancelLeave = () => {
 };
 
 const viewCommunity = (community: any) => {
-  router.push(`/community/${community.slug}`);
+  console.log('viewCommunity called with:', community);
+  console.log('slug:', community.slug);
+  if (community.slug) {
+    router.push(`/community/${community.slug}`);
+  } else {
+    console.error('Community has no slug:', community);
+  }
 };
 
 // Debounce search input

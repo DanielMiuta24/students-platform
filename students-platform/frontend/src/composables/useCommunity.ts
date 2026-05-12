@@ -1,14 +1,19 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch, type Ref } from 'vue';
 import { getCommunityById, joinCommunity, leaveCommunity, updateCommunity, deleteCommunity, createJoinRequest, cancelJoinRequest } from '../api/community';
 import type { SafeCommunity } from '../types/community';
 import { useSessionStore } from '../store/session';
 
-export const useCommunity = (communityId: string) => {
+export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
   const session = useSessionStore();
 
   const community = ref<SafeCommunity | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
+
+  // Convert to ref if it's a plain string
+  const communityIdOrSlugRef = typeof communityIdOrSlug === 'string'
+    ? ref(communityIdOrSlug)
+    : communityIdOrSlug;
 
   const isJoined = computed(() => community.value?.joined || false);
   const isMember = computed(() => community.value?.joined || false);
@@ -35,7 +40,7 @@ export const useCommunity = (communityId: string) => {
       loading.value = true;
       error.value = null;
 
-      const result = await getCommunityById(communityId);
+      const result = await getCommunityById(communityIdOrSlugRef.value);
       community.value = result.community;
     } catch (err: any) {
       error.value = err.message || 'Failed to load community';
@@ -59,7 +64,7 @@ export const useCommunity = (communityId: string) => {
     if (community.value.hasPendingRequest) {
       try {
         console.log('Canceling pending request...');
-        await cancelJoinRequest(communityId);
+        await cancelJoinRequest(communityIdOrSlugRef.value);
         // Update local state
         community.value.hasPendingRequest = false;
         console.log('Pending request canceled');
@@ -80,7 +85,7 @@ export const useCommunity = (communityId: string) => {
         // User is already a member - leave the community
         console.log('Leaving community...');
 
-        await leaveCommunity(communityId);
+        await leaveCommunity(communityIdOrSlugRef.value);
 
         // Update state after successful leave
         community.value.joined = false;
@@ -90,7 +95,7 @@ export const useCommunity = (communityId: string) => {
       } else if (community.value.requiresApproval) {
         // Community requires approval - create a join request
         console.log('Creating join request (requires approval)...');
-        await createJoinRequest(communityId, { message: '' });
+        await createJoinRequest(communityIdOrSlugRef.value, { message: '' });
 
         // Update to show pending request status
         community.value.hasPendingRequest = true;
@@ -100,7 +105,7 @@ export const useCommunity = (communityId: string) => {
         // Community doesn't require approval - join directly
         console.log('Joining directly (no approval required)...');
 
-        const result = await joinCommunity(communityId);
+        const result = await joinCommunity(communityIdOrSlugRef.value);
         community.value = result.community;
         console.log('Successfully joined community');
       }
@@ -119,7 +124,7 @@ export const useCommunity = (communityId: string) => {
 
   const updateCommunityData = async (formData: FormData) => {
     try {
-      const result = await updateCommunity(communityId, formData);
+      const result = await updateCommunity(communityIdOrSlugRef.value, formData);
       community.value = result.community;
       return result;
     } catch (err: any) {
@@ -129,7 +134,7 @@ export const useCommunity = (communityId: string) => {
 
   const deleteCommunityData = async () => {
     try {
-      const result = await deleteCommunity(communityId);
+      const result = await deleteCommunity(communityIdOrSlugRef.value);
       community.value = null;
       return result;
     } catch (err: any) {
