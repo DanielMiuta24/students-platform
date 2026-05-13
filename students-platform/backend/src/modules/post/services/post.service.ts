@@ -391,8 +391,9 @@ export class PostService {
       .limit(limit * 3)
       .exec();
 
-    const scoredPosts = posts.map(post => {
+    const scoredPosts = await Promise.all(posts.map(async (post) => {
       const safePost = PostMapper.toSafePost(post);
+      await this.enrichWithAuthorCommunityRole(safePost);
       const score = PostScorer.calculateScore(post, {
         preferredCategories,
         currentUserId: userId,
@@ -400,7 +401,7 @@ export class PostService {
         friendIds: friends
       });
       return { ...safePost, score };
-    });
+    }));
 
     scoredPosts.sort((a, b) => (b.score || 0) - (a.score || 0));
 
@@ -712,6 +713,26 @@ export class PostService {
 
   private async validateCommunityPostPermission(communityId: string, userId: string): Promise<void> {
     await communityService.validatePostPermission(communityId, userId);
+  }
+
+  private async enrichWithAuthorCommunityRole(safePost: SafePost): Promise<void> {
+    if (!safePost.community || typeof safePost.community === 'string') {
+      return;
+    }
+
+    const communityId = safePost.community.id;
+    const authorId = typeof safePost.author === 'string' ? safePost.author : safePost.author.id;
+
+    if (!communityId || !authorId) {
+      return;
+    }
+
+    try {
+      const role = await communityService.getMemberRole(communityId, authorId);
+      safePost.authorCommunityRole = role;
+    } catch (error) {
+      safePost.authorCommunityRole = null;
+    }
   }
 }
 

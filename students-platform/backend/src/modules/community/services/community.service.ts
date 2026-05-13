@@ -1027,6 +1027,26 @@ export class CommunityService {
     return communities.map(c => c._id.toString());
   }
 
+  async getMemberRole(communityId: string, userId: string): Promise<'founder' | 'admin' | 'member' | null> {
+    const community = await CommunityModel.findById(communityId).select('members founder');
+
+    if (!community) {
+      return null;
+    }
+
+    if (community.founder.toString() === userId) {
+      return 'founder';
+    }
+
+    const member = community.members.find((m: any) => m.user.toString() === userId);
+
+    if (!member) {
+      return null;
+    }
+
+    return member.role as 'founder' | 'admin' | 'member';
+  }
+
   async incrementPostCount(communityId: string): Promise<void> {
     await CommunityModel.findByIdAndUpdate(communityId, { $inc: { postCount: 1 } });
   }

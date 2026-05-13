@@ -58,6 +58,7 @@ export interface SafePost {
   content: PostContent;
   category?: string;
   community?: string | SafeCommunity;
+  authorCommunityRole?: 'founder' | 'admin' | 'member' | null;
   status: PostStatus;
   visibility: PostVisibility;
   isPinned: boolean;

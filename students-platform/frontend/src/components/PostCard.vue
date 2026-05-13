@@ -74,13 +74,13 @@
               </span>
 
               <span
-                v-if="authorCommunityRole === 'founder' || authorCommunityRole === 'admin'"
+                v-if="effectiveAuthorCommunityRole === 'founder' || effectiveAuthorCommunityRole === 'admin'"
                 class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200 flex items-center gap-1"
               >
                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                 </svg>
-                {{ authorCommunityRole === 'founder' ? 'Founder' : 'Admin' }}
+                {{ effectiveAuthorCommunityRole === 'founder' ? 'Founder' : 'Admin' }}
               </span>
             </div>
 
@@ -680,6 +680,10 @@ const displayVisibility = computed(() => {
 
 const isCommunityPost = computed(() => {
   return !!props.post.community || props.post.visibility === 'community';
+});
+
+const effectiveAuthorCommunityRole = computed(() => {
+  return props.authorCommunityRole || props.post.authorCommunityRole || null;
 });
 
 const contentPreview = computed(() => {

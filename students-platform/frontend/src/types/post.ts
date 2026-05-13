@@ -58,6 +58,7 @@ export interface SafePost {
   content: string | LexicalEditorState;
   category?: string | { id: string; name: string; slug: string };
   community?: string | SafeCommunity;
+  authorCommunityRole?: 'founder' | 'admin' | 'member' | null;
   status: PostStatus;
   visibility: PostVisibility;
   isPinned: boolean;
