@@ -49,11 +49,11 @@ const form = reactive<LoginForm>({
 const handleLogin = async () => {
   const user = await auth.login(form);
   if (user) {
-    router.push('/dashboard');
+    router.push(`/profile/${user.username}`);
   }
 };
 
 if (auth.isAuthenticated) {
-  router.push('/dashboard');
+  router.push(`/profile/${auth.user.value?.username}`);
 }
 </script>
