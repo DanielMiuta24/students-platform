@@ -1035,7 +1035,7 @@ export class CommunityService {
     }
 
     if (community.founder.toString() === userId) {
-      return 'founder';
+      return COMMUNITY_ROLE.FOUNDER;
     }
 
     const member = community.members.find((m: any) => m.user.toString() === userId);
@@ -1044,7 +1044,7 @@ export class CommunityService {
       return null;
     }
 
-    return member.role as 'founder' | 'admin' | 'member';
+    return member.role;
   }
 
   async incrementPostCount(communityId: string): Promise<void> {

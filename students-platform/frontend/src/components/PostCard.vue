@@ -32,7 +32,16 @@
                 {{ authorType }}
               </span>
 
-              <!-- Community info for community posts -->
+              <span
+                v-if="effectiveAuthorCommunityRole === COMMUNITY_ROLE.FOUNDER || effectiveAuthorCommunityRole === COMMUNITY_ROLE.ADMIN"
+                class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200 flex items-center gap-1"
+              >
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                {{ effectiveAuthorCommunityRole === COMMUNITY_ROLE.FOUNDER ? 'Founder' : 'Admin' }}
+              </span>
+
               <template v-if="communityName && !props.hideCommunityName">
                 <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
@@ -71,16 +80,6 @@
                   <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v2h3a1 1 0 011 1v1a1 1 0 01-1 1h-1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9H2a1 1 0 01-1-1V7a1 1 0 011-1h3V5zm2 0v2h6V5H7zm-1 4h8v6H6V9z" />
                 </svg>
                 Pinned
-              </span>
-
-              <span
-                v-if="effectiveAuthorCommunityRole === 'founder' || effectiveAuthorCommunityRole === 'admin'"
-                class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200 flex items-center gap-1"
-              >
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-                {{ effectiveAuthorCommunityRole === 'founder' ? 'Founder' : 'Admin' }}
               </span>
             </div>
 
@@ -427,6 +426,7 @@ import { getAvatarUrl } from '../utils/avatar';
 import { useLike } from '../composables/useLike';
 import { useFollow } from '../composables/useFollow';
 import { useSessionStore } from '../store/session';
+import { COMMUNITY_ROLE } from '../types/community';
 
 interface Props {
   post: SafePost;
@@ -473,7 +473,6 @@ const toggleMenu = () => {
 };
 
 const closeMenuOnClickOutside = (event: MouseEvent) => {
-  // Don't close menus when modal is open
   if (showDeleteModal.value || showPostModal.value || showLikesModal.value || showAudienceModal.value) {
     return;
   }
@@ -608,7 +607,6 @@ const followButtonClass = computed(() => {
 
 const followButtonText = computed(() => {
   if (isFollowing.value) {
-    // Show Friends if mutual follow exists
     if (followsBack.value) {
       return followButtonHovered.value ? 'Unfollow' : 'Friends';
     }
@@ -666,13 +664,10 @@ const communityVisibility = computed(() => {
 });
 
 const displayVisibility = computed(() => {
-  // For community posts, show community visibility
   if (props.post.community && communityVisibility.value) {
     return communityVisibility.value;
   }
-  // For regular posts, show post visibility (but skip 'community' status)
   if (props.post.visibility === 'community') {
-    // If visibility is 'community' but we don't have community visibility, default to public
     return 'public';
   }
   return props.post.visibility;
@@ -722,24 +717,20 @@ const formatDate = (date: Date | string): string => {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000);
 
-  // Just now (less than 1 minute)
   if (diffInSeconds < 60) {
     return 'Just now';
   }
 
-  // Minutes ago (less than 1 hour)
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `${diffInMinutes}m`;
   }
 
-  // Hours ago (less than 24 hours)
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
     return `${diffInHours}h`;
   }
 
-  // Yesterday
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   if (
@@ -750,18 +741,15 @@ const formatDate = (date: Date | string): string => {
     return 'Yesterday';
   }
 
-  // Less than 7 days ago - show day name
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
     return d.toLocaleDateString('en-US', { weekday: 'long' });
   }
 
-  // Less than a year - show month and day
   if (d.getFullYear() === now.getFullYear()) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  // More than a year - show full date
   return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -794,13 +782,11 @@ const confirmDelete = async () => {
     actionLoading.value = true;
     actionError.value = null;
 
-    // Delete from API
     await deletePost(props.post.id);
 
     actionLoading.value = false;
     actionError.value = null;
 
-    // Emit delete event to parent so it can update its state
     emit('delete', props.post.id);
   } catch (err: any) {
     actionLoading.value = false;
@@ -862,7 +848,6 @@ const navigateToCommunity = () => {
 const toggleComments = async () => {
   showComments.value = !showComments.value;
 
-  // Fetch accurate count when opening comments
   if (showComments.value) {
     try {
       const { getCommentCount } = await import('../api/comment');
