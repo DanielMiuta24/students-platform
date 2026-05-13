@@ -250,7 +250,6 @@ export class PostService {
 
   async getPostsByAuthor(authorId: string, viewerId: string, cursor?: string, limit?: number): Promise<CursorPostsResult> {
     const safeLimit = limit || this.DEFAULT_LIMIT;
-    const memberCommunityIds = await communityService.getMemberCommunityIds(viewerId);
 
     const queryBuilder = new PostQueryBuilder()
       .setAuthorFeedVisibility(authorId, viewerId);
@@ -261,14 +260,7 @@ export class PostService {
 
     const query = queryBuilder.build();
 
-    if (memberCommunityIds.length > 0) {
-      query.$or = [
-        { community: null },
-        { community: { $in: memberCommunityIds } }
-      ];
-    } else {
-      query.community = null;
-    }
+    query.community = null;
 
     const posts = await PostModel.find(query)
       .populate('author', 'name username avatar email type')
