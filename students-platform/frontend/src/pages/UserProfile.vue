@@ -571,6 +571,7 @@ onMounted(() => {
           }
         }
 
+        // For non-community posts or if post not found yet, scroll to it
         setTimeout(() => {
           const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
           if (postElement) {
@@ -580,22 +581,16 @@ onMounted(() => {
               postElement.classList.remove('highlight-post');
             }, 3000);
           }
-        }, 500);
+        }, 1000);
       } catch (err) {
         console.error('Error checking community post:', err);
       }
     };
 
-    if (posts.value.length > 0) {
+    // Wait a bit for posts to load, then check
+    setTimeout(() => {
       checkAndRedirectCommunityPost();
-    } else {
-      const unwatch = watch(posts, (newPosts) => {
-        if (newPosts.length > 0) {
-          checkAndRedirectCommunityPost();
-          unwatch();
-        }
-      });
-    }
+    }, 1500);
   }
 });
 
