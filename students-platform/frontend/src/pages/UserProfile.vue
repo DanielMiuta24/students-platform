@@ -725,7 +725,7 @@ const fetchCommunities = async () => {
 };
 
 const navigateToCommunity = (slug: string) => {
-  router.push(`/communities/${slug}`);
+  router.push(`/community/${slug}`);
 };
 
 const isFounder = (community: SafeCommunity) => {
