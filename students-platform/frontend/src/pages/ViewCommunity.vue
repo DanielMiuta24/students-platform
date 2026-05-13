@@ -1053,15 +1053,22 @@
               <div class="flex items-start justify-between">
                 <div class="flex-1">
                   <label class="font-semibold text-gray-900 block mb-1">Require Approval to Join</label>
-                  <p class="text-sm text-gray-600">When enabled, new members must be approved by an admin before joining</p>
+                  <p class="text-sm text-gray-600">
+                    <span v-if="communityVisibility === 'private'" class="text-amber-600">
+                      Not available for private communities - private communities are invite-only by default
+                    </span>
+                    <span v-else>
+                      When enabled, new members must be approved by an admin before joining
+                    </span>
+                  </p>
                 </div>
                 <div class="ml-4">
                   <button
                     @click="toggleRequiresApproval"
-                    :disabled="settingsSaving"
+                    :disabled="settingsSaving || communityVisibility === 'private'"
                     :class="[
                       'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                      community?.requiresApproval ? 'bg-blue-600' : 'bg-gray-200'
+                      communityVisibility === 'private' ? 'bg-gray-300 cursor-not-allowed opacity-50' : community?.requiresApproval ? 'bg-blue-600' : 'bg-gray-200'
                     ]"
                   >
                     <span
