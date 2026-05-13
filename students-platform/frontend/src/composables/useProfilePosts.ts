@@ -25,10 +25,11 @@ export const useProfilePosts = (profileUserId: string) => {
   const visiblePosts = computed(() => {
     let filtered = posts.value;
 
+    filtered = filtered.filter((post) => !(post as any).communityId);
+
     if (isOwner.value) {
       filtered = filtered.filter((post) => post.status === 'published');
     } else {
-      // For non-owners, show public posts and friends-only posts if they're friends
       filtered = filtered.filter((post) => {
         if (post.status !== 'published') return false;
         if (post.visibility === 'public') return true;
@@ -37,7 +38,6 @@ export const useProfilePosts = (profileUserId: string) => {
       });
     }
 
-    // Apply visibility filter (only for owners)
     if (isOwner.value && selectedVisibility.value !== 'all') {
       filtered = filtered.filter((post) => post.visibility === selectedVisibility.value);
     }
