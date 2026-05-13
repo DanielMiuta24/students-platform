@@ -884,6 +884,13 @@ const handleCommentDeleted = async () => {
 
 const getPostUrl = () => {
   const baseUrl = window.location.origin;
+
+  // If post belongs to a community, return community URL
+  if (communitySlug.value) {
+    return `${baseUrl}/community/${communitySlug.value}`;
+  }
+
+  // Otherwise return profile post URL
   const username = typeof props.post.author === 'object' ? props.post.author.username : '';
   return `${baseUrl}/profile/${username}/posts/${props.post.slug}`;
 };
