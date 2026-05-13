@@ -340,6 +340,14 @@
         <div class="flex-1 w-full lg:max-w-3xl mx-auto lg:mx-0">
 
       <div v-if="activeTab === 'feed'">
+      <div v-if="!isJoined" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-sm border-2 border-blue-200 p-8 text-center">
+        <svg class="w-16 h-16 mx-auto text-blue-600 mb-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+        </svg>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Members Only Content</h3>
+        <p class="text-gray-600 mb-4">Join this community to view posts and engage with members</p>
+      </div>
+      <template v-else>
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
         <h2 class="text-sm font-semibold text-gray-700 mb-3">Filter by Category</h2>
         <CategoryFilter @change="handleCategoryChange" />
@@ -585,6 +593,7 @@
           {{ loadingMore ? 'Loading...' : 'Load More Posts' }}
         </button>
       </div>
+      </template>
       </div>
 
       <div v-else-if="activeTab === 'about'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -690,6 +699,14 @@
       </div>
 
       <div v-else-if="activeTab === 'members'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-visible">
+        <div v-if="!isJoined" class="p-8 text-center">
+          <svg class="w-16 h-16 mx-auto text-blue-600 mb-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+          </svg>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Members Only Content</h3>
+          <p class="text-gray-600 mb-4">Join this community to view the member list</p>
+        </div>
+        <template v-else>
         <div class="relative h-32 sm:h-40 md:h-48 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 overflow-hidden">
           <div class="absolute inset-0 opacity-10">
             <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -952,9 +969,18 @@
             </p>
           </div>
         </div>
+        </template>
       </div>
 
       <div v-else-if="activeTab === 'media'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div v-if="!isJoined" class="p-8 text-center">
+          <svg class="w-16 h-16 mx-auto text-blue-600 mb-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+          </svg>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Members Only Content</h3>
+          <p class="text-gray-600 mb-4">Join this community to view media shared by members</p>
+        </div>
+        <template v-else>
         <div class="relative h-32 sm:h-40 md:h-48 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 overflow-hidden">
           <div class="absolute inset-0 opacity-10">
             <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -1022,6 +1048,7 @@
             </p>
           </div>
         </div>
+        </template>
       </div>
 
       <!-- Settings Tab -->
@@ -1505,7 +1532,7 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div v-if="isJoined" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div class="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
               <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

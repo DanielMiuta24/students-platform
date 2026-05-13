@@ -92,7 +92,7 @@ export class PostService {
       return null;
     }
 
-    if (post.community && post.visibility === 'community') {
+    if (post.community) {
       const communityId = typeof post.community === 'string'
         ? post.community
         : post.community._id.toString();
@@ -125,7 +125,7 @@ export class PostService {
       return null;
     }
 
-    if (post.community && post.visibility === 'community') {
+    if (post.community) {
       const communityId = typeof post.community === 'string'
         ? post.community
         : post.community._id.toString();
