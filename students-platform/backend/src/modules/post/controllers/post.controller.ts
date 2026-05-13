@@ -356,6 +356,20 @@ class PostController {
       return this.handleError(err, res, next);
     }
   };
+
+  getDraftsByAuthor = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const drafts = await postService.getDraftsByAuthor(req.user!.id);
+      const safeDrafts = drafts.map(draft => PostMapper.toSafePost(draft));
+      return res.status(PostController.HTTP_STATUS.OK).json({ drafts: safeDrafts });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
 }
 
 export const postController = new PostController();

@@ -742,6 +742,24 @@ export class PostService {
     });
     return count;
   }
+
+  async getDraftsByAuthor(authorId: string): Promise<PostDoc[]> {
+    const drafts = await PostModel.find({
+      author: authorId,
+      status: 'draft'
+    })
+      .populate('author', 'name username avatar email type')
+      .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug visibility',
+      })
+      .populate('images')
+      .sort({ updatedAt: -1 })
+      .exec();
+
+    return drafts;
+  }
 }
 
 export const postService = new PostService();
