@@ -280,9 +280,9 @@ We addressed duplication by:
 
 ### Results
 
-| Before | After |
-|--------|-------|
-| 26.8% | 4.8% |3.5
+| Before | After    |
+|--------|----------|
+| 26.8%  | 4.8% ,3.5| 
 
 👉 This reflects a significant improvement in maintainability.
 
