@@ -6,12 +6,12 @@
     variant="primary"
     size="lg"
     max-height="70vh"
-    :icon="EditIcon"
+    icon="edit"
     @close="handleClose"
   >
     <div class="space-y-5">
       <!-- Success Message -->
-      <div v-if="successMessage" class="p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-3 animate-fade-in">
+      <div v-if="successMessage" class="p-4 bg-green-50 border-2 border-green-200 rounded-lg flex items-center gap-3">
         <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -27,7 +27,7 @@
         <textarea
           v-model="formData.description"
           rows="4"
-          class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all"
+          class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all"
           :class="validationErrors.description ? 'border-red-300 bg-red-50' : 'border-gray-300'"
           placeholder="Describe your community..."
           @input="validateDescription"
@@ -53,25 +53,12 @@
         </label>
         <select
           v-model="formData.visibility"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
         >
-          <option value="public">
-            <span class="flex items-center gap-2">
-              🌍 Public - Anyone can see and join
-            </span>
-          </option>
-          <option value="private">
-            <span class="flex items-center gap-2">
-              🔒 Private - Only invited members can join
-            </span>
-          </option>
+          <option value="public">Public - Anyone can see and join</option>
+          <option value="private">Private - Only invited members can join</option>
         </select>
-        <p class="text-xs text-gray-500 mt-2 flex items-start gap-1">
-          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-          </svg>
-          <span>Private communities require admin approval for new members</span>
-        </p>
+        <p class="text-xs text-gray-500 mt-2">Private communities require admin approval for new members</p>
       </div>
 
       <!-- Cover Image -->
@@ -80,51 +67,53 @@
           Cover Image
         </label>
 
-        <!-- Current Image Preview -->
-        <div v-if="currentCoverImage && !formData.removeCoverImage" class="mb-3 relative group">
-          <img
-            :src="currentCoverImage"
-            alt="Current cover"
-            class="w-full h-48 object-cover rounded-xl border-2 border-gray-200"
-          />
-          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-xl flex items-center justify-center">
+        <!-- Current Image Preview with Remove Button -->
+        <div v-if="currentCoverImage && !formData.removeCoverImage" class="mb-3">
+          <div class="relative">
+            <img
+              :src="currentCoverImage"
+              alt="Current cover"
+              class="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+            />
             <button
               @click="removeCoverImage"
-              class="opacity-0 group-hover:opacity-100 transition-all bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 flex items-center gap-2"
+              type="button"
+              class="absolute top-3 right-3 bg-red-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-red-700 shadow-lg transition-all flex items-center gap-2"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Remove Image
+              Remove
             </button>
           </div>
         </div>
 
         <!-- New Image Preview -->
-        <div v-if="formData.newCoverImagePreview" class="mb-3 relative group">
-          <img
-            :src="formData.newCoverImagePreview"
-            alt="New cover preview"
-            class="w-full h-48 object-cover rounded-xl border-2 border-blue-300"
-          />
-          <div class="absolute top-2 right-2">
-            <span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-semibold">New Image</span>
-          </div>
-          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-xl flex items-center justify-center">
+        <div v-if="formData.newCoverImagePreview" class="mb-3">
+          <div class="relative">
+            <img
+              :src="formData.newCoverImagePreview"
+              alt="New cover preview"
+              class="w-full h-48 object-cover rounded-lg border-2 border-blue-500"
+            />
+            <span class="absolute top-3 left-3 bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-semibold shadow-lg">
+              New Image
+            </span>
             <button
               @click="clearNewImage"
-              class="opacity-0 group-hover:opacity-100 transition-all bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 flex items-center gap-2"
+              type="button"
+              class="absolute top-3 right-3 bg-red-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-red-700 shadow-lg transition-all flex items-center gap-2"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-              Cancel Upload
+              Cancel
             </button>
           </div>
         </div>
 
         <!-- Upload Button -->
-        <div v-if="!formData.newCoverImagePreview" class="relative">
+        <div v-if="!formData.newCoverImagePreview">
           <input
             ref="fileInputRef"
             type="file"
@@ -133,8 +122,9 @@
             class="hidden"
           />
           <button
+            type="button"
             @click="fileInputRef?.click()"
-            class="w-full px-4 py-3 border-2 border-dashed rounded-xl transition-all flex items-center justify-center gap-2 font-semibold"
+            class="w-full px-4 py-3 border-2 border-dashed rounded-lg transition-all flex items-center justify-center gap-2 font-semibold"
             :class="validationErrors.coverImage
               ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
               : 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 hover:border-gray-400'"
@@ -153,30 +143,27 @@
           {{ validationErrors.coverImage }}
         </p>
 
-        <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-          </svg>
-          Recommended size: 1200x400px (Max 5MB, JPG/PNG)
-        </p>
+        <p class="text-sm text-gray-500 mt-2">Recommended size: 1200x400px (Max 5MB, JPG/PNG)</p>
       </div>
     </div>
 
     <template #footer>
       <button
         @click="handleClose"
-        class="px-5 py-2.5 text-gray-700 font-semibold hover:bg-gray-100 rounded-xl transition-colors"
+        type="button"
+        class="px-5 py-2.5 text-gray-700 font-semibold hover:bg-gray-100 rounded-lg transition-colors"
       >
         Cancel
       </button>
       <button
         @click="handleSubmit"
+        type="button"
         :disabled="isSubmitting || !isFormValid"
         :class="[
-          'px-5 py-2.5 font-semibold rounded-xl transition-all flex items-center gap-2',
+          'px-5 py-2.5 font-semibold rounded-lg transition-all flex items-center gap-2',
           isSubmitting || !isFormValid
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
         ]"
       >
         <svg v-if="isSubmitting" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
@@ -194,14 +181,6 @@ import { ref, computed, watch } from 'vue';
 import Modal from './Modal.vue';
 import { updateCommunity } from '../api/community';
 import type { SafeCommunity } from '../types/community';
-
-const EditIcon = {
-  template: `
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-  `
-};
 
 interface Props {
   modelValue: boolean;
@@ -370,20 +349,3 @@ const handleSubmit = async () => {
   }
 };
 </script>
-
-<style scoped>
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
-}
-</style>
