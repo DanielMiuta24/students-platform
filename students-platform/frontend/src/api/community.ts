@@ -639,9 +639,9 @@ export const acceptOwnershipTransfer = async (transferId: string): Promise<{ mes
 /**
  * Get my ownership transfer requests (transfers directed to me)
  */
-export const getMyOwnershipTransferRequests = async (): Promise<{ transfers: any[] }> => {
+export const getMyOwnershipTransferRequests = async (): Promise<any[]> => {
   try {
-    const response = await secureApi.get<{ transfers: any[] }>(
+    const response = await secureApi.get<any[]>(
       '/communities/ownership-transfers/me'
     );
     return response.data;

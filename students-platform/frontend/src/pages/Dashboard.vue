@@ -275,6 +275,22 @@
           <div v-else-if="activeTab === 'requests'" class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
             <h2 class="text-3xl font-bold text-gray-900 mb-8">Requests</h2>
 
+            <div v-if="requestSuccessMessage" class="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-3">
+              <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p v-if="requestSuccessMessage.startsWith('ownership-transfer:')" class="text-green-800 font-semibold">
+                You are now the owner of
+                <button
+                  @click="$router.push(`/community/${requestSuccessMessage.split(':')[2]}`)"
+                  class="underline hover:text-green-900 font-bold"
+                >
+                  {{ requestSuccessMessage.split(':')[1] }}
+                </button>!
+              </p>
+              <p v-else class="text-green-800 font-semibold">{{ requestSuccessMessage }}</p>
+            </div>
+
             <div v-if="requestsLoading" class="text-center py-8">
               <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p class="text-gray-600 mt-4">Loading requests...</p>
@@ -436,6 +452,7 @@ const joinRequestsToMyCommunities = ref<any[]>([]);
 const myJoinRequests = ref<any[]>([]);
 const ownershipTransferRequests = ref<any[]>([]);
 const requestsLoading = ref(false);
+const requestSuccessMessage = ref('');
 
 const tabs = [
   {
@@ -576,9 +593,9 @@ const fetchRequests = async () => {
 
     try {
       const { getMyOwnershipTransferRequests } = await import('../api/community');
-      const transferResult = await getMyOwnershipTransferRequests();
-      console.log('Ownership transfer requests:', transferResult);
-      ownershipTransferRequests.value = transferResult.transfers || [];
+      const transfers = await getMyOwnershipTransferRequests();
+      console.log('Ownership transfer requests:', transfers);
+      ownershipTransferRequests.value = transfers || [];
     } catch (err) {
       console.error('Failed to fetch ownership transfers:', err);
       ownershipTransferRequests.value = [];
@@ -736,6 +753,10 @@ const approveJoinRequest = async (request: any) => {
     const { approveJoinRequest: approveAPI } = await import('../api/community');
     await approveAPI(request.community, request.id);
     joinRequestsToMyCommunities.value = joinRequestsToMyCommunities.value.filter(r => r.id !== request.id);
+    requestSuccessMessage.value = `Approved ${request.user?.name || 'user'}'s request to join ${request.communityName}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
   } catch (error: any) {
     alert(error.message || 'Failed to approve request');
   }
@@ -746,6 +767,10 @@ const rejectJoinRequest = async (request: any) => {
     const { rejectJoinRequest: rejectAPI } = await import('../api/community');
     await rejectAPI(request.community, request.id);
     joinRequestsToMyCommunities.value = joinRequestsToMyCommunities.value.filter(r => r.id !== request.id);
+    requestSuccessMessage.value = `Rejected ${request.user?.name || 'user'}'s request to join ${request.communityName}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
   } catch (error: any) {
     alert(error.message || 'Failed to reject request');
   }
@@ -756,6 +781,10 @@ const cancelMyJoinRequest = async (community: any) => {
     const { cancelJoinRequest } = await import('../api/community');
     await cancelJoinRequest(community.id);
     myJoinRequests.value = myJoinRequests.value.filter(c => c.id !== community.id);
+    requestSuccessMessage.value = `Cancelled request to join ${community.name}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
   } catch (error: any) {
     alert(error.message || 'Failed to cancel request');
   }
@@ -766,7 +795,10 @@ const acceptOwnershipTransfer = async (transfer: any) => {
     const { acceptOwnershipTransfer: acceptAPI } = await import('../api/community');
     await acceptAPI(transfer.id);
     ownershipTransferRequests.value = ownershipTransferRequests.value.filter(t => t.id !== transfer.id);
-    alert(`You are now the owner of ${transfer.community?.name}`);
+    requestSuccessMessage.value = `ownership-transfer:${transfer.community?.name}:${transfer.community?.slug}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
   } catch (error: any) {
     alert(error.message || 'Failed to accept ownership transfer');
   }
@@ -777,6 +809,10 @@ const rejectOwnershipTransfer = async (transfer: any) => {
     const { rejectOwnershipTransfer: rejectAPI } = await import('../api/community');
     await rejectAPI(transfer.id);
     ownershipTransferRequests.value = ownershipTransferRequests.value.filter(t => t.id !== transfer.id);
+    requestSuccessMessage.value = `Rejected ownership transfer for ${transfer.community?.name}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
   } catch (error: any) {
     alert(error.message || 'Failed to reject ownership transfer');
   }
