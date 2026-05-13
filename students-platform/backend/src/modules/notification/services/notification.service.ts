@@ -14,6 +14,7 @@ import { PostModel } from '../../post/models/post.model';
 import { CommentModel } from '../../comment/models/comment.model';
 import { CommunityModel } from '../../community/models/community.model';
 import { MessageModel } from '../../message/models/message.model';
+import { CommunityInvitationModel } from '../../community/models/community-invitation.model';
 
 export class NotificationService {
   async createNotification(dto: CreateNotificationDTO): Promise<NotificationResponseDTO> {
@@ -191,6 +192,9 @@ export class NotificationService {
         break;
       case 'Community':
         targetExists = !!(await CommunityModel.exists({ _id: dto.targetId }));
+        break;
+      case 'CommunityInvitation':
+        targetExists = !!(await CommunityInvitationModel.exists({ _id: dto.targetId }));
         break;
       case 'User':
         targetExists = !!(await User.exists({ _id: dto.targetId }));

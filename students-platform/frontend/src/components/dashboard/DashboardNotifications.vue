@@ -198,7 +198,11 @@ const getNotificationRoute = (notification: Notification): string | null => {
       return `/profile/${notification.actor._id}`;
     case 'community_join':
     case 'community_post':
+      return `/community/${notification.target._id}`;
     case 'community_invite':
+      if (notification.targetModel === 'CommunityInvitation') {
+        return null;
+      }
       return `/community/${notification.target._id}`;
     case 'new_post':
       return `/post/${notification.target._id}`;

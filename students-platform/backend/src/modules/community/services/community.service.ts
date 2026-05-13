@@ -430,7 +430,7 @@ export class CommunityService {
 
     if (inviteData.userIds) {
       for (const recipientUserId of inviteData.userIds) {
-        invitations.push({
+        const invitation = await CommunityInvitationModel.create({
           community: communityId,
           invitedBy: userId,
           recipientUser: recipientUserId,
@@ -442,8 +442,8 @@ export class CommunityService {
           recipientId: recipientUserId,
           actorId: userId,
           type: 'community_invite',
-          targetModel: 'Community',
-          targetId: communityId,
+          targetModel: 'CommunityInvitation',
+          targetId: invitation._id.toString(),
         }).catch(err => console.error('Failed to create community invite notification:', err));
       }
     }
@@ -452,7 +452,8 @@ export class CommunityService {
       await CommunityInvitationModel.insertMany(invitations);
     }
 
-    return { invitationsSent: invitations.length };
+    const totalInvitations = invitations.length + (inviteData.userIds?.length || 0);
+    return { invitationsSent: totalInvitations };
   }
 
   async getInvitations(communityId: string, userId: string) {

@@ -51,6 +51,11 @@ export class NotificationMapper {
           name: target.name,
           slug: target.slug,
         };
+      case 'CommunityInvitation':
+        return {
+          community: target.community,
+          status: target.status,
+        };
       case 'User':
         return {
           name: target.name,
