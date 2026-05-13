@@ -738,7 +738,7 @@ export class PostService {
   async getPostsCountByAuthor(authorId: string): Promise<number> {
     const count = await PostModel.countDocuments({
       author: authorId,
-      status: 'published'
+      status: { $ne: 'draft' }
     });
     return count;
   }
