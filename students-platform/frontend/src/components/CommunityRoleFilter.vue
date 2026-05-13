@@ -5,8 +5,8 @@
       :class="[
         'px-4 py-2 rounded-full font-semibold transition flex items-center gap-2',
         selectedRole === null
-          ? 'bg-purple-600 text-white'
-          : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+          ? 'bg-indigo-600 text-white'
+          : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
       ]"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,8 +20,8 @@
       :class="[
         'px-4 py-2 rounded-full font-semibold transition flex items-center gap-2',
         selectedRole === 'admin'
-          ? 'bg-purple-600 text-white'
-          : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+          ? 'bg-red-600 text-white'
+          : 'bg-red-50 text-red-700 hover:bg-red-100'
       ]"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,8 +35,8 @@
       :class="[
         'px-4 py-2 rounded-full font-semibold transition flex items-center gap-2',
         selectedRole === 'member'
-          ? 'bg-purple-600 text-white'
-          : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+          ? 'bg-emerald-600 text-white'
+          : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
       ]"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

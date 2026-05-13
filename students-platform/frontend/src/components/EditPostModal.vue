@@ -81,7 +81,7 @@
                 />
               </div>
 
-              <div class="form-field">
+              <div v-if="!isCommunityPost" class="form-field">
                 <label for="category" class="field-label">
                   Category <span class="required">*</span>
                 </label>
@@ -119,7 +119,7 @@
                 <div v-if="errors.images" class="field-error">{{ errors.images }}</div>
               </div>
 
-              <div class="form-field">
+              <div v-if="!isCommunityPost" class="form-field">
                 <label for="visibility" class="field-label">
                   Visibility
                 </label>
@@ -196,6 +196,10 @@ export default defineComponent({
       type: Object as PropType<SafePost>,
       required: true,
     },
+    isCommunityPost: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   emits: ['close', 'updated'],
@@ -229,6 +233,12 @@ export default defineComponent({
       return typeof category === 'string' ? category : category.id;
     };
 
+    // Helper function to get community ID
+    const getCommunityId = (community: string | { id: string; name: string; slug: string } | undefined): string => {
+      if (!community) return '';
+      return typeof community === 'string' ? community : community.id;
+    };
+
     // Pre-populate form with existing post data
     const postTitle = ref(props.post.title);
     const postContent = ref<LexicalEditorState | null>(
@@ -237,6 +247,7 @@ export default defineComponent({
         : props.post.content
     );
     const postCategory = ref(getCategoryId(props.post.category));
+    const postCommunityId = ref(getCommunityId(props.post.community));
     const postImages = ref<ImageUploadType[]>([]);
     const existingImages = ref<string[]>(
       props.post.images ? props.post.images.map(img => img.url) : []
@@ -360,9 +371,16 @@ export default defineComponent({
 
       formData.append('title', postTitle.value.trim());
       formData.append('content', JSON.stringify(postContent.value));
-      formData.append('category', postCategory.value);
       formData.append('status', status);
+
+      // Always send category and visibility (backend will preserve them for community posts)
+      formData.append('category', postCategory.value);
       formData.append('visibility', postVisibility.value);
+
+      // Include communityId if this is a community post (to prevent backend from thinking we're removing it)
+      if (postCommunityId.value) {
+        formData.append('communityId', postCommunityId.value);
+      }
 
       // Add new image files (field name 'images' for file uploads)
       postImages.value.forEach((image) => {
@@ -405,10 +423,11 @@ export default defineComponent({
 
         successMessage.value = 'Post updated successfully!';
 
-        // Update the post in the store
-        await postFeedStore.refreshPosts();
-
+        // Emit the updated event immediately so parent can update UI
         emit('updated', updatedPost);
+
+        // Update the post in the store (for other pages that use the feed store)
+        await postFeedStore.refreshPosts();
 
         setTimeout(() => {
           handleClose();
@@ -440,10 +459,11 @@ export default defineComponent({
 
         successMessage.value = 'Draft saved successfully!';
 
-        // Update the post in the store
-        await postFeedStore.refreshPosts();
-
+        // Emit the updated event immediately so parent can update UI
         emit('updated', updatedPost);
+
+        // Update the post in the store (for other pages that use the feed store)
+        await postFeedStore.refreshPosts();
 
         setTimeout(() => {
           handleClose();
@@ -469,6 +489,7 @@ export default defineComponent({
       userName,
       userAvatar,
       userProfileUrl,
+      isCommunityPost: props.isCommunityPost,
 
       postTitle,
       postContent,

@@ -390,6 +390,7 @@
               :hide-community-name="true"
               :is-community-admin="isAdmin"
               :author-community-role="getAuthorCommunityRole(post)"
+              @edit="handlePostEdit"
               @update="handlePostUpdate"
               @delete="handlePostDelete"
             />
@@ -553,6 +554,7 @@
           :hide-community-name="true"
           :is-community-admin="isAdmin"
           :author-community-role="getAuthorCommunityRole(post)"
+          @edit="handlePostEdit"
           @update="handlePostUpdate"
           @delete="handlePostDelete"
         />
@@ -2008,6 +2010,14 @@
       @close="closePostModal"
     />
 
+    <EditPostModal
+      v-if="showEditPostModal && editingPost"
+      :post="editingPost"
+      :is-community-post="true"
+      @close="handleEditModalClose"
+      @updated="handlePostEdited"
+    />
+
     <div
       v-if="showInviteSuccess"
       class="fixed inset-0 flex items-center justify-center z-50 px-4 pointer-events-none"
@@ -2248,6 +2258,7 @@ import CommunityRoleFilter from '../components/CommunityRoleFilter.vue';
 import CreatePostForm from '../components/CreatePostForm.vue';
 import PostCard from '../components/PostCard.vue';
 import PostModal from '../components/PostModal.vue';
+import EditPostModal from '../components/EditPostModal.vue';
 import TabContentHeader from '../components/TabContentHeader.vue';
 import CommunityStatsCard from '../components/CommunityStatsCard.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
@@ -2375,6 +2386,8 @@ const settingsSuccess = ref(false);
 const hoveredRequestButton = ref(false);
 const showPostModal = ref(false);
 const selectedPost = ref<SafePost | null>(null);
+const showEditPostModal = ref(false);
+const editingPost = ref<SafePost | null>(null);
 const hoveredJoinButton = ref(false);
 const showDeleteConfirmModal = ref(false);
 const deleteConfirmText = ref('');
@@ -2593,9 +2606,30 @@ const handleRoleChange = (role: 'admin' | 'member' | null) => {
 };
 
 const handlePostCreated = (newPost: SafePost) => {
-  console.log('Post created event received:', newPost);
   posts.value = [newPost, ...posts.value];
-  console.log('Posts array after adding:', posts.value.length);
+};
+
+const handlePostEdit = (post: SafePost) => {
+  editingPost.value = post;
+  showEditPostModal.value = true;
+};
+
+const handlePostEdited = (updatedPost: SafePost) => {
+  // Update in posts array - replace the old post with the updated one
+  posts.value = posts.value.map(p => p.id === updatedPost.id ? updatedPost : p);
+
+  // Update pinned posts if the edited post was pinned
+  if (pinnedPosts.value.some(p => p.id === updatedPost.id)) {
+    pinnedPosts.value = pinnedPosts.value.map(p => p.id === updatedPost.id ? updatedPost : p);
+  }
+
+  showEditPostModal.value = false;
+  editingPost.value = null;
+};
+
+const handleEditModalClose = () => {
+  showEditPostModal.value = false;
+  editingPost.value = null;
 };
 
 const handlePostUpdate = (updatedPost: SafePost) => {
@@ -3305,10 +3339,8 @@ onMounted(async () => {
     }
   }
 
-  // Fetch members
-  if (activeTab.value === 'members') {
-    fetchMembers();
-  }
+  // Fetch members - needed for role badges and filters
+  fetchMembers();
 
   // TODO: Fetch pinned posts from backend
   pinnedPosts.value = [];

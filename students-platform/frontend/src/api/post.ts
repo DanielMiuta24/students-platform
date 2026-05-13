@@ -32,13 +32,13 @@ export const createPost = async (formData: FormData): Promise<SafePost> => {
 
 export const updatePost = async (postId: string, formData: FormData): Promise<SafePost> => {
   try {
-    const response = await secureApi.put<SafePost>(`/posts/${postId}`, formData, {
+    const response = await secureApi.put<{ message: string; post: SafePost }>(`/posts/${postId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
 
-    return response.data;
+    return response.data.post;
   } catch (error: any) {
     if (error.response?.status === 401) {
       throw new Error('You must be logged in to update a post');
