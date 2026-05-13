@@ -73,6 +73,29 @@ const validateCategory = () =>
     .notEmpty().withMessage('Category is required')
     .isMongoId().withMessage('Invalid category ID');
 
+const validateOptionalCategory = () =>
+  body('category')
+    .optional()
+    .isMongoId().withMessage('Invalid category ID');
+
+const validateCategoryOrCommunity = () =>
+  body('category')
+    .custom((value, { req }) => {
+      // If communityId is provided, category is optional (backend will use community's category)
+      if (req.body.communityId) {
+        return true;
+      }
+      // Otherwise, category is required
+      if (!value) {
+        throw new Error('Category is required when communityId is not provided');
+      }
+      // Validate it's a valid MongoDB ObjectId
+      if (!MONGO_ID_PATTERN.test(value)) {
+        throw new Error('Invalid category ID');
+      }
+      return true;
+    });
+
 const validateImages = () =>
   body('images')
     .optional()
@@ -106,6 +129,11 @@ const validateOptionalVisibility = () =>
     .optional()
     .isIn(VALID_VISIBILITIES).withMessage(`Invalid visibility. Must be one of: ${VALID_VISIBILITIES.join(', ')}`);
 
+const validateOptionalCommunityId = () =>
+  body('communityId')
+    .optional()
+    .isMongoId().withMessage('Invalid community ID');
+
 export const validateTotalImageCount = (req: UploadRequest, res: Response, next: NextFunction) => {
   const existingImagesCount = Array.isArray(req.body.existingImages) ? req.body.existingImages.length : 0;
   const newFilesCount = req.files ? req.files.length : 0;
@@ -123,7 +151,8 @@ export const validateTotalImageCount = (req: UploadRequest, res: Response, next:
 export const validateCreatePost = [
   validateTitle(),
   validateContent(),
-  validateCategory(),
+  validateCategoryOrCommunity(),
+  validateOptionalCommunityId(),
   validateOptionalStatus(),
   validateOptionalVisibility(),
   validateImages(),

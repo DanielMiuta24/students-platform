@@ -15,6 +15,7 @@ export class PostMapper {
       community: post.community ? this.mapCommunity(post.community) : undefined,
       status: post.status,
       visibility: post.visibility,
+      isPinned: post.isPinned || false,
       images: this.mapImages(post.images),
       likeCount: post.likeCount,
       commentCount: post.commentCount,

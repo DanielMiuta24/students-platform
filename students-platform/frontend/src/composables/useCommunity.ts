@@ -124,7 +124,10 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
 
   const updateCommunityData = async (formData: FormData) => {
     try {
-      const result = await updateCommunity(communityIdOrSlugRef.value, formData);
+      if (!community.value?.id) {
+        throw new Error('Community ID not available');
+      }
+      const result = await updateCommunity(community.value.id, formData);
       community.value = result.community;
       return result;
     } catch (err: any) {
@@ -134,7 +137,10 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
 
   const deleteCommunityData = async () => {
     try {
-      const result = await deleteCommunity(communityIdOrSlugRef.value);
+      if (!community.value?.id) {
+        throw new Error('Community ID not available');
+      }
+      const result = await deleteCommunity(community.value.id);
       community.value = null;
       return result;
     } catch (err: any) {

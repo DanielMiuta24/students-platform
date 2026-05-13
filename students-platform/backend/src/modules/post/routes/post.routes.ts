@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { postController } from '../controllers/post.controller';
-import { authMiddleware } from '../../../shared/middleware/auth.middleware';
+import { authMiddleware, optionalAuthMiddleware } from '../../../shared/middleware/auth.middleware';
 import { busboyUploadMiddleware } from '../../image/middleware';
 import { IMAGE_VALIDATION } from '../../image/services';
 import {
@@ -18,7 +18,7 @@ router.get('/feed', authMiddleware, postController.getFeed);
 
 router.get('/feed/scored', authMiddleware, postController.getScoredFeed);
 
-router.get('/community/:communityId/feed', authMiddleware, postController.getCommunityScoredFeed);
+router.get('/community/:communityId/feed', optionalAuthMiddleware, postController.getCommunityScoredFeed);
 
 router.get(
   '/category/:categoryId',
@@ -80,6 +80,13 @@ router.patch(
   validatePostId,
   validateVisibility,
   postController.updateVisibility
+);
+
+router.patch(
+  '/:postId/pin',
+  authMiddleware,
+  validatePostId,
+  postController.togglePinPost
 );
 
 router.delete(

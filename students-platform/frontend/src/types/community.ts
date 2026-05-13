@@ -148,3 +148,14 @@ export const COMMUNITY_VISIBILITY = {
   PUBLIC: 'public' as CommunityVisibility,
   PRIVATE: 'private' as CommunityVisibility,
 };
+
+/**
+ * Community role constants
+ */
+export const COMMUNITY_ROLE = {
+  FOUNDER: 'founder',
+  ADMIN: 'admin',
+  MEMBER: 'member',
+} as const;
+
+export type CommunityRole = typeof COMMUNITY_ROLE[keyof typeof COMMUNITY_ROLE];

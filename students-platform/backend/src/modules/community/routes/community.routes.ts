@@ -21,6 +21,13 @@ router.get(
 );
 
 router.get(
+  '/:id/can-view-posts',
+  optionalAuthMiddleware,
+  validateCommunityId,
+  communityController.canViewCommunityPosts
+);
+
+router.get(
   '/:id/members',
   validateCommunityId,
   communityController.getCommunityMembers

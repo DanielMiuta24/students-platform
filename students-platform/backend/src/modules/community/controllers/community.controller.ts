@@ -158,6 +158,21 @@ class CommunityController {
     }
   };
 
+  canViewCommunityPosts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = (req as AuthenticatedRequest).user?.id;
+      const result = await communityService.canViewCommunityPosts(req.params.id, userId);
+
+      return res.status(CommunityController.HTTP_STATUS.OK).json(result);
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
   updateCommunity = async (
     req: AuthenticatedRequest & UploadRequest,
     res: Response,

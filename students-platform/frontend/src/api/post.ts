@@ -4,13 +4,13 @@ import { api } from '../services/api';
 
 export const createPost = async (formData: FormData): Promise<SafePost> => {
   try {
-    const response = await secureApi.post<SafePost>('/posts', formData, {
+    const response = await secureApi.post<{ message: string; post: SafePost }>('/posts', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
 
-    return response.data;
+    return response.data.post;
   } catch (error: any) {
     if (error.response?.status === 401) {
       throw new Error('You must be logged in to create a post');
@@ -199,5 +199,22 @@ export const updatePostVisibility = async (
     }
 
     throw new Error(error.response?.data?.message || 'Failed to update post visibility');
+  }
+};
+
+export const togglePinPost = async (postId: string): Promise<SafePost> => {
+  try {
+    const response = await secureApi.patch<{message: string; post: SafePost}>(`/posts/${postId}/pin`);
+    return response.data.post;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      throw new Error('You must be logged in to pin posts');
+    } else if (error.response?.status === 403) {
+      throw new Error('Only community admins can pin posts');
+    } else if (error.response?.status === 404) {
+      throw new Error('Post not found');
+    }
+
+    throw new Error(error.response?.data?.message || 'Failed to pin post');
   }
 };

@@ -55,6 +55,18 @@ export const getCommunityById = async (communityId: string): Promise<{ community
 };
 
 /**
+ * Check if user can view community posts
+ */
+export const canViewCommunityPosts = async (communityId: string): Promise<{ canView: boolean; isMember: boolean; visibility: string }> => {
+  try {
+    const response = await api.get<{ canView: boolean; isMember: boolean; visibility: string }>(`/communities/${communityId}/can-view-posts`);
+    return response.data;
+  } catch (error: any) {
+    return { canView: false, isMember: false, visibility: 'private' };
+  }
+};
+
+/**
  * Create a new community
  */
 export const createCommunity = async (formData: FormData): Promise<{ message: string; community: SafeCommunity }> => {

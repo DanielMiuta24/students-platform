@@ -40,13 +40,23 @@ class PostController {
 
     const errorResponse = PostController.ERROR_RESPONSES[err.message];
 
-    if (!errorResponse) {
-      return next(err);
+    if (errorResponse) {
+      return res.status(errorResponse.status).json({
+        message: errorResponse.message,
+      });
     }
 
-    return res.status(errorResponse.status).json({
-      message: errorResponse.message,
-    });
+    // Handle community permission errors
+    if (err.message.includes('Only admins can post') ||
+        err.message.includes('must be a member') ||
+        err.message.includes('Community not found')) {
+      return res.status(403).json({
+        message: err.message,
+      });
+    }
+
+    // For any other error, pass to next middleware
+    return next(err);
   }
 
   createPost = async (
@@ -307,6 +317,26 @@ class PostController {
 
       return res.status(PostController.HTTP_STATUS.OK).json({
         message: 'Post visibility updated successfully',
+        post: PostMapper.toSafePost(updatedPost),
+      });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  togglePinPost = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const updatedPost = await postService.togglePinPost(
+        req.params.postId,
+        req.user!.id
+      );
+
+      return res.status(PostController.HTTP_STATUS.OK).json({
+        message: updatedPost.isPinned ? 'Post pinned successfully' : 'Post unpinned successfully',
         post: PostMapper.toSafePost(updatedPost),
       });
     } catch (err: unknown) {

@@ -13,6 +13,7 @@ import { PostQueryBuilder, PostCreateBuilder, PostUpdateBuilder } from '../build
 import { PostMapper } from '../mappers';
 import { categoryService } from '../../category/services';
 import { communityService } from '../../community/services';
+import { COMMUNITY_ROLE } from '../../community/constants';
 import { PostScorer } from './post.scorer';
 import { imageService, type UploadedFile } from '../../image/services';
 import { commentService } from '../../comment/services';
@@ -55,6 +56,19 @@ export class PostService {
     if (data.communityId && savedPost.status === 'published') {
       await communityService.incrementPostCount(data.communityId);
     }
+
+    // Populate author, category, community, and images before returning
+    await savedPost.populate('author', 'name username avatar email type');
+    await savedPost.populate('category', 'name slug');
+    await savedPost.populate({
+      path: 'community',
+      select: 'name slug coverImage visibility',
+      populate: {
+        path: 'coverImage',
+        select: 'url'
+      }
+    });
+    await savedPost.populate('images');
 
     return savedPost;
   }
@@ -138,6 +152,20 @@ export class PostService {
 
     if (postAuthorId !== authorId) {
       throw new Error(POST_ERROR.UNAUTHORIZED);
+    }
+
+    // Prevent changing community association - posts should not be moved between communities
+    const existingCommunityId = existingPost.community?.toString();
+    if (data.communityId !== existingCommunityId) {
+      if (existingCommunityId && !data.communityId) {
+        throw new Error('Cannot remove post from community. Community posts must remain in their community.');
+      }
+      if (!existingCommunityId && data.communityId) {
+        throw new Error('Cannot move regular post to a community. Create a new post in the community instead.');
+      }
+      if (existingCommunityId && data.communityId) {
+        throw new Error('Cannot move post between communities.');
+      }
     }
 
     if (data.communityId) {
@@ -400,6 +428,7 @@ export class PostService {
   async getCommunityScoredFeed(communityId: string, userId: string, cursor?: string, limit?: number): Promise<ScoredFeedResult> {
     const safeLimit = limit && limit > 0 && limit <= 100 ? limit : this.DEFAULT_LIMIT;
 
+    // Check access - userId can be undefined for non-authenticated users viewing public communities
     const accessResult = await communityService.canAccessCommunity(communityId, userId);
     if (!accessResult.canAccess) {
       throw new Error(accessResult.reason);
@@ -426,13 +455,18 @@ export class PostService {
         }
       })
       .populate('images')
-      .sort({ _id: -1 })
+      .sort({ isPinned: -1, _id: -1 })
       .limit(safeLimit * 3)
       .exec();
 
     const scoredPosts = posts.map(post => {
       const safePost = PostMapper.toSafePost(post);
-      const score = PostScorer.calculateCommunityScore(post, userId);
+      // Use community score for authenticated users, simple chronological for non-authenticated
+      // Pinned posts get a massive boost to always appear first
+      let score = userId ? PostScorer.calculateCommunityScore(post, userId) : Date.now();
+      if (post.isPinned) {
+        score += 999999999999; // Ensure pinned posts always come first
+      }
       return { ...safePost, score };
     });
 
@@ -462,7 +496,51 @@ export class PostService {
       ? post.author
       : post.author!.toString();
 
-    if (postAuthorId !== authorId) {
+    // Check if user is the post owner
+    const isOwner = postAuthorId === authorId;
+
+    // For community posts, also check if user is a community admin
+    let isAdmin = false;
+    if (post.community) {
+      const communityId = typeof post.community === 'string'
+        ? post.community
+        : post.community.toString();
+
+      const community = await communityService.getCommunityById(communityId, authorId);
+
+      // Check if user is the founder OR has admin role in members
+      // founder might be populated as an object or just an ObjectId
+      const founderId = typeof community.founder === 'string'
+        ? community.founder
+        : (community.founder as any)?._id?.toString() || community.founder?.toString();
+
+      const isFounder = founderId === authorId;
+      const hasAdminRole = community.members?.some((m: any) => {
+        // m.user might be populated as an object or just an ObjectId
+        const memberUserId = typeof m.user === 'string'
+          ? m.user
+          : (m.user as any)?._id?.toString() || m.user?.toString();
+        const isMatch = memberUserId === authorId && m.role === COMMUNITY_ROLE.ADMIN;
+        console.log('Checking member:', { memberUserId, authorId, role: m.role, isMatch });
+        return isMatch;
+      }) || false;
+
+      isAdmin = isFounder || hasAdminRole;
+
+      console.log('Delete authorization check:', {
+        postId,
+        authorId,
+        isOwner,
+        isFounder,
+        hasAdminRole,
+        isAdmin,
+        founderId,
+        membersCount: community.members?.length
+      });
+    }
+
+    // User must be either the owner or a community admin
+    if (!isOwner && !isAdmin) {
       throw new Error(POST_ERROR.UNAUTHORIZED);
     }
 
@@ -502,6 +580,11 @@ export class PostService {
       throw new Error(POST_ERROR.UNAUTHORIZED);
     }
 
+    // Prevent changing visibility of community posts
+    if (post.community || post.visibility === 'community') {
+      throw new Error('Cannot change visibility of community posts. Community posts always have community visibility.');
+    }
+
     const updatedPost = await PostModel.findByIdAndUpdate(
       postId,
       { visibility },
@@ -509,6 +592,67 @@ export class PostService {
     )
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
+      .populate('images')
+      .exec();
+
+    return updatedPost!;
+  }
+
+  async togglePinPost(postId: string, userId: string): Promise<PostDoc> {
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+      throw new Error(POST_ERROR.NOT_FOUND);
+    }
+
+    // Only community posts can be pinned
+    if (!post.community) {
+      throw new Error('Only community posts can be pinned');
+    }
+
+    // Check if user is admin of the community
+    const communityId = typeof post.community === 'string'
+      ? post.community
+      : post.community.toString();
+
+    const community = await communityService.getCommunityById(communityId, userId);
+
+    // Check if user is the founder OR has admin role in members
+    // founder might be populated as an object or just an ObjectId
+    const founderId = typeof community.founder === 'string'
+      ? community.founder
+      : (community.founder as any)?._id?.toString() || community.founder?.toString();
+
+    const isFounder = founderId === userId;
+    const hasAdminRole = community.members?.some((m: any) => {
+      // m.user might be populated as an object or just an ObjectId
+      const memberUserId = typeof m.user === 'string'
+        ? m.user
+        : (m.user as any)?._id?.toString() || m.user?.toString();
+      return memberUserId === userId && m.role === COMMUNITY_ROLE.ADMIN;
+    }) || false;
+
+    const isAdmin = isFounder || hasAdminRole;
+
+    if (!isAdmin) {
+      throw new Error('Only community admins can pin posts');
+    }
+
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      postId,
+      { isPinned: !post.isPinned },
+      { new: true, runValidators: true }
+    )
+      .populate('author', 'name username avatar email type')
+      .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .exec();
 

@@ -60,6 +60,7 @@ export interface SafePost {
   community?: string | SafeCommunity;
   status: PostStatus;
   visibility: PostVisibility;
+  isPinned: boolean;
   images: ImageMetadata[];
   likeCount: number;
   commentCount: number;

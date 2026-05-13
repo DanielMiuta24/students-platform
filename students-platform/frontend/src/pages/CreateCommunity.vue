@@ -155,6 +155,22 @@
                   </option>
                 </select>
               </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Visibility <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="formData.visibility"
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
+                >
+                  <option value="public">Public - Anyone can find and join</option>
+                  <option value="private">Private - Invite-only community</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ formData.visibility === 'public' ? 'Everyone can discover and join your community' : 'Only invited members can join your community' }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -402,9 +418,24 @@
                 </div>
                 <div class="flex-1 text-center sm:text-left">
                   <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{{ formData.name }}</h3>
-                  <span class="inline-block bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-300">
-                    {{ formData.category }}
-                  </span>
+                  <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span class="inline-block bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-300">
+                      {{ formData.category }}
+                    </span>
+                    <span :class="[
+                      'inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border',
+                      formData.visibility === 'public'
+                        ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border-green-300'
+                        : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border-amber-300'
+                    ]">
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path v-if="formData.visibility === 'public'" d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path v-if="formData.visibility === 'public'" fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                        <path v-if="formData.visibility === 'private'" fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                      </svg>
+                      {{ formData.visibility === 'public' ? 'Public' : 'Private' }}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -608,6 +639,7 @@ const formData = ref({
   name: '',
   category: '',
   description: '',
+  visibility: 'public' as 'public' | 'private',
   coverImage: null as File | null,
   invites: [] as string[],
   invitedUsers: [] as string[],
@@ -832,6 +864,7 @@ const createCommunity = async () => {
     apiFormData.append('name', formData.value.name);
     apiFormData.append('category', formData.value.category);
     apiFormData.append('description', formData.value.description);
+    apiFormData.append('visibility', formData.value.visibility);
 
     // Add cover image if present
     if (formData.value.coverImage) {
@@ -878,6 +911,7 @@ const handleCreateAnother = () => {
     name: '',
     category: '',
     description: '',
+    visibility: 'public',
     coverImage: null,
     invites: [],
     invitedUsers: [],

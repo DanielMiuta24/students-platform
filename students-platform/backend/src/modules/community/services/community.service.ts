@@ -95,6 +95,10 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
     }
 
+    // Note: We return the community data even for private communities
+    // The frontend will check membership via canViewCommunityPosts endpoint
+    // and handle display accordingly (showing "access denied" for non-members)
+
     return community;
   }
 
@@ -184,6 +188,21 @@ export class CommunityService {
     // Exclude communities where user is banned (only if userId is a valid string)
     if (userId && userId !== 'undefined' && typeof userId === 'string') {
       query.bannedUsers = { $ne: userId };
+    }
+
+    // Show public communities, plus private communities where user is a member
+    if (userId && userId !== 'undefined' && typeof userId === 'string') {
+      // User is authenticated: show public communities OR private communities where they are a member
+      query.$or = [
+        { visibility: COMMUNITY_VISIBILITY.PUBLIC },
+        {
+          visibility: COMMUNITY_VISIBILITY.PRIVATE,
+          'members.user': userId
+        }
+      ];
+    } else {
+      // User is not authenticated: only show public communities
+      query.visibility = COMMUNITY_VISIBILITY.PUBLIC;
     }
 
     const safeLimit = dto.limit && dto.limit > 0 && dto.limit <= 100 ? dto.limit : 10;
@@ -957,7 +976,7 @@ export class CommunityService {
     }) || false;
   }
 
-  async canAccessCommunity(communityId: string, userId: string): Promise<{ canAccess: boolean; reason?: string }> {
+  async canAccessCommunity(communityId: string, userId?: string): Promise<{ canAccess: boolean; reason?: string }> {
     const community = await CommunityModel.findById(communityId).select('visibility members');
 
     if (!community) {
@@ -968,11 +987,35 @@ export class CommunityService {
       return { canAccess: true };
     }
 
+    // For private communities, user must be authenticated and a member
+    if (!userId) {
+      return { canAccess: false, reason: 'You must be a member to view this private community' };
+    }
+
     if (!this.checkMembership(community, userId)) {
       return { canAccess: false, reason: 'You must be a member to view this private community' };
     }
 
     return { canAccess: true };
+  }
+
+  async canViewCommunityPosts(communityId: string, userId?: string): Promise<{ canView: boolean; isMember: boolean; visibility: string }> {
+    const community = await CommunityModel.findById(communityId).select('visibility members');
+
+    if (!community) {
+      return { canView: false, isMember: false, visibility: 'private' };
+    }
+
+    // Check if user is a member
+    const isMember = userId ? this.checkMembership(community, userId) : false;
+
+    // Private communities: only members can view posts
+    if (community.visibility === COMMUNITY_VISIBILITY.PRIVATE) {
+      return { canView: isMember, isMember, visibility: community.visibility };
+    }
+
+    // Public communities: members can view full content, non-members get blurred/masked preview
+    return { canView: true, isMember, visibility: community.visibility };
   }
 
   async getMemberCommunityIds(userId: string): Promise<string[]> {

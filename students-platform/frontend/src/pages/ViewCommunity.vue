@@ -1,5 +1,33 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <!-- Private Community Access Denied State -->
+  <div v-if="isPrivateCommunityNonMember" class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+      <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center">
+        <svg class="w-10 h-10 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-800 mb-3">Private Community</h1>
+      <p class="text-gray-600 mb-6">This community is private and only accessible to invited members.</p>
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+        <p class="text-sm text-amber-900">
+          <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          You need an invitation to join this community
+        </p>
+      </div>
+      <button
+        @click="router.push('/')"
+        class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200"
+      >
+        Back to Home
+      </button>
+    </div>
+  </div>
+
+  <!-- Community Content (Public or Member Access) -->
+  <div v-else class="min-h-screen bg-gray-100">
     <div class="shadow-md">
       <!-- Cover Image Section -->
       <div class="relative h-40 sm:h-48 md:h-64 overflow-hidden">
@@ -66,11 +94,18 @@
                   <span class="inline-flex items-center px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-white text-blue-700 shadow-sm">
                     {{ communityCategory }}
                   </span>
-                  <span class="inline-flex items-center px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-white text-blue-700 shadow-sm">
+                  <span :class="[
+                    'inline-flex items-center px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold shadow-sm',
+                    communityVisibility === 'public'
+                      ? 'bg-white text-green-700'
+                      : 'bg-white text-amber-700'
+                  ]">
                     <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 sm:mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+                      <path v-if="communityVisibility === 'public'" d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                      <path v-if="communityVisibility === 'public'" fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                      <path v-if="communityVisibility === 'private'" fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
                     </svg>
-                    Public Community
+                    {{ communityVisibility === 'public' ? 'Public' : 'Private' }} Community
                   </span>
                 </div>
 
@@ -156,6 +191,7 @@
                 </button>
 
                 <button
+                  v-if="canInvite"
                   @click="handleInvitePeople"
                   class="px-4 sm:px-4 md:px-6 py-2 md:py-2.5 bg-white text-gray-700 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-sm"
                 >
@@ -279,7 +315,7 @@
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="Search posts..."
+                placeholder="Search in Community..."
                 class="w-full pl-9 sm:pl-10 pr-8 sm:pr-10 py-2 sm:py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
               <button
@@ -307,6 +343,16 @@
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
         <h2 class="text-sm font-semibold text-gray-700 mb-3">Filter by Category</h2>
         <CategoryFilter @change="handleCategoryChange" />
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">Filter by User Type</h2>
+        <UserStatusFilter @change="handleUserTypeChange" />
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">Filter by Community Role</h2>
+        <CommunityRoleFilter @change="handleRoleChange" />
       </div>
 
       <div v-if="pinnedPosts.length > 0" class="mb-4">
@@ -341,6 +387,9 @@
             <PostCard
               :post="post"
               :is-owner="isPostOwner(post)"
+              :hide-community-name="true"
+              :is-community-admin="isAdmin"
+              :author-community-role="getAuthorCommunityRole(post)"
               @update="handlePostUpdate"
               @delete="handlePostDelete"
             />
@@ -356,9 +405,33 @@
 
       <div class="mb-4">
         <CreatePostForm
-          v-if="sessionStore.isAuthenticated"
-          @post-created="handlePostCreated"
+          v-if="sessionStore.isAuthenticated && canPost"
+          :community-id="communityId"
+          @success="handlePostCreated"
         />
+        <div v-else-if="sessionStore.isAuthenticated && isJoined && !canPost" class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg shadow-sm border-2 border-amber-200 p-8 text-center">
+          <svg class="w-16 h-16 mx-auto text-amber-600 mb-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Admin-Only Posting</h3>
+          <p class="text-gray-600 mb-4">Only community admins can create posts in this community</p>
+        </div>
+        <div v-else-if="sessionStore.isAuthenticated && !isJoined" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-sm border-2 border-blue-200 p-8 text-center">
+          <svg class="w-16 h-16 mx-auto text-blue-600 mb-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+          </svg>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Join to Share Your Thoughts</h3>
+          <p class="text-gray-600 mb-4">Become a member of this community to create posts and engage with others</p>
+          <button
+            @click="handleJoinCommunity"
+            class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200 inline-flex items-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Join Community
+          </button>
+        </div>
         <div v-else class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
           <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -422,12 +495,64 @@
         </button>
       </div>
 
+      <!-- Blurred Posts Preview for Public Community Non-Members -->
+      <div v-else-if="isPublicCommunityNonMember && filteredPosts.length > 0" class="space-y-4">
+        <div class="relative">
+          <!-- Blur effect over posts -->
+          <div class="filter blur-md pointer-events-none select-none space-y-4">
+            <PostCard
+              v-for="post in filteredPosts.slice(0, 3)"
+              :key="post.id"
+              :post="post"
+              :is-owner="false"
+              :hide-community-name="true"
+            />
+          </div>
+
+          <!-- Overlay with CTA -->
+          <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-white/60 to-white/90">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center border-2 border-blue-200">
+              <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-3">Join to See Full Content</h3>
+              <p class="text-gray-600 mb-6">Become a member to view all posts and engage with this community</p>
+              <div v-if="sessionStore.isAuthenticated">
+                <button
+                  @click="handleJoinCommunity"
+                  class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200 inline-flex items-center justify-center gap-2"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Join Community
+                </button>
+              </div>
+              <div v-else>
+                <button
+                  @click="router.push('/login')"
+                  class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  Sign In to Join
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regular Posts for Members -->
       <div v-else class="space-y-4">
         <PostCard
           v-for="post in filteredPosts"
           :key="post.id"
           :post="post"
           :is-owner="isPostOwner(post)"
+          :hide-community-name="true"
+          :is-community-admin="isAdmin"
+          :author-community-role="getAuthorCommunityRole(post)"
           @update="handlePostUpdate"
           @delete="handlePostDelete"
         />
@@ -471,6 +596,43 @@
               </div>
             </div>
 
+            <!-- Community Info (Category & Visibility) -->
+            <div class="border-t border-gray-200 pt-6">
+              <h3 class="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Community Info
+              </h3>
+              <div class="flex flex-wrap gap-3">
+                <div class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 border-2 border-blue-200 shadow-sm">
+                  <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  {{ communityCategory }}
+                </div>
+                <div :class="[
+                  'inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold border-2 shadow-sm',
+                  communityVisibility === 'public'
+                    ? 'bg-gradient-to-br from-green-50 to-emerald-100 text-green-700 border-green-200'
+                    : 'bg-gradient-to-br from-amber-50 to-orange-100 text-amber-700 border-amber-200'
+                ]">
+                  <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path v-if="communityVisibility === 'public'" d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path v-if="communityVisibility === 'public'" fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                    <path v-if="communityVisibility === 'private'" fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                  </svg>
+                  {{ communityVisibility === 'public' ? 'Public' : 'Private' }}
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">
+                {{ communityVisibility === 'public'
+                  ? 'Anyone can discover and join this community'
+                  : 'This is an invite-only community'
+                }}
+              </p>
+            </div>
+
             <!-- Community Stats Section -->
             <div class="border-t border-gray-200 pt-6">
               <h3 class="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -480,22 +642,6 @@
                 Community Stats
               </h3>
               <CommunityStatsCard :stats="aboutStats" />
-            </div>
-
-            <!-- Category Section -->
-            <div class="border-t border-gray-200 pt-6">
-              <h3 class="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                Category
-              </h3>
-              <div class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 border-2 border-blue-200 shadow-sm">
-                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-                </svg>
-                {{ communityCategory }}
-              </div>
             </div>
 
             <!-- Founder Section -->
@@ -1315,6 +1461,20 @@
                   </svg>
                   <span class="text-gray-700 font-medium">Created {{ communityCreatedDate }}</span>
                 </div>
+                <div class="flex items-center gap-2 text-sm">
+                  <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-gray-700 font-medium">{{ communityCategory }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                  <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path v-if="communityVisibility === 'public'" d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path v-if="communityVisibility === 'public'" fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                    <path v-if="communityVisibility === 'private'" fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-gray-700 font-medium">{{ communityVisibility === 'public' ? 'Public' : 'Private' }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1333,6 +1493,7 @@
                 <div
                   v-for="(image, index) in recentImages"
                   :key="index"
+                  @click="openPostModal(image.post)"
                   class="aspect-square rounded-lg overflow-hidden bg-gray-100 hover:opacity-90 transition cursor-pointer"
                 >
                   <img
@@ -1893,6 +2054,15 @@
       </div>
     </div>
 
+    <!-- Post Delete Success Toast -->
+    <Toast
+      :show="showPostDeleteSuccess"
+      title="Post deleted"
+      message="Your post has been successfully deleted."
+      type="success"
+      @close="showPostDeleteSuccess = false"
+    />
+
     <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteConfirmModal"
@@ -2073,6 +2243,8 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSessionStore } from '../store/session';
 import CategoryFilter from '../components/CategoryFilter.vue';
+import UserStatusFilter from '../components/UserStatusFilter.vue';
+import CommunityRoleFilter from '../components/CommunityRoleFilter.vue';
 import CreatePostForm from '../components/CreatePostForm.vue';
 import PostCard from '../components/PostCard.vue';
 import PostModal from '../components/PostModal.vue';
@@ -2081,18 +2253,26 @@ import CommunityStatsCard from '../components/CommunityStatsCard.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 import InvitePeopleModal from '../components/InvitePeopleModal.vue';
 import EmptyState from '../components/EmptyState.vue';
+import Toast from '../components/Toast.vue';
 import { getScoredFeed, getCommunityScoredFeed } from '../api/post';
 import type { SafePost } from '../types/post';
 import { useCommunity } from '../composables/useCommunity';
 import { useCommunityMembers } from '../composables/useCommunityMembers';
-import { sendInvitations, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer } from '../api/community';
+import { sendInvitations, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, canViewCommunityPosts } from '../api/community';
 import type { InviteUsersPayload, SafeJoinRequest, CommunityMember } from '../types/community';
+import { COMMUNITY_ROLE } from '../types/community';
 
 const route = useRoute();
 const router = useRouter();
 const sessionStore = useSessionStore();
 
 const communitySlug = computed(() => route.params.slug as string);
+
+// Access control state
+const canViewPosts = ref(false);
+const isPrivateCommunityNonMember = ref(false);
+const isPublicCommunityNonMember = ref(false);
+const checkingAccess = ref(true);
 
 // Use community composable
 const {
@@ -2146,6 +2326,8 @@ const loading = ref(true);
 const loadingMore = ref(false);
 const error = ref<string | null>(null);
 const selectedCategory = ref<string | null>(null);
+const selectedUserType = ref<'Student' | 'StudySeeker' | 'Admin' | null>(null);
+const selectedRole = ref<'admin' | 'member' | null>(null);
 const hasMore = ref(false);
 const nextCursor = ref<string | null>(null);
 const activeTab = ref<'feed' | 'about' | 'members' | 'media' | 'settings'>('feed');
@@ -2205,6 +2387,7 @@ const joinRequests = ref<SafeJoinRequest[]>([]);
 const joinRequestsLoading = ref(false);
 const joinRequestsError = ref<string | null>(null);
 const processingRequestId = ref<string | null>(null);
+const showPostDeleteSuccess = ref(false);
 
 const bannedUsers = ref<CommunityMember[]>([]);
 const bannedUsersLoading = ref(false);
@@ -2222,6 +2405,10 @@ const communityCategory = computed(() => {
   return typeof community.value.category === 'string'
     ? community.value.category
     : community.value.category.name;
+});
+
+const communityVisibility = computed(() => {
+  return community.value?.visibility || 'public';
 });
 
 const communityDescription = computed(() => community.value?.description || '');
@@ -2263,6 +2450,39 @@ const filteredPosts = computed(() => {
       }
       if (typeof post.category === 'object' && post.category !== null) {
         return (post.category as any).id === selectedCategory.value;
+      }
+      return false;
+    });
+  }
+
+  // Filter by user type
+  if (selectedUserType.value) {
+    filtered = filtered.filter(post => {
+      if (typeof post.author === 'object' && post.author !== null) {
+        return (post.author as any).type === selectedUserType.value;
+      }
+      return false;
+    });
+  }
+
+  // Filter by community role
+  if (selectedRole.value) {
+    filtered = filtered.filter(post => {
+      if (typeof post.author === 'object' && post.author !== null) {
+        const authorId = (post.author as any).id;
+
+        // Find the author in the members list to get their role
+        const member = members.value.find(m => m.id === authorId);
+
+        if (!member) return false;
+
+        if (selectedRole.value === 'admin') {
+          // Show founders and admins
+          return member.role === COMMUNITY_ROLE.FOUNDER || member.role === COMMUNITY_ROLE.ADMIN;
+        } else if (selectedRole.value === 'member') {
+          // Show only regular members (not founders or admins)
+          return member.role === COMMUNITY_ROLE.MEMBER;
+        }
       }
       return false;
     });
@@ -2364,8 +2584,18 @@ const handleCategoryChange = (categoryId: string | null) => {
   selectedCategory.value = categoryId;
 };
 
+const handleUserTypeChange = (userType: 'Student' | 'StudySeeker' | 'Admin' | null) => {
+  selectedUserType.value = userType;
+};
+
+const handleRoleChange = (role: 'admin' | 'member' | null) => {
+  selectedRole.value = role;
+};
+
 const handlePostCreated = (newPost: SafePost) => {
+  console.log('Post created event received:', newPost);
   posts.value = [newPost, ...posts.value];
+  console.log('Posts array after adding:', posts.value.length);
 };
 
 const handlePostUpdate = (updatedPost: SafePost) => {
@@ -2377,6 +2607,21 @@ const handlePostUpdate = (updatedPost: SafePost) => {
 
 const handlePostDelete = (postId: string) => {
   posts.value = posts.value.filter(p => p.id !== postId);
+  showPostDeleteSuccess.value = true;
+  setTimeout(() => {
+    showPostDeleteSuccess.value = false;
+  }, 3000);
+};
+
+const getAuthorCommunityRole = (post: SafePost): 'founder' | 'admin' | 'member' | null => {
+  if (typeof post.author !== 'object' || !post.author) return null;
+
+  const authorId = (post.author as any).id;
+  const member = members.value.find(m => m.id === authorId);
+
+  if (!member) return null;
+
+  return member.role as 'founder' | 'admin' | 'member';
 };
 
 const openPostModal = (post: SafePost) => {
@@ -2983,6 +3228,38 @@ const confirmRejectOwnership = async () => {
   }
 };
 
+// Check if user can view posts
+const checkAccess = async () => {
+  try {
+    checkingAccess.value = true;
+    const result = await canViewCommunityPosts(communityId.value);
+
+    canViewPosts.value = result.canView;
+
+    // Reset flags first
+    isPrivateCommunityNonMember.value = false;
+    isPublicCommunityNonMember.value = false;
+
+    // For private communities, non-members cannot view at all
+    if (result.visibility === 'private' && !result.isMember) {
+      isPrivateCommunityNonMember.value = true;
+      canViewPosts.value = false;
+    }
+
+    // For public communities, non-members can view but with restrictions
+    if (result.visibility === 'public' && !result.isMember) {
+      isPublicCommunityNonMember.value = true;
+    }
+  } catch (err: any) {
+    console.error('Failed to check access:', err);
+    // Default to no access on error
+    canViewPosts.value = false;
+    isPrivateCommunityNonMember.value = true;
+  } finally {
+    checkingAccess.value = false;
+  }
+};
+
 onMounted(async () => {
   // Fetch community data
   try {
@@ -2994,12 +3271,39 @@ onMounted(async () => {
       router.push('/');
       return;
     }
+
+    // Check access permissions
+    await checkAccess();
+
+    // For private communities, if user is not a member, show access denied
+    if (isPrivateCommunityNonMember.value) {
+      return;
+    }
   } catch (err: any) {
     console.error('Failed to load community:', err);
+    // Only show error, don't assume it's private - the community might actually not exist
+    return;
   }
 
-  // Fetch posts
-  fetchPosts();
+  // Fetch posts for members, or limited posts for public community non-members
+  if (isJoined.value) {
+    // Members can see all posts
+    fetchPosts();
+  } else if (isPublicCommunityNonMember.value) {
+    // Public non-members see blurred preview - fetch limited posts
+    try {
+      const result = await getCommunityScoredFeed(
+        communityId.value,
+        undefined,
+        3 // Only fetch 3 posts for preview
+      );
+      posts.value = result.posts;
+    } catch (err: any) {
+      console.error('Failed to load preview posts:', err);
+      // If fetching fails for non-members, it's expected for some communities
+      posts.value = [];
+    }
+  }
 
   // Fetch members
   if (activeTab.value === 'members') {
