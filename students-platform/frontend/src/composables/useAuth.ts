@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 import type { LoginForm, RegisterForm, AuthResponse, SafeUser } from '../types/auth';
 import { loginUser, registerUser, logoutUser, getProfile } from '../api/auth';
 import { useSessionStore } from '../store/session';
@@ -10,6 +11,7 @@ export const useAuth = () => {
     const success = ref<string | null>(null);
     const session = useSessionStore();
     const { user, isAuthenticated } = storeToRefs(session);
+    const router = useRouter();
 
     const register = async (form: RegisterForm) => {
         loading.value = true;
@@ -47,6 +49,7 @@ export const useAuth = () => {
             await logoutUser();
             session.clearUser();
             success.value = 'Logged out successfully';
+            router.push('/login');
         } catch (err: any) {
             error.value = 'Logout failed';
         } finally {
