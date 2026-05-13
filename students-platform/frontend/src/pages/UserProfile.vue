@@ -555,16 +555,47 @@ onMounted(() => {
 
   const postSlug = route.params.slug as string | undefined;
   if (postSlug) {
-    setTimeout(() => {
-      const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
-      if (postElement) {
-        postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        postElement.classList.add('highlight-post');
+    const checkAndRedirectCommunityPost = async () => {
+      try {
+        const allPosts = posts.value;
+        const targetPost = allPosts.find(p => p.slug === postSlug);
+
+        if (targetPost?.community) {
+          const communitySlug = typeof targetPost.community === 'string'
+            ? targetPost.community
+            : targetPost.community.slug;
+
+          if (communitySlug) {
+            router.push(`/community/${communitySlug}`);
+            return;
+          }
+        }
+
         setTimeout(() => {
-          postElement.classList.remove('highlight-post');
-        }, 3000);
+          const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
+          if (postElement) {
+            postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            postElement.classList.add('highlight-post');
+            setTimeout(() => {
+              postElement.classList.remove('highlight-post');
+            }, 3000);
+          }
+        }, 500);
+      } catch (err) {
+        console.error('Error checking community post:', err);
       }
-    }, 1000);
+    };
+
+    if (posts.value.length > 0) {
+      checkAndRedirectCommunityPost();
+    } else {
+      const unwatch = watch(posts, (newPosts) => {
+        if (newPosts.length > 0) {
+          checkAndRedirectCommunityPost();
+          unwatch();
+        }
+      });
+    }
   }
 });
 
