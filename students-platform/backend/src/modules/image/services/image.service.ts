@@ -98,6 +98,11 @@ export class ImageService {
     await ImageModel.findByIdAndDelete(imageId);
   }
 
+  async getImageById(imageId: string): Promise<{ publicId: string } | null> {
+    const image = await ImageModel.findById(imageId).select('publicId').exec();
+    return image ? { publicId: image.publicId } : null;
+  }
+
   async validateImagesOwnership(urls: string[], userId: string): Promise<boolean> {
     const count = await ImageModel.countDocuments({
       url: { $in: urls },

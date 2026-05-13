@@ -107,7 +107,7 @@ const variantClasses = computed(() => {
   const variants = {
     default: {
       header: 'bg-gradient-to-r from-gray-600 to-gray-700',
-      iconBg: 'bg-white bg-opacity-20',
+      iconBg: 'bg-white/20',
       iconColor: 'text-white',
       title: 'text-white',
       subtitle: 'text-gray-100',
@@ -115,15 +115,15 @@ const variantClasses = computed(() => {
     },
     primary: {
       header: 'bg-gradient-to-r from-blue-500 to-indigo-600',
-      iconBg: 'bg-white bg-opacity-20',
+      iconBg: 'bg-white/20',
       iconColor: 'text-white',
       title: 'text-white',
-      subtitle: 'text-white text-opacity-90',
+      subtitle: 'text-white/90',
       closeButton: 'text-white hover:bg-white',
     },
     success: {
       header: 'bg-gradient-to-r from-green-500 to-emerald-600',
-      iconBg: 'bg-white bg-opacity-20',
+      iconBg: 'bg-white/20',
       iconColor: 'text-white',
       title: 'text-white',
       subtitle: 'text-green-100',
@@ -131,7 +131,7 @@ const variantClasses = computed(() => {
     },
     warning: {
       header: 'bg-gradient-to-r from-amber-500 to-orange-600',
-      iconBg: 'bg-white bg-opacity-20',
+      iconBg: 'bg-white/20',
       iconColor: 'text-white',
       title: 'text-white',
       subtitle: 'text-amber-100',
@@ -139,7 +139,7 @@ const variantClasses = computed(() => {
     },
     danger: {
       header: 'bg-gradient-to-r from-red-500 to-red-600',
-      iconBg: 'bg-white bg-opacity-20',
+      iconBg: 'bg-white/20',
       iconColor: 'text-white',
       title: 'text-white',
       subtitle: 'text-red-100',
@@ -149,7 +149,7 @@ const variantClasses = computed(() => {
   return variants[props.variant];
 });
 
-const iconBgClass = computed(() => props.headerClass || variantClasses.value.iconBg);
+const iconBgClass = computed(() => variantClasses.value.iconBg);
 const iconColorClass = computed(() => variantClasses.value.iconColor);
 const titleColorClass = computed(() => variantClasses.value.title);
 const subtitleColorClass = computed(() => variantClasses.value.subtitle);

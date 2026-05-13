@@ -127,9 +127,31 @@ export class CommunityService {
 
     let coverImageId: string | undefined | null;
     if (coverImageFile) {
+      if (community.coverImage) {
+        try {
+          const oldImageId = community.coverImage.toString();
+          const oldImage = await imageService.getImageById(oldImageId);
+          if (oldImage) {
+            await imageService.deleteImage(oldImage.publicId);
+            await imageService.deleteImageFromDb(oldImageId);
+          }
+        } catch (err) {
+        }
+      }
       const uploadResult = await imageService.uploadImagesForPost([coverImageFile], userId);
       coverImageId = uploadResult[0]?.imageId;
-    } else if (data.coverImage === '') {
+    } else if (data.coverImage === '' || data.coverImage === 'null' || data.coverImage === null) {
+      if (community.coverImage) {
+        try {
+          const oldImageId = community.coverImage.toString();
+          const oldImage = await imageService.getImageById(oldImageId);
+          if (oldImage) {
+            await imageService.deleteImage(oldImage.publicId);
+            await imageService.deleteImageFromDb(oldImageId);
+          }
+        } catch (err) {
+        }
+      }
       coverImageId = null;
     }
 
