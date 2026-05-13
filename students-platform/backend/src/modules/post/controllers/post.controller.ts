@@ -343,6 +343,19 @@ class PostController {
       return this.handleError(err, res, next);
     }
   };
+
+  getPostsCountByAuthor = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const count = await postService.getPostsCountByAuthor(req.user!.id);
+      return res.status(PostController.HTTP_STATUS.OK).json({ count });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
 }
 
 export const postController = new PostController();

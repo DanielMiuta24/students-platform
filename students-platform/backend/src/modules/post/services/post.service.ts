@@ -734,6 +734,14 @@ export class PostService {
       safePost.authorCommunityRole = null;
     }
   }
+
+  async getPostsCountByAuthor(authorId: string): Promise<number> {
+    const count = await PostModel.countDocuments({
+      author: authorId,
+      status: 'active'
+    });
+    return count;
+  }
 }
 
 export const postService = new PostService();

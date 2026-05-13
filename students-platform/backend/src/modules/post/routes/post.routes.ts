@@ -14,6 +14,8 @@ import {
 
 const router = Router();
 
+router.get('/my-posts/count', authMiddleware, postController.getPostsCountByAuthor);
+
 router.get('/feed', authMiddleware, postController.getFeed);
 
 router.get('/feed/scored', authMiddleware, postController.getScoredFeed);
