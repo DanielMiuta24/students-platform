@@ -10,6 +10,7 @@ jest.mock('../../../modules/image/services');
 jest.mock('../../../modules/post/services', () => ({
   postService: {
     deletePostsByCommunity: jest.fn().mockResolvedValue(undefined),
+    deletePostsByAuthorInCommunity: jest.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -63,10 +64,17 @@ describe('CommunityService', () => {
       expect(mockCommunity.save).toHaveBeenCalled();
     });
 
-    it('should throw error when slug already exists', async () => {
-      (CommunityModel.exists as jest.Mock).mockResolvedValue(true);
+    it('should create community with modified slug when slug exists', async () => {
+      (CommunityModel.exists as jest.Mock)
+        .mockResolvedValueOnce(true)  // First check - base slug exists
+        .mockResolvedValueOnce(false); // Second check - slug with suffix doesn't exist
+      (CategoryModel.findOne as jest.Mock).mockResolvedValue({ _id: mockCategoryId, isActive: true });
+      (CommunityModel as any).mockImplementation(() => mockCommunity);
 
-      await expect(communityService.createCommunity(createData)).rejects.toThrow(COMMUNITY_ERROR.SLUG_EXISTS);
+      const result = await communityService.createCommunity(createData);
+
+      expect(CommunityModel.exists).toHaveBeenCalled();
+      expect(mockCommunity.save).toHaveBeenCalled();
     });
 
     it('should throw error when category not found', async () => {
@@ -93,19 +101,19 @@ describe('CommunityService', () => {
 
   describe('getCommunityById', () => {
     it('should return community when found', async () => {
-      (CommunityModel.findById as jest.Mock).mockReturnValue({
+      (CommunityModel.findOne as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue(mockCommunity),
       });
 
       const result = await communityService.getCommunityById(mockCommunityId);
 
-      expect(CommunityModel.findById).toHaveBeenCalledWith(mockCommunityId);
+      expect(CommunityModel.findOne).toHaveBeenCalledWith({ slug: mockCommunityId });
       expect(result).toEqual(mockCommunity);
     });
 
     it('should throw error when community not found', async () => {
-      (CommunityModel.findById as jest.Mock).mockReturnValue({
+      (CommunityModel.findOne as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue(null),
       });
@@ -317,7 +325,9 @@ describe('CommunityService', () => {
           { user: mockUserId, role: COMMUNITY_ROLE.MEMBER, joinedAt: new Date() }
         ]
       };
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(communityWithAdmin);
+      (CommunityModel.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(communityWithAdmin)
+      });
       (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue({});
 
       await communityService.removeMember(mockCommunityId, mockUserId, adminUser);
@@ -326,7 +336,9 @@ describe('CommunityService', () => {
     });
 
     it('should throw error when trying to remove founder', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockCommunity)
+      });
 
       await expect(communityService.removeMember(mockCommunityId, mockFounderId, mockFounderId)).rejects.toThrow(COMMUNITY_ERROR.CANNOT_REMOVE_FOUNDER);
     });
@@ -341,7 +353,9 @@ describe('CommunityService', () => {
           { user: mockUserId, role: COMMUNITY_ROLE.MEMBER, joinedAt: new Date() }
         ]
       };
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(communityWithUser);
+      (CommunityModel.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(communityWithUser)
+      });
       (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue({});
 
       await communityService.banUser(mockCommunityId, mockUserId, mockFounderId);
@@ -365,7 +379,9 @@ describe('CommunityService', () => {
           { user: adminUser, role: COMMUNITY_ROLE.ADMIN, joinedAt: new Date() }
         ]
       };
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(communityWithAdmin);
+      (CommunityModel.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(communityWithAdmin)
+      });
 
       await expect(communityService.banUser(mockCommunityId, adminUser, mockFounderId)).rejects.toThrow(COMMUNITY_ERROR.CANNOT_BAN_ADMIN);
     });
@@ -380,7 +396,9 @@ describe('CommunityService', () => {
           { user: mockUserId, role: COMMUNITY_ROLE.MEMBER, joinedAt: new Date() }
         ]
       };
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(communityWithUser);
+      (CommunityModel.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(communityWithUser)
+      });
       (CommunityModel.findOneAndUpdate as jest.Mock).mockResolvedValue({});
 
       await communityService.updateMemberRole(mockCommunityId, mockUserId, COMMUNITY_ROLE.ADMIN, mockFounderId);
@@ -396,7 +414,9 @@ describe('CommunityService', () => {
           { user: mockUserId, role: COMMUNITY_ROLE.MEMBER, joinedAt: new Date() }
         ]
       };
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(communityWithUser);
+      (CommunityModel.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(communityWithUser)
+      });
 
       await expect(communityService.updateMemberRole(mockCommunityId, mockUserId, COMMUNITY_ROLE.ADMIN, mockUserId)).rejects.toThrow(COMMUNITY_ERROR.UNAUTHORIZED);
     });

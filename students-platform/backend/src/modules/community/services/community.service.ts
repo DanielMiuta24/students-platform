@@ -872,10 +872,10 @@ export class CommunityService {
     // Only return transfer data if user is the founder (who sent it) or the target (who should accept/reject it)
     const currentOwnerId = typeof transfer.currentOwner === 'object'
       ? (transfer.currentOwner as any)._id.toString()
-      : transfer.currentOwner.toString();
+      : (transfer.currentOwner as any)?.toString();
     const newOwnerId = typeof transfer.newOwner === 'object'
       ? (transfer.newOwner as any)._id.toString()
-      : transfer.newOwner.toString();
+      : (transfer.newOwner as any)?.toString();
 
     if (userId !== currentOwnerId && userId !== newOwnerId) {
       return { transfer: null };
@@ -977,6 +977,9 @@ export class CommunityService {
       ? transfer.community
       : transfer.community?.toString();
 
+    if (!communityId) {
+      throw new Error(COMMUNITY_ERROR.NOT_FOUND);
+    }
 
     await OwnershipTransferModel.findByIdAndUpdate(transferId, { status: 'accepted' });
 
@@ -1104,7 +1107,7 @@ export class CommunityService {
       return null;
     }
 
-    if (community.founder.toString() === userId) {
+    if (community.founder?.toString() === userId) {
       return COMMUNITY_ROLE.FOUNDER;
     }
 

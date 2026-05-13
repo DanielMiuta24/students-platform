@@ -5,6 +5,11 @@ import { COMMUNITY_ERROR } from '../../../modules/community/constants';
 
 jest.mock('../../../modules/community/services');
 jest.mock('../../../modules/community/mappers');
+jest.mock('../../../modules/community/models', () => ({
+  CommunityJoinRequestModel: {
+    findOne: jest.fn(),
+  },
+}));
 
 describe('CommunityController', () => {
   let mockReq: any;
@@ -84,10 +89,12 @@ describe('CommunityController', () => {
 
   describe('getCommunityById', () => {
     it('should return community', async () => {
+      const { CommunityJoinRequestModel } = require('../../../modules/community/models');
       mockReq.params.id = 'comm123';
 
       (communityService.getCommunityById as jest.Mock).mockResolvedValue(mockCommunity);
       (CommunityMapper.toSafeCommunity as jest.Mock).mockReturnValue(mockCommunity);
+      (CommunityJoinRequestModel.findOne as jest.Mock).mockResolvedValue(null);
 
       await communityController.getCommunityById(mockReq, mockRes, mockNext);
 

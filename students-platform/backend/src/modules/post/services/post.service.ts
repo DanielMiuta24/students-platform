@@ -6,7 +6,8 @@ import type {
   CursorPostsResult,
   GetScoredFeedDTO,
   ScoredFeedResult,
-  ScoredPost
+  ScoredPost,
+  SafePost
 } from '../types/post.types';
 import { POST_ERROR, POST_VALIDATION } from '../constants/post.constants';
 import { PostQueryBuilder, PostCreateBuilder, PostUpdateBuilder } from '../builders';

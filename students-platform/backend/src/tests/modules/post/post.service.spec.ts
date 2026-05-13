@@ -27,10 +27,16 @@ describe('PostService', () => {
         authorId: 'user123',
       };
 
+      const savedPostMock = {
+        _id: 'post123',
+        ...mockPostData,
+        populate: jest.fn().mockReturnThis(),
+      };
+
       const mockPost = {
         _id: 'post123',
         ...mockPostData,
-        save: jest.fn().mockResolvedValue({ _id: 'post123', ...mockPostData }),
+        save: jest.fn().mockResolvedValue(savedPostMock),
       };
 
       (categoryService.isActiveCategory as jest.Mock).mockResolvedValue(true);
