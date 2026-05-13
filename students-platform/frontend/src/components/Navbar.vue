@@ -87,10 +87,8 @@
             </div>
           </div>
 
-          <!-- Notifications Button (Placeholder) -->
-          <button class="notifications-button" title="Notifications">
-            <el-icon><Bell /></el-icon>
-          </button>
+          <!-- Notifications Dropdown -->
+          <NotificationDropdown />
 
           <el-dropdown>
             <span class="user-name">
@@ -271,6 +269,7 @@ import { api } from '../services/api';
 import ChatBox from './ChatBox.vue';
 import ConversationList from './ConversationList.vue';
 import NewConversationDialog from './NewConversationDialog.vue';
+import NotificationDropdown from './NotificationDropdown.vue';
 
 const { activeIndex } = useActiveMenu();
 const { navigate } = useNavigation();

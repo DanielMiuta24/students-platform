@@ -20,6 +20,7 @@ import { imageService, type UploadedFile } from '../../image/services';
 import { commentService } from '../../comment/services';
 import { likeService } from '../../like/services';
 import { followService } from '../../follow/services';
+import { notificationService } from '../../notification/services';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
@@ -56,6 +57,21 @@ export class PostService {
 
     if (data.communityId && savedPost.status === 'published') {
       await communityService.incrementPostCount(data.communityId);
+
+      const community = await communityService.getCommunityById(data.communityId, data.authorId);
+      const communityMemberIds = community.members
+        ?.filter((m: any) => m.user.toString() !== data.authorId)
+        .map((m: any) => m.user.toString()) || [];
+
+      for (const memberId of communityMemberIds) {
+        await notificationService.createNotification({
+          recipientId: memberId,
+          actorId: data.authorId,
+          type: 'community_post',
+          targetModel: 'Post',
+          targetId: savedPost._id.toString(),
+        }).catch(err => console.error('Failed to create community post notification:', err));
+      }
     }
 
     // Populate author, category, community, and images before returning

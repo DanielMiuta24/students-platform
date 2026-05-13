@@ -4,6 +4,7 @@ import { LIKE_ERROR } from '../constants';
 import { PostModel } from '../../post/models';
 import { CommentModel } from '../../comment/models';
 import { LikeBuilder } from '../builders';
+import { notificationService } from '../../notification/services';
 
 export class LikeService {
   async like(data: CreateLikeDTO): Promise<LikeDoc> {
@@ -30,6 +31,17 @@ export class LikeService {
     await like.save();
 
     await this.incrementLikeCount(data);
+
+    const entityOwnerId = entity.author?.toString();
+    if (entityOwnerId && entityOwnerId !== data.userId) {
+      await notificationService.createNotification({
+        recipientId: entityOwnerId,
+        actorId: data.userId,
+        type: 'like',
+        targetModel: data.likeableType === 'Post' ? 'Post' : 'Comment',
+        targetId: data.likeableId,
+      }).catch(err => console.error('Failed to create like notification:', err));
+    }
 
     return like;
   }

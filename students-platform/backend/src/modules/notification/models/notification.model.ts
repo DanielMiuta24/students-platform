@@ -10,20 +10,16 @@ import {
   TARGET_MODELS,
   type NotificationType,
   type TargetModel,
-} from '@/shared/types';
+} from '../../../shared/types/domain';
 
 const NotificationSchema = new Schema(
   {
     recipient: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     actor:     { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
-    type: { type: String, enum: NOTIFICATION_TYPES, required: true, index: true } as {
-      type: String; enum: readonly NotificationType[];
-    },
+    type: { type: String, enum: NOTIFICATION_TYPES, required: true, index: true },
 
-    targetModel: { type: String, enum: TARGET_MODELS, required: true } as {
-      type: String; enum: readonly TargetModel[];
-    },
+    targetModel: { type: String, enum: TARGET_MODELS, required: true },
 
     target: {
       type: Schema.Types.ObjectId,

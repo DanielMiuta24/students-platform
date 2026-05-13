@@ -2,6 +2,7 @@ import { CommentModel, type CommentDoc } from '../models';
 import { PostModel } from '../../post/models';
 import { LikeModel } from '../../like/models';
 import { realtimeService } from '../../realtime/services';
+import { notificationService } from '../../notification/services';
 
 export interface CreateCommentDTO {
   postId: string;
@@ -62,18 +63,39 @@ export class CommentService {
 
     await comment.save();
 
-    // Increment the post's comment count
     await PostModel.findByIdAndUpdate(data.postId, { $inc: { commentCount: 1 } });
 
-    // Populate author data before returning
     await comment.populate('author', 'name username avatar');
 
-    // Emit realtime event
     realtimeService.publishToRoom('post', data.postId, 'comment:created', {
       id: comment._id.toString(),
       timestamp: new Date(),
       data: this.toSafeComment(comment),
     });
+
+    if (data.parentCommentId) {
+      const parentComment = await CommentModel.findById(data.parentCommentId).select('author');
+      if (parentComment && parentComment.author.toString() !== data.authorId) {
+        await notificationService.createNotification({
+          recipientId: parentComment.author.toString(),
+          actorId: data.authorId,
+          type: 'reply',
+          targetModel: 'Comment',
+          targetId: comment._id.toString(),
+        }).catch(err => console.error('Failed to create reply notification:', err));
+      }
+    } else {
+      const post = await PostModel.findById(data.postId).select('author');
+      if (post && post.author && post.author.toString() !== data.authorId) {
+        await notificationService.createNotification({
+          recipientId: post.author.toString(),
+          actorId: data.authorId,
+          type: 'comment',
+          targetModel: 'Comment',
+          targetId: comment._id.toString(),
+        }).catch(err => console.error('Failed to create comment notification:', err));
+      }
+    }
 
     return comment;
   }

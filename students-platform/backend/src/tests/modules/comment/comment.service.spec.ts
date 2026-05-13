@@ -6,10 +6,23 @@ import { LikeModel } from '../../../modules/like/models';
 jest.mock('../../../modules/comment/models');
 jest.mock('../../../modules/post/models');
 jest.mock('../../../modules/like/models');
+jest.mock('../../../modules/notification/services/notification.service', () => ({
+  notificationService: {
+    createNotification: jest.fn().mockResolvedValue({}),
+  },
+}));
 
 describe('CommentService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Setup default mocks to prevent undefined errors
+    (PostModel.findById as jest.Mock) = jest.fn().mockReturnValue({
+      select: jest.fn().mockResolvedValue(null),
+    });
+    (CommentModel.findById as jest.Mock) = jest.fn().mockReturnValue({
+      select: jest.fn().mockResolvedValue(null),
+    });
   });
 
   describe('createComment', () => {
@@ -33,6 +46,12 @@ describe('CommentService', () => {
 
     it('should create a comment successfully', async () => {
       (PostModel.exists as jest.Mock).mockResolvedValue(true);
+      (PostModel.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue({
+          _id: '507f1f77bcf86cd799439011',
+          author: '507f1f77bcf86cd799439099',
+        }),
+      });
       (CommentModel as any).mockImplementation(() => mockSavedComment);
 
       const result = await commentService.createComment(mockCommentData);
@@ -60,6 +79,12 @@ describe('CommentService', () => {
 
       (PostModel.exists as jest.Mock).mockResolvedValue(true);
       (CommentModel.exists as jest.Mock).mockResolvedValue(true);
+      (CommentModel.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue({
+          _id: '507f1f77bcf86cd799439014',
+          author: '507f1f77bcf86cd799439099',
+        }),
+      });
       (CommentModel as any).mockImplementation(() => mockSavedComment);
 
       await commentService.createComment(dataWithParent);
@@ -92,6 +117,12 @@ describe('CommentService', () => {
       };
 
       (PostModel.exists as jest.Mock).mockResolvedValue(true);
+      (PostModel.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue({
+          _id: '507f1f77bcf86cd799439011',
+          author: '507f1f77bcf86cd799439099',
+        }),
+      });
       const mockConstructor = jest.fn();
       (CommentModel as any).mockImplementation(mockConstructor);
       mockConstructor.mockReturnValue(mockSavedComment);

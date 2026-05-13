@@ -1,6 +1,7 @@
 import { User, type UserDoc } from '../../user/models';
 import type { FollowDTO, SafeFollow, FollowStats, PaginatedFollowResult } from '../types';
 import { FOLLOW_ERROR } from '../constants';
+import { notificationService } from '../../notification/services';
 
 export class FollowService {
   async follow(data: FollowDTO): Promise<void> {
@@ -39,6 +40,14 @@ export class FollowService {
     if (!followerUpdate || !followingUpdate) {
       throw new Error(FOLLOW_ERROR.USER_NOT_FOUND);
     }
+
+    await notificationService.createNotification({
+      recipientId: followingId,
+      actorId: followerId,
+      type: 'follow',
+      targetModel: 'User',
+      targetId: followerId,
+    }).catch(err => console.error('Failed to create follow notification:', err));
   }
 
   async unfollow(data: FollowDTO): Promise<void> {

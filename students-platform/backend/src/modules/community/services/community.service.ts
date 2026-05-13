@@ -1,6 +1,7 @@
 import { CommunityModel, type CommunityDoc, CommunityInvitationModel, CommunityJoinRequestModel, OwnershipTransferModel } from '../models';
 import { categoryService } from '../../category/services';
 import { imageService } from '../../image/services';
+import { notificationService } from '../../notification/services';
 
 import type {
   CreateCommunityDTO,
@@ -311,6 +312,17 @@ export class CommunityService {
       .populate('members.user', 'name username avatar type')
       .exec();
 
+    const founderId = community.founder?.toString();
+    if (founderId && founderId !== userId) {
+      await notificationService.createNotification({
+        recipientId: founderId,
+        actorId: userId,
+        type: 'community_join',
+        targetModel: 'Community',
+        targetId: communityId,
+      }).catch(err => console.error('Failed to create community join notification:', err));
+    }
+
     return updated!;
   }
 
@@ -425,6 +437,14 @@ export class CommunityService {
           status: 'pending',
           expiresAt,
         });
+
+        await notificationService.createNotification({
+          recipientId: recipientUserId,
+          actorId: userId,
+          type: 'community_invite',
+          targetModel: 'Community',
+          targetId: communityId,
+        }).catch(err => console.error('Failed to create community invite notification:', err));
       }
     }
 

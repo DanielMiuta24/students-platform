@@ -96,7 +96,7 @@
 import { ref, onMounted, h } from 'vue';
 import { api } from '../services/api';
 import { deletePost } from '../api/post';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import DashboardGeneral from '../components/dashboard/DashboardGeneral.vue';
 import DashboardChangePassword from '../components/dashboard/DashboardChangePassword.vue';
 import DashboardStudentStatus from '../components/dashboard/DashboardStudentStatus.vue';
@@ -109,6 +109,7 @@ import EditPostModal from '../components/EditPostModal.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 
 const router = useRouter();
+const route = useRoute();
 const activeTab = ref('general');
 const user = ref<any>(null);
 const savedUniversities = ref<any[]>([]);
@@ -183,6 +184,13 @@ const tabs = [
 ];
 
 onMounted(async () => {
+  if (route.query.tab && typeof route.query.tab === 'string') {
+    const tabExists = tabs.some(tab => tab.id === route.query.tab);
+    if (tabExists) {
+      activeTab.value = route.query.tab;
+    }
+  }
+
   await fetchUserProfile();
   fetchSavedUniversitiesCount();
   fetchCommunitiesCount();

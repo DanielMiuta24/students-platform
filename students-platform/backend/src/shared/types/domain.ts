@@ -14,8 +14,11 @@ export const NOTIFICATION_TYPES = [
 'view',
 'message',
 'new_post',
+'community_join',
+'community_post',
+'community_invite',
 ] as const;
 
 export type NotificationType = typeof NOTIFICATION_TYPES[number];
-export const TARGET_MODELS = ['Post', 'Comment', 'User', 'Message'] as const;
+export const TARGET_MODELS = ['Post', 'Comment', 'User', 'Message', 'Community'] as const;
 export type TargetModel = typeof TARGET_MODELS[number];
