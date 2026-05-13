@@ -211,7 +211,7 @@
                 :key="draft.id"
                 class="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300"
               >
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4">
                   <div class="flex justify-between items-start">
                     <div class="flex-1">
                       <h3 class="font-bold text-gray-900 text-lg mb-1">{{ draft.title }}</h3>
@@ -232,10 +232,6 @@
                     </div>
                     <span class="px-2.5 py-1 bg-amber-400 text-amber-900 text-xs font-bold rounded-full">DRAFT</span>
                   </div>
-                </div>
-
-                <div class="px-6 py-4">
-                  <p class="text-sm text-gray-700 leading-relaxed line-clamp-3">{{ getPlainText(draft.content) }}</p>
                 </div>
 
                 <div class="px-6 py-3 bg-gray-50 flex items-center gap-2">
