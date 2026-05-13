@@ -456,11 +456,17 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
     }
 
-    if (!this.isAdmin(community, userId)) {
+    const recipientUserId =
+      typeof invitation.recipientUser === 'string' ? invitation.recipientUser : invitation.recipientUser?.toString();
+
+    const isRecipient = recipientUserId === userId;
+    const isAdmin = this.isAdmin(community, userId);
+
+    if (!isAdmin && !isRecipient) {
       throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
     }
 
-    await CommunityInvitationModel.findByIdAndUpdate(invitationId, { status: 'cancelled' });
+    await CommunityInvitationModel.findByIdAndDelete(invitationId);
   }
 
   async acceptInvitation(invitationId: string, userId: string) {
@@ -493,7 +499,7 @@ export class CommunityService {
 
     await this.joinCommunity(community._id.toString(), userId);
 
-    await CommunityInvitationModel.findByIdAndUpdate(invitationId, { status: 'accepted' });
+    await CommunityInvitationModel.findByIdAndDelete(invitationId);
 
     return community;
   }
