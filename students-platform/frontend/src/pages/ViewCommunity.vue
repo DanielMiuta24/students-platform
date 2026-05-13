@@ -967,30 +967,31 @@
         </div>
 
         <div class="p-4 sm:p-6 md:p-8">
-          <div v-if="recentImages.length > 0">
+          <div v-if="allImages.length > 0">
             <div class="mb-3 sm:mb-4 flex items-center justify-between">
-              <p class="text-sm text-gray-600 font-medium">{{ recentImages.length }} media items</p>
+              <p class="text-sm text-gray-600 font-medium">{{ allImages.length }} media items</p>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
               <div
-                v-for="(image, index) in recentImages"
+                v-for="(image, index) in displayedImages"
                 :key="index"
                 @click="openPostModal(image.post)"
-                class="aspect-square rounded-xl overflow-hidden bg-gray-100 hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer group relative"
+                class="aspect-square rounded-xl overflow-hidden hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer group relative"
               >
                 <img
                   :src="image.url"
                   :alt="image.alt || 'Community image'"
-                  class="w-full h-full object-cover group-hover:brightness-95"
+                  class="w-full h-full object-cover"
                 />
-                <!-- Overlay on hover -->
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
-                  <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </div>
               </div>
+            </div>
+            <div v-if="hasMoreImages" class="mt-6 text-center">
+              <button
+                @click="loadMoreImages"
+                class="inline-flex items-center px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+              >
+                Load More
+              </button>
             </div>
           </div>
           <div v-else class="text-center py-16">
@@ -1482,13 +1483,20 @@
           </div>
 
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="p-4 border-b border-gray-200 bg-gray-50">
+            <div class="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
               <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 Recent Pictures
               </h2>
+              <button
+                v-if="recentImages.length > 0"
+                @click="navigateToMediaTab"
+                class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
+              >
+                View All
+              </button>
             </div>
             <div class="p-4">
               <div v-if="recentImages.length > 0" class="grid grid-cols-3 gap-2">
@@ -1496,7 +1504,7 @@
                   v-for="(image, index) in recentImages"
                   :key="index"
                   @click="openPostModal(image.post)"
-                  class="aspect-square rounded-lg overflow-hidden bg-gray-100 hover:opacity-90 transition cursor-pointer"
+                  class="aspect-square rounded-lg overflow-hidden hover:opacity-90 transition cursor-pointer"
                 >
                   <img
                     :src="image.url"
@@ -2279,13 +2287,11 @@ const sessionStore = useSessionStore();
 
 const communitySlug = computed(() => route.params.slug as string);
 
-// Access control state
 const canViewPosts = ref(false);
 const isPrivateCommunityNonMember = ref(false);
 const isPublicCommunityNonMember = ref(false);
 const checkingAccess = ref(true);
 
-// Use community composable
 const {
   community,
   loading: communityLoading,
@@ -2342,6 +2348,10 @@ const selectedRole = ref<'admin' | 'member' | null>(null);
 const hasMore = ref(false);
 const nextCursor = ref<string | null>(null);
 const activeTab = ref<'feed' | 'about' | 'members' | 'media' | 'settings'>('feed');
+
+const navigateToMediaTab = () => {
+  activeTab.value = 'media';
+};
 const searchQuery = ref('');
 const showJoinedDropdown = ref(false);
 const showLeaveConfirmation = ref(false);
@@ -2388,6 +2398,7 @@ const showPostModal = ref(false);
 const selectedPost = ref<SafePost | null>(null);
 const showEditPostModal = ref(false);
 const editingPost = ref<SafePost | null>(null);
+const displayedImagesCount = ref(20);
 const hoveredJoinButton = ref(false);
 const showDeleteConfirmModal = ref(false);
 const deleteConfirmText = ref('');
@@ -2408,7 +2419,6 @@ const unbanningUserId = ref<string | null>(null);
 
 const pinnedPosts = ref<SafePost[]>([]);
 
-// Computed properties based on backend data
 const communityId = computed(() => community.value?.id || '');
 
 const communityName = computed(() => community.value?.name || 'Community');
@@ -2455,7 +2465,6 @@ const aboutStats = computed(() => [
 const filteredPosts = computed(() => {
   let filtered = posts.value;
 
-  // Filter by category
   if (selectedCategory.value) {
     filtered = filtered.filter(post => {
       if (typeof post.category === 'string') {
@@ -2468,7 +2477,6 @@ const filteredPosts = computed(() => {
     });
   }
 
-  // Filter by user type
   if (selectedUserType.value) {
     filtered = filtered.filter(post => {
       if (typeof post.author === 'object' && post.author !== null) {
@@ -2478,22 +2486,18 @@ const filteredPosts = computed(() => {
     });
   }
 
-  // Filter by community role
   if (selectedRole.value) {
     filtered = filtered.filter(post => {
       if (typeof post.author === 'object' && post.author !== null) {
         const authorId = (post.author as any).id;
 
-        // Find the author in the members list to get their role
         const member = members.value.find(m => m.id === authorId);
 
         if (!member) return false;
 
         if (selectedRole.value === 'admin') {
-          // Show founders and admins
           return member.role === COMMUNITY_ROLE.FOUNDER || member.role === COMMUNITY_ROLE.ADMIN;
         } else if (selectedRole.value === 'member') {
-          // Show only regular members (not founders or admins)
           return member.role === COMMUNITY_ROLE.MEMBER;
         }
       }
@@ -2501,7 +2505,6 @@ const filteredPosts = computed(() => {
     });
   }
 
-  // Filter by search query
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(post => {
@@ -2520,10 +2523,9 @@ const filteredPosts = computed(() => {
   return filtered;
 });
 
-const recentImages = computed(() => {
+const allImages = computed(() => {
   const images: Array<{ url: string; alt?: string; post: SafePost; imageIndex: number }> = [];
 
-  // Extract images from posts
   for (const post of filteredPosts.value) {
     if (post.images && Array.isArray(post.images)) {
       for (let i = 0; i < post.images.length; i++) {
@@ -2536,16 +2538,29 @@ const recentImages = computed(() => {
             imageIndex: i,
           });
         }
-        if (images.length >= 12) break; // Show max 12 images (4x3 grid)
       }
     }
-    if (images.length >= 12) break;
   }
 
   return images;
 });
 
-// Mock data for friends, following, and followers (TODO: Replace with actual API call)
+const displayedImages = computed(() => {
+  return allImages.value.slice(0, displayedImagesCount.value);
+});
+
+const hasMoreImages = computed(() => {
+  return allImages.value.length > displayedImagesCount.value;
+});
+
+const recentImages = computed(() => {
+  return allImages.value.slice(0, 6);
+});
+
+const loadMoreImages = () => {
+  displayedImagesCount.value += 20;
+};
+
 const isPostOwner = (post: SafePost): boolean => {
   if (!sessionStore.user) return false;
 
@@ -2615,10 +2630,8 @@ const handlePostEdit = (post: SafePost) => {
 };
 
 const handlePostEdited = (updatedPost: SafePost) => {
-  // Update in posts array - replace the old post with the updated one
   posts.value = posts.value.map(p => p.id === updatedPost.id ? updatedPost : p);
 
-  // Update pinned posts if the edited post was pinned
   if (pinnedPosts.value.some(p => p.id === updatedPost.id)) {
     pinnedPosts.value = pinnedPosts.value.map(p => p.id === updatedPost.id ? updatedPost : p);
   }
@@ -2691,7 +2704,6 @@ const handleJoinCommunity = async () => {
     const wasRequiringApproval = community.value?.requiresApproval;
     await toggleJoin();
 
-    // If community required approval and now has pending request, show success modal
     if (wasRequiringApproval && community.value?.hasPendingRequest) {
       showJoinRequestSuccess.value = true;
       setTimeout(() => {
@@ -2708,7 +2720,6 @@ const handleCancelRequest = async () => {
 
   try {
     await cancelJoinRequest(community.value.id);
-    // Update local state
     if (community.value) {
       community.value.hasPendingRequest = false;
     }
@@ -2875,7 +2886,6 @@ const handleDeleteCommunity = async () => {
     deletingCommunity.value = true;
     await deleteCommunity(community.value!.id);
 
-    // Redirect to communities page after successful deletion
     router.push('/communities');
   } catch (err: any) {
     alert(err.message || 'Failed to delete community');
@@ -2897,7 +2907,6 @@ const handleTransferOwnership = async () => {
     showTransferOwnershipModal.value = false;
     selectedNewOwnerId.value = '';
 
-    // Show success modal
     showTransferOwnershipSuccess.value = true;
     setTimeout(() => {
       showTransferOwnershipSuccess.value = false;
@@ -2929,10 +2938,8 @@ const confirmPromoteMember = async () => {
     await updateMemberRole(community.value!.id, member.id, { role: 'admin' });
     openMemberDropdown.value = null;
 
-    // Refresh members list
     fetchMembers();
 
-    // Show success modal
     showPromoteSuccess.value = true;
     setTimeout(() => {
       showPromoteSuccess.value = false;
@@ -2959,10 +2966,8 @@ const confirmDemoteMember = async () => {
     await updateMemberRole(community.value!.id, member.id, { role: 'member' });
     openMemberDropdown.value = null;
 
-    // Refresh members list
     fetchMembers();
 
-    // Show success modal
     showDemoteSuccess.value = true;
     setTimeout(() => {
       showDemoteSuccess.value = false;
@@ -2989,11 +2994,9 @@ const confirmRemoveMember = async () => {
     await removeMember(community.value!.id, member.id);
     openMemberDropdown.value = null;
 
-    // Refresh members list and community data
     fetchMembers();
     fetchCommunity();
 
-    // Show success modal
     showRemoveSuccess.value = true;
     setTimeout(() => {
       showRemoveSuccess.value = false;
@@ -3020,12 +3023,10 @@ const confirmBanMember = async () => {
     await banUser(community.value!.id, member.id);
     openMemberDropdown.value = null;
 
-    // Refresh members list, community data, and banned users list
     fetchMembers();
     fetchCommunity();
     fetchBannedUsers();
 
-    // Show success modal
     showBanSuccess.value = true;
     setTimeout(() => {
       showBanSuccess.value = false;
@@ -3078,14 +3079,11 @@ const confirmApproveRequest = async () => {
     processingRequestId.value = request.id;
     await approveJoinRequest(community.value!.id, request.id);
 
-    // Remove from list
     joinRequests.value = joinRequests.value.filter(r => r.id !== request.id);
 
-    // Refresh community data to update member count
     fetchCommunity();
     fetchMembers();
 
-    // Show success modal
     showApproveSuccess.value = true;
     setTimeout(() => {
       showApproveSuccess.value = false;
@@ -3114,7 +3112,6 @@ const confirmRejectRequest = async () => {
     processingRequestId.value = request.id;
     await rejectJoinRequest(community.value!.id, request.id);
 
-    // Remove from list
     joinRequests.value = joinRequests.value.filter(r => r.id !== request.id);
     selectedRequestToReject.value = null;
   } catch (err: any) {
@@ -3178,7 +3175,6 @@ const confirmUnbanUser = async () => {
     unbanningUserId.value = userId;
     await unbanUser(community.value!.id, userId);
 
-    // Remove from banned list
     bannedUsers.value = bannedUsers.value.filter(u => u.id !== userId);
     selectedUserToUnban.value = null;
   } catch (err: any) {
@@ -3215,15 +3211,12 @@ const confirmAcceptOwnership = async () => {
   try {
     const result = await acceptOwnershipTransfer(pendingOwnershipTransfer.value.id);
 
-    // Update the community data with the new ownership
     if (result.community) {
       community.value = result.community;
     }
 
-    // Clear pending transfer
     pendingOwnershipTransfer.value = null;
 
-    // Show success modal
     showAcceptOwnershipSuccess.value = true;
     setTimeout(() => {
       showAcceptOwnershipSuccess.value = false;
@@ -3247,10 +3240,8 @@ const confirmRejectOwnership = async () => {
   try {
     await rejectOwnershipTransfer(pendingOwnershipTransfer.value.id);
 
-    // Clear pending transfer
     pendingOwnershipTransfer.value = null;
 
-    // Show success modal
     showRejectOwnershipSuccess.value = true;
     setTimeout(() => {
       showRejectOwnershipSuccess.value = false;
@@ -3262,7 +3253,6 @@ const confirmRejectOwnership = async () => {
   }
 };
 
-// Check if user can view posts
 const checkAccess = async () => {
   try {
     checkingAccess.value = true;
@@ -3270,23 +3260,19 @@ const checkAccess = async () => {
 
     canViewPosts.value = result.canView;
 
-    // Reset flags first
     isPrivateCommunityNonMember.value = false;
     isPublicCommunityNonMember.value = false;
 
-    // For private communities, non-members cannot view at all
     if (result.visibility === 'private' && !result.isMember) {
       isPrivateCommunityNonMember.value = true;
       canViewPosts.value = false;
     }
 
-    // For public communities, non-members can view but with restrictions
     if (result.visibility === 'public' && !result.isMember) {
       isPublicCommunityNonMember.value = true;
     }
   } catch (err: any) {
     console.error('Failed to check access:', err);
-    // Default to no access on error
     canViewPosts.value = false;
     isPrivateCommunityNonMember.value = true;
   } finally {
@@ -3295,36 +3281,28 @@ const checkAccess = async () => {
 };
 
 onMounted(async () => {
-  // Fetch community data
   try {
     await fetchCommunity();
 
-    // Check if user is banned - redirect to home if banned
     if (community.value?.isBanned) {
       console.log('User is banned from this community, redirecting to home');
       router.push('/');
       return;
     }
 
-    // Check access permissions
     await checkAccess();
 
-    // For private communities, if user is not a member, show access denied
     if (isPrivateCommunityNonMember.value) {
       return;
     }
   } catch (err: any) {
     console.error('Failed to load community:', err);
-    // Only show error, don't assume it's private - the community might actually not exist
     return;
   }
 
-  // Fetch posts for members, or limited posts for public community non-members
   if (isJoined.value) {
-    // Members can see all posts
     fetchPosts();
   } else if (isPublicCommunityNonMember.value) {
-    // Public non-members see blurred preview - fetch limited posts
     try {
       const result = await getCommunityScoredFeed(
         communityId.value,
@@ -3334,15 +3312,12 @@ onMounted(async () => {
       posts.value = result.posts;
     } catch (err: any) {
       console.error('Failed to load preview posts:', err);
-      // If fetching fails for non-members, it's expected for some communities
       posts.value = [];
     }
   }
 
-  // Fetch members - needed for role badges and filters
   fetchMembers();
 
-  // TODO: Fetch pinned posts from backend
   pinnedPosts.value = [];
 
   document.addEventListener('click', (e) => {
@@ -3354,7 +3329,6 @@ onMounted(async () => {
   });
 });
 
-// Watch for slug changes to reload community data
 watch(communitySlug, async (newSlug, oldSlug) => {
   if (newSlug && newSlug !== oldSlug) {
     try {
@@ -3381,7 +3355,6 @@ watch(communitySlug, async (newSlug, oldSlug) => {
   }
 });
 
-// Watch for tab changes to load data as needed
 watch(activeTab, (newTab, oldTab) => {
   if (newTab === 'members' && oldTab !== 'members') {
     fetchMembers();
@@ -3393,7 +3366,6 @@ watch(activeTab, (newTab, oldTab) => {
   }
 });
 
-// Watch for changes to requiresApproval to refetch join requests
 watch(() => community.value?.requiresApproval, (newValue) => {
   if (newValue && activeTab.value === 'settings') {
     fetchJoinRequests();
