@@ -360,6 +360,42 @@
                 </div>
               </div>
 
+              <div class="border-l-4 border-indigo-600 pl-6 py-4">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Community Invitations</h3>
+                <div v-if="myInvitations.length === 0" class="empty-state-small">
+                  <p class="text-gray-600">No pending invitations</p>
+                </div>
+                <div v-else class="space-y-3">
+                  <div
+                    v-for="invitation in myInvitations"
+                    :key="invitation.id"
+                    class="bg-white border border-gray-200 rounded-lg p-4"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="font-semibold text-gray-900">{{ invitation.communityName }}</p>
+                        <p class="text-sm text-gray-600">Invited to join this community</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ new Date(invitation.createdAt).toLocaleDateString() }}</p>
+                      </div>
+                      <div class="flex gap-2">
+                        <button
+                          @click="acceptInvitation(invitation)"
+                          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          @click="declineInvitation(invitation)"
+                          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="border-l-4 border-purple-600 pl-6 py-4">
                 <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfer Requests</h3>
                 <div v-if="ownershipTransferRequests.length === 0" class="empty-state-small">
@@ -450,6 +486,7 @@ const draftToDelete = ref<any>(null);
 const deleteSuccessMessage = ref('');
 const joinRequestsToMyCommunities = ref<any[]>([]);
 const myJoinRequests = ref<any[]>([]);
+const myInvitations = ref<any[]>([]);
 const ownershipTransferRequests = ref<any[]>([]);
 const requestsLoading = ref(false);
 const requestSuccessMessage = ref('');
@@ -587,6 +624,20 @@ const fetchRequests = async () => {
       }
     }
     joinRequestsToMyCommunities.value = allJoinRequests;
+
+    try {
+      const { getMyInvitations } = await import('../api/community');
+      const invitations = await getMyInvitations();
+      myInvitations.value = invitations.map((inv: any) => ({
+        ...inv,
+        communityName: inv.community?.name,
+        communitySlug: inv.community?.slug,
+        communityId: inv.community?.id
+      }));
+    } catch (err) {
+      console.error('Failed to fetch invitations:', err);
+      myInvitations.value = [];
+    }
 
     const myCommunitiesWithRequests = communities.data.communities.filter((c: any) => c.hasPendingRequest);
     myJoinRequests.value = myCommunitiesWithRequests;
@@ -815,6 +866,34 @@ const rejectOwnershipTransfer = async (transfer: any) => {
     }, 5000);
   } catch (error: any) {
     alert(error.message || 'Failed to reject ownership transfer');
+  }
+};
+
+const acceptInvitation = async (invitation: any) => {
+  try {
+    const { acceptInvitation: acceptAPI } = await import('../api/community');
+    await acceptAPI(invitation.id);
+    myInvitations.value = myInvitations.value.filter(i => i.id !== invitation.id);
+    requestSuccessMessage.value = `You have joined ${invitation.communityName}!`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+  } catch (error: any) {
+    alert(error.message || 'Failed to accept invitation');
+  }
+};
+
+const declineInvitation = async (invitation: any) => {
+  try {
+    const { cancelInvitation } = await import('../api/community');
+    await cancelInvitation(invitation.communityId, invitation.id);
+    myInvitations.value = myInvitations.value.filter(i => i.id !== invitation.id);
+    requestSuccessMessage.value = `Declined invitation to ${invitation.communityName}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+  } catch (error: any) {
+    alert(error.message || 'Failed to decline invitation');
   }
 };
 

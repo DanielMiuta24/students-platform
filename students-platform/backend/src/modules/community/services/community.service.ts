@@ -485,9 +485,45 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.UNAUTHORIZED);
     }
 
+    const community = await CommunityModel.findById(invitation.community);
+
+    if (!community) {
+      throw new Error(COMMUNITY_ERROR.NOT_FOUND);
+    }
+
+    await this.joinCommunity(community._id.toString(), userId);
+
     await CommunityInvitationModel.findByIdAndUpdate(invitationId, { status: 'accepted' });
 
-    return this.joinCommunity(invitation.community!.toString(), userId, true);
+    return community;
+  }
+
+  async getMyInvitations(userId: string) {
+    const invitations = await CommunityInvitationModel.find({
+      recipientUser: userId,
+      status: 'pending',
+      expiresAt: { $gt: new Date() },
+    })
+      .populate('community', 'name slug')
+      .populate('invitedBy', 'name username')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return invitations.map((invitation) => ({
+      id: invitation._id.toString(),
+      community: {
+        id: (invitation.community as any)._id.toString(),
+        name: (invitation.community as any).name,
+        slug: (invitation.community as any).slug,
+      },
+      invitedBy: {
+        id: (invitation.invitedBy as any)._id.toString(),
+        name: (invitation.invitedBy as any).name,
+        username: (invitation.invitedBy as any).username,
+      },
+      createdAt: invitation.createdAt,
+      expiresAt: invitation.expiresAt,
+    }));
   }
 
   async createJoinRequest(communityId: string, userId: string, message?: string) {

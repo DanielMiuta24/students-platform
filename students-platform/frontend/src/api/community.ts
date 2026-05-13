@@ -304,6 +304,22 @@ export const acceptInvitation = async (invitationId: string): Promise<{ message:
 };
 
 /**
+ * Get my invitations
+ */
+export const getMyInvitations = async (): Promise<any[]> => {
+  try {
+    const response = await secureApi.get<any[]>('/communities/invitations/me');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      throw new Error('You must be logged in to view invitations');
+    }
+
+    throw new Error(error.response?.data?.message || 'Failed to fetch invitations');
+  }
+};
+
+/**
  * Create a join request for a community that requires approval
  */
 export const createJoinRequest = async (
