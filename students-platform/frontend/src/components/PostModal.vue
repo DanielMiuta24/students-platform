@@ -87,6 +87,31 @@
                         {{ authorType }}
                       </span>
 
+                      <span
+                        v-if="post && (post.authorCommunityRole === COMMUNITY_ROLE.FOUNDER || post.authorCommunityRole === COMMUNITY_ROLE.ADMIN)"
+                        class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200 flex items-center gap-1"
+                      >
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        {{ post.authorCommunityRole === COMMUNITY_ROLE.FOUNDER ? 'Founder' : 'Admin' }}
+                      </span>
+
+                      <template v-if="communityName">
+                        <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <span
+                          @click="navigateToCommunity"
+                          class="inline-flex items-center px-2 py-0.5 rounded-md text-sm font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all cursor-pointer shadow-sm"
+                        >
+                          <svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                          </svg>
+                          {{ communityName }}
+                        </span>
+                      </template>
+
                       <div v-if="isOwner && post" class="flex gap-1.5">
                         <span
                           v-if="post.status === 'draft'"
@@ -258,6 +283,7 @@ import { useSessionStore } from '../store/session';
 import CommentSection from './CommentSection.vue';
 import LikesModal from './LikesModal.vue';
 import { getPostById } from '../api/post';
+import { COMMUNITY_ROLE } from '../types/community';
 
 interface Props {
   show: boolean;
@@ -375,6 +401,34 @@ const categoryName = computed(() => {
 
   return null;
 });
+
+const communityName = computed(() => {
+  if (!props.post || !props.post.community) return null;
+
+  if (typeof props.post.community === 'object' && props.post.community !== null) {
+    const communityObj = props.post.community as any;
+    return communityObj.name || null;
+  }
+
+  return null;
+});
+
+const communitySlug = computed(() => {
+  if (!props.post || !props.post.community) return null;
+
+  if (typeof props.post.community === 'object' && props.post.community !== null) {
+    const communityObj = props.post.community as any;
+    return communityObj.slug || null;
+  }
+
+  return null;
+});
+
+const navigateToCommunity = () => {
+  if (communitySlug.value) {
+    router.push(`/community/${communitySlug.value}`);
+  }
+};
 
 const authorType = computed(() => {
   if (!props.post) return null;
