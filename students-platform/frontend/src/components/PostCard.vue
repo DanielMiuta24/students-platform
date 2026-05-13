@@ -392,6 +392,7 @@
     <PostModal
       :show="showPostModal"
       :post="post"
+      :author-community-role="effectiveAuthorCommunityRole"
       @close="showPostModal = false"
     />
 

@@ -88,13 +88,13 @@
                       </span>
 
                       <span
-                        v-if="post && (post.authorCommunityRole === COMMUNITY_ROLE.FOUNDER || post.authorCommunityRole === COMMUNITY_ROLE.ADMIN)"
+                        v-if="effectiveAuthorCommunityRole === COMMUNITY_ROLE.FOUNDER || effectiveAuthorCommunityRole === COMMUNITY_ROLE.ADMIN"
                         class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200 flex items-center gap-1"
                       >
                         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                           <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
-                        {{ post.authorCommunityRole === COMMUNITY_ROLE.FOUNDER ? 'Founder' : 'Admin' }}
+                        {{ effectiveAuthorCommunityRole === COMMUNITY_ROLE.FOUNDER ? 'Founder' : 'Admin' }}
                       </span>
 
                       <template v-if="communityName">
@@ -126,6 +126,16 @@
                           📦 Archived
                         </span>
                       </div>
+
+                      <span
+                        v-if="post && post.isPinned && isCommunityPost"
+                        class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200 flex items-center gap-1"
+                      >
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v2h3a1 1 0 011 1v1a1 1 0 01-1 1h-1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9H2a1 1 0 01-1-1V7a1 1 0 011-1h3V5zm2 0v2h6V5H7zm-1 4h8v6H6V9z" />
+                        </svg>
+                        Pinned
+                      </span>
                     </div>
 
                     <div class="flex items-center gap-2 text-xs text-gray-500 flex-wrap mt-1">
@@ -135,7 +145,17 @@
                         {{ categoryName }}
                       </span>
 
-                      <span v-if="post && post.visibility === 'public'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-green-50 text-green-700 font-medium border border-green-200 cursor-help">
+                      <span v-if="isCommunityPost" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 font-medium border border-emerald-300 cursor-help">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                        </svg>
+                        Community
+                        <span class="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-emerald-50 text-emerald-800 text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 shadow-lg border border-emerald-300">
+                          Only community members can see this post
+                        </span>
+                      </span>
+
+                      <span v-if="!isCommunityPost && post && displayVisibility === 'public'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-green-50 text-green-700 font-medium border border-green-200 cursor-help">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -145,7 +165,7 @@
                         </span>
                       </span>
 
-                      <span v-if="post && post.visibility === 'friends'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-medium border border-purple-200 cursor-help">
+                      <span v-if="!isCommunityPost && post && displayVisibility === 'friends'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-medium border border-purple-200 cursor-help">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
@@ -155,7 +175,7 @@
                         </span>
                       </span>
 
-                      <span v-if="post && post.visibility === 'private'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 text-gray-700 font-medium border border-gray-200 cursor-help">
+                      <span v-if="!isCommunityPost && post && displayVisibility === 'private'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 text-gray-700 font-medium border border-gray-200 cursor-help">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
@@ -288,6 +308,7 @@ import { COMMUNITY_ROLE } from '../types/community';
 interface Props {
   show: boolean;
   post: SafePost | null;
+  authorCommunityRole?: 'founder' | 'admin' | 'member' | null;
 }
 
 const props = defineProps<Props>();
@@ -429,6 +450,35 @@ const navigateToCommunity = () => {
     router.push(`/community/${communitySlug.value}`);
   }
 };
+
+const effectiveAuthorCommunityRole = computed(() => {
+  return props.authorCommunityRole || props.post?.authorCommunityRole || null;
+});
+
+const isCommunityPost = computed(() => {
+  return !!props.post?.community || props.post?.visibility === 'community';
+});
+
+const communityVisibility = computed(() => {
+  if (!props.post?.community) return null;
+
+  if (typeof props.post.community === 'object' && props.post.community !== null) {
+    const communityObj = props.post.community as any;
+    return communityObj.visibility || null;
+  }
+
+  return null;
+});
+
+const displayVisibility = computed(() => {
+  if (props.post?.community && communityVisibility.value) {
+    return communityVisibility.value;
+  }
+  if (props.post?.visibility === 'community') {
+    return 'public';
+  }
+  return props.post?.visibility;
+});
 
 const authorType = computed(() => {
   if (!props.post) return null;
