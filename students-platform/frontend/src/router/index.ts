@@ -30,6 +30,7 @@ const routes = [
   { path: '/community/join', component: JoinCommunity, name: 'JoinCommunity', meta: { requiresAuth: true }},
   { path: '/community/create', component: CreateCommunity, name: 'CreateCommunity', meta: { requiresAuth: true }},
   { path: '/community/:slug', component: ViewCommunity, name: 'ViewCommunity' },
+  { path: '/community/:slug/posts/:postSlug', component: ViewCommunity, name: 'CommunityPost' },
   { path: '/universities', component: Universities },
   { path: '/scholarships', component: Scholarships },
   { path: '/feed', component: Feed, name: 'Feed', meta: { requiresAuth: true } },

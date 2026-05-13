@@ -3370,6 +3370,21 @@ onMounted(async () => {
 
   pinnedPosts.value = [];
 
+  // Check if there's a post slug in the URL to scroll to
+  const postSlug = route.params.postSlug as string | undefined;
+  if (postSlug && isJoined.value) {
+    setTimeout(() => {
+      const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
+      if (postElement) {
+        postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        postElement.classList.add('highlight-post');
+        setTimeout(() => {
+          postElement.classList.remove('highlight-post');
+        }, 3000);
+      }
+    }, 1500);
+  }
+
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     if (!target.closest('.relative')) {
@@ -3482,9 +3497,24 @@ watch(() => community.value?.requiresApproval, (newValue) => {
   display: none;
 }
 
+.highlight-post {
+  animation: highlight-pulse 3s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+    transform: scale(1.02);
+  }
+}
+
 @media (max-width: 1024px) {
   .lg\:block {
     display: none !important;
   }
 }
 </style>
+

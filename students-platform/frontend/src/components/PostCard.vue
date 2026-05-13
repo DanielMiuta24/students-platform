@@ -885,9 +885,9 @@ const handleCommentDeleted = async () => {
 const getPostUrl = () => {
   const baseUrl = window.location.origin;
 
-  // If post belongs to a community, return community URL
+  // If post belongs to a community, return community URL with post slug
   if (communitySlug.value) {
-    return `${baseUrl}/community/${communitySlug.value}`;
+    return `${baseUrl}/community/${communitySlug.value}/posts/${props.post.slug}`;
   }
 
   // Otherwise return profile post URL
