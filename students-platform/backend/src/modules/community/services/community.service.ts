@@ -125,15 +125,21 @@ export class CommunityService {
       }
     }
 
-    let coverImageId: string | undefined;
+    let coverImageId: string | undefined | null;
     if (coverImageFile) {
       const uploadResult = await imageService.uploadImagesForPost([coverImageFile], userId);
       coverImageId = uploadResult[0]?.imageId;
+    } else if (data.coverImage === '') {
+      coverImageId = null;
     }
 
     const updateData = new CommunityUpdateBuilder()
-      .fromDTO({ ...data, coverImage: coverImageId })
+      .fromDTO({ ...data, coverImage: coverImageId as string | undefined })
       .build();
+
+    if (coverImageId === null) {
+      updateData.coverImage = null;
+    }
 
     if (data.name) {
       const newSlug = toSlug(data.name);
