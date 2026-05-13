@@ -64,7 +64,7 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
     if (community.value.hasPendingRequest) {
       try {
         console.log('Canceling pending request...');
-        await cancelJoinRequest(communityIdOrSlugRef.value);
+        await cancelJoinRequest(community.value.id);
         // Update local state
         community.value.hasPendingRequest = false;
         console.log('Pending request canceled');
@@ -85,7 +85,7 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
         // User is already a member - leave the community
         console.log('Leaving community...');
 
-        await leaveCommunity(communityIdOrSlugRef.value);
+        await leaveCommunity(community.value.id);
 
         // Update state after successful leave
         community.value.joined = false;
@@ -95,7 +95,7 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
       } else if (community.value.requiresApproval) {
         // Community requires approval - create a join request
         console.log('Creating join request (requires approval)...');
-        await createJoinRequest(communityIdOrSlugRef.value, { message: '' });
+        await createJoinRequest(community.value.id, { message: '' });
 
         // Update to show pending request status
         community.value.hasPendingRequest = true;
@@ -105,7 +105,7 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
         // Community doesn't require approval - join directly
         console.log('Joining directly (no approval required)...');
 
-        const result = await joinCommunity(communityIdOrSlugRef.value);
+        const result = await joinCommunity(community.value.id);
         community.value = result.community;
         console.log('Successfully joined community');
       }
