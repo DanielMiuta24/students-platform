@@ -202,6 +202,17 @@
                 </button>
 
                 <button
+                  v-if="isAdmin"
+                  @click="showEditCommunityModal = true"
+                  class="px-4 sm:px-4 md:px-6 py-2 md:py-2.5 bg-white text-gray-700 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-sm"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit
+                </button>
+
+                <button
                   @click="handleShare"
                   class="px-4 sm:px-4 md:px-6 py-2 md:py-2.5 bg-white text-gray-700 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-sm"
                 >
@@ -336,6 +347,14 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-4 py-4 sm:py-6">
+      <!-- Deletion Success Message -->
+      <div v-if="deletionSuccessMessage" class="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-3">
+        <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-green-800 font-semibold">{{ deletionSuccessMessage }}</p>
+      </div>
+
       <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
         <div class="flex-1 w-full lg:max-w-3xl mx-auto lg:mx-0">
 
@@ -2134,7 +2153,7 @@
     <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteConfirmModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4"
+      class="fixed inset-0 flex items-center justify-center z-50 px-4"
       @click.self="showDeleteConfirmModal = false"
     >
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
@@ -2209,6 +2228,113 @@
             ]"
           >
             {{ deletingCommunity ? 'Deleting...' : 'Delete Community' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Community Modal -->
+    <div
+      v-if="showEditCommunityModal"
+      class="fixed inset-0 flex items-center justify-center z-50 px-4"
+      @click.self="showEditCommunityModal = false"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-white">Edit Community</h3>
+                <p class="text-blue-100 text-sm">Update your community information</p>
+              </div>
+            </div>
+            <button
+              @click="showEditCommunityModal = false"
+              class="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-6">
+          <div v-if="editSuccessMessage" class="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg flex items-center gap-3">
+            <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-green-800 font-semibold">{{ editSuccessMessage }}</p>
+          </div>
+
+          <div class="space-y-5">
+            <!-- Description -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+              <textarea
+                v-model="editDescription"
+                rows="4"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Describe your community..."
+              ></textarea>
+            </div>
+
+            <!-- Visibility -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Visibility</label>
+              <select
+                v-model="editVisibility"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="public">Public - Anyone can see and join</option>
+                <option value="private">Private - Only invited members can join</option>
+              </select>
+            </div>
+
+            <!-- Cover Image -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Cover Image</label>
+              <div v-if="editCoverImagePreview || community?.coverImage" class="mb-3">
+                <img
+                  :src="editCoverImagePreview || community?.coverImage"
+                  alt="Cover preview"
+                  class="w-full h-40 object-cover rounded-lg"
+                />
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                @change="handleEditCoverImageChange"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p class="text-sm text-gray-500 mt-2">Recommended size: 1200x400px</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3">
+          <button
+            @click="showEditCommunityModal = false"
+            class="px-4 py-2 text-gray-700 font-semibold hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            @click="handleUpdateCommunity"
+            :disabled="updatingCommunity"
+            :class="[
+              'px-4 py-2 font-semibold rounded-lg transition-colors',
+              updatingCommunity
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            ]"
+          >
+            {{ updatingCommunity ? 'Updating...' : 'Update Community' }}
           </button>
         </div>
       </div>
@@ -2327,7 +2453,7 @@ import { getScoredFeed, getCommunityScoredFeed } from '../api/post';
 import type { SafePost } from '../types/post';
 import { useCommunity } from '../composables/useCommunity';
 import { useCommunityMembers } from '../composables/useCommunityMembers';
-import { sendInvitations, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, canViewCommunityPosts } from '../api/community';
+import { sendInvitations, cancelJoinRequest, deleteCommunity, updateCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, canViewCommunityPosts } from '../api/community';
 import type { InviteUsersPayload, SafeJoinRequest, CommunityMember } from '../types/community';
 import { COMMUNITY_ROLE } from '../types/community';
 
@@ -2453,6 +2579,14 @@ const hoveredJoinButton = ref(false);
 const showDeleteConfirmModal = ref(false);
 const deleteConfirmText = ref('');
 const deletingCommunity = ref(false);
+const deletionSuccessMessage = ref('');
+const showEditCommunityModal = ref(false);
+const editDescription = ref('');
+const editCoverImageFile = ref<File | null>(null);
+const editCoverImagePreview = ref<string | null>(null);
+const editVisibility = ref<'public' | 'private'>('public');
+const updatingCommunity = ref(false);
+const editSuccessMessage = ref('');
 const showTransferOwnershipModal = ref(false);
 const selectedNewOwnerId = ref('');
 const transferringOwnership = ref(false);
@@ -2934,14 +3068,77 @@ const handleDeleteCommunity = async () => {
 
   try {
     deletingCommunity.value = true;
+    const communityName = community.value!.name;
     await deleteCommunity(community.value!.id);
 
-    router.push('/communities');
+    showDeleteConfirmModal.value = false;
+    deletionSuccessMessage.value = `Community "${communityName}" has been deleted successfully!`;
+
+    setTimeout(() => {
+      router.push('/community');
+    }, 3000);
   } catch (err: any) {
     alert(err.message || 'Failed to delete community');
     deletingCommunity.value = false;
   }
 };
+
+const handleEditCoverImageChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (file) {
+    editCoverImageFile.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      editCoverImagePreview.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const handleUpdateCommunity = async () => {
+  try {
+    updatingCommunity.value = true;
+    const formData = new FormData();
+
+    if (editDescription.value !== community.value?.description) {
+      formData.append('description', editDescription.value);
+    }
+
+    if (editVisibility.value !== community.value?.visibility) {
+      formData.append('visibility', editVisibility.value);
+    }
+
+    if (editCoverImageFile.value) {
+      formData.append('coverImage', editCoverImageFile.value);
+    }
+
+    const result = await updateCommunity(community.value!.id, formData);
+
+    community.value = result.community;
+    editSuccessMessage.value = 'Community updated successfully!';
+
+    setTimeout(() => {
+      editSuccessMessage.value = '';
+      showEditCommunityModal.value = false;
+      editCoverImageFile.value = null;
+      editCoverImagePreview.value = null;
+    }, 2000);
+  } catch (err: any) {
+    alert(err.message || 'Failed to update community');
+  } finally {
+    updatingCommunity.value = false;
+  }
+};
+
+watch(showEditCommunityModal, (isOpen) => {
+  if (isOpen && community.value) {
+    editDescription.value = community.value.description || '';
+    editVisibility.value = community.value.visibility as 'public' | 'private';
+    editCoverImagePreview.value = null;
+    editCoverImageFile.value = null;
+  }
+});
 
 const handleTransferOwnership = async () => {
   if (!selectedNewOwnerId.value) {
