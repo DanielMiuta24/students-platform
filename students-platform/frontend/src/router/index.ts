@@ -4,6 +4,8 @@ import Login from '../pages/Auth/Login.vue';
 import Register from '../pages/Auth/Register.vue';
 import Dashboard from '../pages/Dashboard.vue';
 import Community from '../pages/Community.vue';
+import JoinCommunity from '../pages/JoinCommunity.vue';
+import CreateCommunity from '../pages/CreateCommunity.vue';
 import Universities from '../pages/Universities.vue';
 import Scholarships from '../pages/Scholarships.vue';
 import Feed from '../pages/Feed.vue';
@@ -11,7 +13,7 @@ import UserProfile from '../pages/UserProfile.vue';
 import Messages from '../pages/Messages.vue';
 import EditProfile from '../pages/EditProfile.vue';
 import ChangePassword from '../pages/ChangePassword.vue';
-import CommunityFeed from '../pages/CommunityFeed.vue';
+import ViewCommunity from '../pages/ViewCommunity.vue';
 import EditPost from '../pages/EditPost.vue';
 import { useSessionStore } from '../store/session';
 
@@ -20,12 +22,15 @@ const routes = [
 
   { path: '/login', component: Login, meta: { guestOnly: true } },
   { path: '/register', component: Register, meta: { guestOnly: true } },
-  { path: '/community/:id', component: CommunityFeed, name: 'CommunityFeed' },
   { path: '/edit-profile', component: EditProfile, name: 'EditProfile', meta: { requiresAuth: true } },
   { path: '/change-password', component: ChangePassword, name: 'ChangePassword', meta: { requiresAuth: true } },
   { path: '/posts/:id/edit', component: EditPost, name: 'EditPost', meta: { requiresAuth: true } },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/community', component: Community, meta: { requiresAuth: true }},
+  { path: '/community/join', component: JoinCommunity, name: 'JoinCommunity', meta: { requiresAuth: true }},
+  { path: '/community/create', component: CreateCommunity, name: 'CreateCommunity', meta: { requiresAuth: true }},
+  { path: '/community/:slug', component: ViewCommunity, name: 'ViewCommunity' },
+  { path: '/community/:slug/posts/:postSlug', component: ViewCommunity, name: 'CommunityPost' },
   { path: '/universities', component: Universities },
   { path: '/scholarships', component: Scholarships },
   { path: '/feed', component: Feed, name: 'Feed', meta: { requiresAuth: true } },

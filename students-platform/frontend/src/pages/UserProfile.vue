@@ -124,13 +124,63 @@
                 {{ isOwnProfile ? 'My Communities' : 'Communities' }}
               </h2>
 
-              <ul v-if="user.communities.length" class="space-y-3">
+              <div v-if="communitiesLoading" class="text-center py-6">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="mt-2 text-sm text-gray-600">Loading communities...</p>
+              </div>
+
+              <ul v-else-if="userCommunities.length" class="space-y-4">
                 <li
-                  v-for="community in user.communities"
-                  :key="community"
-                  class="bg-blue-50 text-blue-700 font-semibold px-4 py-3 rounded-lg"
+                  v-for="community in userCommunities"
+                  :key="community.id"
+                  class="flex items-center gap-3 p-2 rounded-lg transition"
                 >
-                  {{ community }}
+                  <div
+                    class="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 hover:ring-2 hover:ring-blue-500 transition cursor-pointer"
+                    @click="navigateToCommunity(community.slug)"
+                  >
+                    <img
+                      v-if="community.coverImage"
+                      :src="community.coverImage"
+                      :alt="community.name"
+                      class="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div v-else class="absolute inset-0 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white/80" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1 min-w-0 cursor-pointer" @click="navigateToCommunity(community.slug)">
+                    <p class="font-semibold text-blue-900 hover:text-blue-600 transition truncate">
+                      {{ community.name }}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      {{ community.memberCount }} {{ community.memberCount === 1 ? 'member' : 'members' }}
+                    </p>
+                  </div>
+                  <button
+                    v-if="isOwnProfile"
+                    @click.stop="handleCommunityAction(community)"
+                    @mouseenter="hoveredCommunity[community.id] = true"
+                    @mouseleave="hoveredCommunity[community.id] = false"
+                    :disabled="communityActionLoading[community.id] || isFounder(community)"
+                    :class="getCommunityButtonClass(community)"
+                    class="px-4 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  >
+                    {{ communityActionLoading[community.id] ? 'Loading...' : getCommunityButtonText(community) }}
+                  </button>
+                  <button
+                    v-else-if="!isOwnProfile && session.isAuthenticated"
+                    @click.stop="handleCommunityActionOther(community)"
+                    @mouseenter="hoveredCommunity[community.id] = true"
+                    @mouseleave="hoveredCommunity[community.id] = false"
+                    :disabled="communityActionLoading[community.id]"
+                    :class="getOtherUserCommunityButtonClass(community)"
+                    class="px-4 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  >
+                    {{ communityActionLoading[community.id] ? 'Loading...' : getOtherUserCommunityButtonText(community) }}
+                  </button>
                 </li>
               </ul>
               <p v-else class="text-gray-500 text-sm">
@@ -188,6 +238,29 @@
         @close="showEditProfileModal = false"
         @success="handleEditProfileSuccess"
       />
+
+      <!-- Leave Community Confirmation Modal -->
+      <ConfirmationModal
+        :is-open="showLeaveConfirmation"
+        variant="warning"
+        title="Leave Community?"
+        subtitle="This action cannot be undone"
+        :message="`Are you sure you want to leave ${selectedCommunityToLeave?.name}?`"
+        :info-box="{
+          icon: '<svg fill=\'currentColor\' viewBox=\'0 0 20 20\'><path fill-rule=\'evenodd\' d=\'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z\' clip-rule=\'evenodd\' /></svg>',
+          title: 'You will lose access to:',
+          items: [
+            'Community posts and discussions',
+            'Member connections and network',
+            'Community events and updates'
+          ]
+        }"
+        confirm-text="Leave Community"
+        cancel-text="Cancel"
+        :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1\' /></svg>'"
+        @close="cancelLeaveCommunity"
+        @confirm="confirmLeaveCommunity"
+      />
     </div>
   </div>
 </template>
@@ -203,11 +276,14 @@ import FriendsList from '../components/FriendsList.vue';
 import FollowersList from '../components/FollowersList.vue';
 import FollowingList from '../components/FollowingList.vue';
 import EditProfileModal from '../components/EditProfileModal.vue';
+import ConfirmationModal from '../components/ConfirmationModal.vue';
 import { useSessionStore } from '../store/session';
 import { getUserByUsername, type SafeUser } from '../api/user';
 import { getAvatarUrl } from '../utils/avatar';
 import { useFollow } from '../composables/useFollow';
 import { getFriends, getFollowers, getFollowing, type SafeFollow } from '../api/follow';
+import { getCommunities, leaveCommunity, joinCommunity, createJoinRequest, cancelJoinRequest } from '../api/community';
+import type { SafeCommunity } from '../types/community';
 
 interface Friend {
   id: number;
@@ -222,7 +298,6 @@ interface User {
   bio: string;
   study: string;
   country: string;
-  communities: string[];
   friends: Friend[];
 }
 
@@ -247,6 +322,12 @@ const followers = ref<SafeFollow[]>([]);
 const followersLoading = ref(false);
 const following = ref<SafeFollow[]>([]);
 const followingLoading = ref(false);
+const userCommunities = ref<SafeCommunity[]>([]);
+const communitiesLoading = ref(false);
+const hoveredCommunity = ref<Record<string, boolean>>({});
+const communityActionLoading = ref<Record<string, boolean>>({});
+const showLeaveConfirmation = ref(false);
+const selectedCommunityToLeave = ref<SafeCommunity | null>(null);
 
 const currentUserFollowing = ref<SafeFollow[]>([]);
 const currentUserFriends = ref<SafeFollow[]>([]);
@@ -310,7 +391,6 @@ const mapUserData = (userData: SafeUser | typeof session.user): User => {
       bio: '',
       study: '',
       country: '',
-      communities: [],
       friends: [],
     };
   }
@@ -320,7 +400,6 @@ const mapUserData = (userData: SafeUser | typeof session.user): User => {
     name: userData.name || 'Unknown User',
     profilePicture: getAvatarUrl(userData.name || 'User', userData.avatar),
     bio: userData.bio || 'No bio yet',
-    communities: [],
     friends: [],
   };
 
@@ -418,6 +497,7 @@ watch(routeUsername, () => {
       fetchFriends();
       fetchFollowers();
       fetchFollowing();
+      fetchCommunities();
     }
   }
 });
@@ -437,6 +517,7 @@ watch(profileUserId, (newUserId) => {
     fetchFriends();
     fetchFollowers();
     fetchFollowing();
+    fetchCommunities();
   }
 });
 
@@ -448,6 +529,7 @@ onMounted(() => {
     fetchFriends();
     fetchFollowers();
     fetchFollowing();
+    fetchCommunities();
   }
 
   const handleVisibilityChange = () => {
@@ -473,16 +555,42 @@ onMounted(() => {
 
   const postSlug = route.params.slug as string | undefined;
   if (postSlug) {
-    setTimeout(() => {
-      const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
-      if (postElement) {
-        postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        postElement.classList.add('highlight-post');
+    const checkAndRedirectCommunityPost = async () => {
+      try {
+        const allPosts = posts.value;
+        const targetPost = allPosts.find(p => p.slug === postSlug);
+
+        if (targetPost?.community) {
+          const communitySlug = typeof targetPost.community === 'string'
+            ? targetPost.community
+            : targetPost.community.slug;
+
+          if (communitySlug) {
+            router.push(`/community/${communitySlug}`);
+            return;
+          }
+        }
+
+        // For non-community posts or if post not found yet, scroll to it
         setTimeout(() => {
-          postElement.classList.remove('highlight-post');
-        }, 3000);
+          const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
+          if (postElement) {
+            postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            postElement.classList.add('highlight-post');
+            setTimeout(() => {
+              postElement.classList.remove('highlight-post');
+            }, 3000);
+          }
+        }, 1000);
+      } catch (err) {
+        console.error('Error checking community post:', err);
       }
-    }, 1000);
+    };
+
+    // Wait a bit for posts to load, then check
+    setTimeout(() => {
+      checkAndRedirectCommunityPost();
+    }, 1500);
   }
 });
 
@@ -505,6 +613,7 @@ const fetchUserProfile = async () => {
       await fetchFriends();
       await fetchFollowers();
       await fetchFollowing();
+      await fetchCommunities();
     }
   } catch (err: any) {
     error.value = err.message || 'Failed to load user profile';
@@ -617,6 +726,216 @@ const fetchCurrentUserFollowers = async () => {
   }
 };
 
+const fetchCommunities = async () => {
+  if (!profileUserId.value) return;
+
+  try {
+    communitiesLoading.value = true;
+
+    if (isOwnProfile.value) {
+      // For own profile: Fetch all communities and filter by joined status
+      const result = await getCommunities(undefined, 100);
+      userCommunities.value = result.communities.filter(c => c.joined);
+    } else {
+      // For other users: Fetch communities where they are the founder
+      // Note: This only shows founded communities, not all joined communities
+      // A proper solution would need a backend endpoint that supports memberId filter
+      const result = await getCommunities(undefined, 100, undefined, undefined, profileUserId.value);
+      userCommunities.value = result.communities;
+    }
+  } catch (err) {
+    userCommunities.value = [];
+  } finally {
+    communitiesLoading.value = false;
+  }
+};
+
+const navigateToCommunity = (slug: string) => {
+  router.push(`/community/${slug}`);
+};
+
+const isFounder = (community: SafeCommunity) => {
+  // Check if the current user is the founder of the community
+  return community.role === 'founder';
+};
+
+const getCommunityButtonText = (community: SafeCommunity) => {
+  // If user is the founder, show "Joined" (disabled, cannot leave)
+  if (isFounder(community)) {
+    return 'Joined';
+  }
+  // If user is a member (which they are if in the list), show "Joined" or "Leave" on hover
+  return hoveredCommunity.value[community.id] ? 'Leave' : 'Joined';
+};
+
+const getCommunityButtonClass = (community: SafeCommunity) => {
+  const baseClasses = 'font-bold px-6 py-2 rounded-lg transition';
+
+  // If user is the founder, show special founder style (disabled)
+  if (isFounder(community)) {
+    return `${baseClasses} bg-blue-100 text-blue-700 cursor-not-allowed`;
+  }
+
+  // If hovering, show red "Leave" style
+  if (hoveredCommunity.value[community.id]) {
+    return `${baseClasses} bg-red-600 text-white hover:bg-red-700`;
+  }
+
+  // Not hovering - show gray "Joined" style
+  return `${baseClasses} bg-gray-200 text-gray-700 hover:bg-red-600 hover:text-white`;
+};
+
+const handleCommunityAction = async (community: SafeCommunity) => {
+  // Show confirmation modal before leaving
+  if (!isFounder(community)) {
+    selectedCommunityToLeave.value = community;
+    showLeaveConfirmation.value = true;
+  }
+};
+
+const confirmLeaveCommunity = async () => {
+  if (!selectedCommunityToLeave.value) return;
+
+  try {
+    communityActionLoading.value[selectedCommunityToLeave.value.id] = true;
+
+    // Leave the community
+    await leaveCommunity(selectedCommunityToLeave.value.id);
+
+    // Remove from local list
+    userCommunities.value = userCommunities.value.filter(c => c.id !== selectedCommunityToLeave.value!.id);
+
+    // Refresh posts to update visibility
+    postsRefreshKey.value++;
+
+    // Close modal
+    showLeaveConfirmation.value = false;
+    selectedCommunityToLeave.value = null;
+  } catch (err: any) {
+    alert(err.message || 'Failed to leave community');
+  } finally {
+    if (selectedCommunityToLeave.value) {
+      communityActionLoading.value[selectedCommunityToLeave.value.id] = false;
+    }
+  }
+};
+
+const cancelLeaveCommunity = () => {
+  showLeaveConfirmation.value = false;
+  selectedCommunityToLeave.value = null;
+};
+
+const getOtherUserCommunityButtonText = (community: SafeCommunity) => {
+  // Check if there's a pending join request from the API
+  if (community.hasPendingRequest) {
+    return hoveredCommunity.value[community.id] ? 'Cancel Request' : 'Requested';
+  }
+
+  // Check if the current authenticated user is a member of this community
+  if (community.joined) {
+    return hoveredCommunity.value[community.id] ? 'Leave' : 'Joined';
+  }
+  return 'Join';
+};
+
+const getOtherUserCommunityButtonClass = (community: SafeCommunity) => {
+  const baseClasses = 'font-bold px-6 py-2 rounded-lg transition';
+
+  // If pending join request
+  if (community.hasPendingRequest) {
+    if (hoveredCommunity.value[community.id]) {
+      return `${baseClasses} bg-red-600 text-white hover:bg-red-700 cursor-pointer`;
+    }
+    return `${baseClasses} bg-yellow-100 text-yellow-700`;
+  }
+
+  // If already a member
+  if (community.joined) {
+    // If hovering, show red "Leave" style
+    if (hoveredCommunity.value[community.id]) {
+      return `${baseClasses} bg-red-600 text-white hover:bg-red-700`;
+    }
+    // Not hovering - show gray "Joined" style
+    return `${baseClasses} bg-gray-200 text-gray-700 hover:bg-red-600 hover:text-white`;
+  }
+
+  // Not a member - show blue "Join" button
+  return `${baseClasses} bg-blue-600 text-white hover:bg-blue-700`;
+};
+
+const handleCommunityActionOther = async (community: SafeCommunity) => {
+  console.log('[UserProfile] handleCommunityActionOther called:', {
+    name: community.name,
+    requiresApproval: community.requiresApproval,
+    joined: community.joined,
+    hasPendingRequest: community.hasPendingRequest
+  });
+
+  try {
+    communityActionLoading.value[community.id] = true;
+
+    if (community.hasPendingRequest) {
+      // Has a pending request - cancel it
+      console.log('[UserProfile] Cancelling join request...');
+      await cancelJoinRequest(community.id);
+
+      // Update local state to clear pending status
+      const communityIndex = userCommunities.value.findIndex(c => c.id === community.id);
+      if (communityIndex !== -1) {
+        userCommunities.value[communityIndex].hasPendingRequest = false;
+      }
+    } else if (community.joined) {
+      // Already a member - leave the community
+      console.log('[UserProfile] Leaving community...');
+      await leaveCommunity(community.id);
+
+      // Update local state to reflect left status
+      const communityIndex = userCommunities.value.findIndex(c => c.id === community.id);
+      if (communityIndex !== -1) {
+        userCommunities.value[communityIndex].joined = false;
+        userCommunities.value[communityIndex].hasPendingRequest = false;
+      }
+
+      // Refresh posts to update visibility
+      postsRefreshKey.value++;
+    } else {
+      // Not a member - check if community requires approval
+      if (community.requiresApproval) {
+        // Create a join request instead of joining directly
+        console.log('[UserProfile] Creating join request (requires approval)...');
+        await createJoinRequest(community.id, { message: '' });
+
+        // Update local state to show pending status
+        const communityIndex = userCommunities.value.findIndex(c => c.id === community.id);
+        if (communityIndex !== -1) {
+          userCommunities.value[communityIndex].hasPendingRequest = true;
+          userCommunities.value[communityIndex].joined = false;
+        }
+        console.log('[UserProfile] Join request created, hasPendingRequest:', userCommunities.value[communityIndex]?.hasPendingRequest);
+      } else {
+        // Join directly (no approval needed)
+        console.log('[UserProfile] Joining directly (no approval required)...');
+        const result = await joinCommunity(community.id);
+
+        // Update local state to reflect joined status
+        const communityIndex = userCommunities.value.findIndex(c => c.id === community.id);
+        if (communityIndex !== -1) {
+          userCommunities.value[communityIndex].joined = true;
+          userCommunities.value[communityIndex].hasPendingRequest = false;
+        }
+
+        // Refresh posts to update visibility
+        postsRefreshKey.value++;
+      }
+    }
+  } catch (err: any) {
+    const action = community.joined ? 'leave' : (community.requiresApproval ? 'request to join' : 'join');
+    alert(err.message || `Failed to ${action} community`);
+  } finally {
+    communityActionLoading.value[community.id] = false;
+  }
+};
+
 const handlePostSuccess = (post: any) => {
   postsRefreshKey.value++;
 };
@@ -633,6 +952,7 @@ const handleListsRefresh = async () => {
     fetchCurrentUserFollowing(),
     fetchCurrentUserFriends(),
     fetchCurrentUserFollowers(),
+    fetchCommunities(),
   ]);
   postsRefreshKey.value++;
 };

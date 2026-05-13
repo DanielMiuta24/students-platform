@@ -32,6 +32,31 @@
                 {{ authorType }}
               </span>
 
+              <span
+                v-if="effectiveAuthorCommunityRole === COMMUNITY_ROLE.FOUNDER || effectiveAuthorCommunityRole === COMMUNITY_ROLE.ADMIN"
+                class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200 flex items-center gap-1"
+              >
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                {{ effectiveAuthorCommunityRole === COMMUNITY_ROLE.FOUNDER ? 'Founder' : 'Admin' }}
+              </span>
+
+              <template v-if="communityName && !props.hideCommunityName">
+                <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span
+                  @click="navigateToCommunity"
+                  class="inline-flex items-center px-2 py-0.5 rounded-md text-sm font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all cursor-pointer shadow-sm"
+                >
+                  <svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                  </svg>
+                  {{ communityName }}
+                </span>
+              </template>
+
               <div v-if="isOwner" class="flex gap-1.5">
                 <span
                   v-if="post.status === 'draft'"
@@ -46,6 +71,16 @@
                   📦 Archived
                 </span>
               </div>
+
+              <span
+                v-if="post.isPinned && isCommunityPost"
+                class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200 flex items-center gap-1"
+              >
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v2h3a1 1 0 011 1v1a1 1 0 01-1 1h-1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9H2a1 1 0 01-1-1V7a1 1 0 011-1h3V5zm2 0v2h6V5H7zm-1 4h8v6H6V9z" />
+                </svg>
+                Pinned
+              </span>
             </div>
 
             <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
@@ -54,7 +89,19 @@
               <span v-if="categoryName" class="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-medium border border-blue-200">
                 {{ categoryName }}
               </span>
-              <span v-if="post.visibility === 'public'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-green-50 text-green-700 font-medium border border-green-200 cursor-help">
+              <!-- Community visibility badge -->
+              <span v-if="isCommunityPost" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 font-medium border border-emerald-300 cursor-help">
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                </svg>
+                Community
+                <span class="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-emerald-50 text-emerald-800 text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 shadow-lg border border-emerald-300">
+                  Only community members can see this post
+                  <span class="absolute right-full top-1/2 transform -translate-y-1/2 mr-0 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-emerald-50"></span>
+                </span>
+              </span>
+              <!-- Regular post visibility badges -->
+              <span v-if="!isCommunityPost && displayVisibility === 'public'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-green-50 text-green-700 font-medium border border-green-200 cursor-help">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -64,7 +111,7 @@
                   <span class="absolute right-full top-1/2 transform -translate-y-1/2 mr-0 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-green-50"></span>
                 </span>
               </span>
-              <span v-if="post.visibility === 'friends'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-medium border border-purple-200 cursor-help">
+              <span v-if="!isCommunityPost && displayVisibility === 'friends'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-medium border border-purple-200 cursor-help">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -74,7 +121,7 @@
                   <span class="absolute right-full top-1/2 transform -translate-y-1/2 mr-0 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-purple-50"></span>
                 </span>
               </span>
-              <span v-if="post.visibility === 'private'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 text-gray-700 font-medium border border-gray-200 cursor-help">
+              <span v-if="!isCommunityPost && displayVisibility === 'private'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 text-gray-700 font-medium border border-gray-200 cursor-help">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
@@ -84,7 +131,7 @@
                   <span class="absolute right-full top-1/2 transform -translate-y-1/2 mr-0 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-50"></span>
                 </span>
               </span>
-              <span v-if="post.visibility === 'public' || post.visibility === 'friends' || post.visibility === 'private'">•</span>
+              <span v-if="isCommunityPost || displayVisibility === 'public' || displayVisibility === 'friends' || displayVisibility === 'private'">•</span>
               <span v-if="categoryName">•</span>
               <span class="flex items-center gap-1">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +144,7 @@
           </div>
         </div>
 
-        <div v-if="isOwner" class="relative">
+        <div v-if="isOwner || (isCommunityPost && props.isCommunityAdmin)" class="relative">
 <button
             @click="toggleMenu"
             class="text-gray-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-all"
@@ -113,6 +160,7 @@
             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
           >
 <button
+              v-if="isOwner"
               @click="handleEdit"
               class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
             >
@@ -133,6 +181,7 @@
             </button>
 
             <button
+              v-if="!isCommunityPost"
               @click="handleChangeAudience"
               class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
             >
@@ -141,6 +190,20 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
               Change Audience
+            </button>
+
+            <button
+              v-if="isCommunityPost && props.isCommunityAdmin"
+              @click="handleTogglePin"
+              class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+            >
+              <svg v-if="post.isPinned" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v2h3a1 1 0 011 1v1a1 1 0 01-1 1h-1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9H2a1 1 0 01-1-1V7a1 1 0 011-1h3V5zm2 0v2h6V5H7zm-1 4h8v6H6V9z" />
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h6a2 2 0 012 2v2h3a1 1 0 011 1v1a1 1 0 01-1 1h-1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9H2a1 1 0 01-1-1V7a1 1 0 011-1h3V5zm2 0v2h6V5H7zm-1 4h8v6H6V9z" />
+              </svg>
+              {{ post.isPinned ? 'Unpin Post' : 'Pin Post' }}
             </button>
           </div>
         </div>
@@ -329,6 +392,7 @@
     <PostModal
       :show="showPostModal"
       :post="post"
+      :author-community-role="effectiveAuthorCommunityRole"
       @close="showPostModal = false"
     />
 
@@ -352,7 +416,7 @@
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import type { SafePost } from '../types/post';
-import { updatePost, deletePost, updatePostVisibility } from '../api/post';
+import { updatePost, deletePost, updatePostVisibility, togglePinPost } from '../api/post';
 import ConfirmModal from './ConfirmModal.vue';
 import PostModal from './PostModal.vue';
 import AudienceModal from './AudienceModal.vue';
@@ -363,10 +427,14 @@ import { getAvatarUrl } from '../utils/avatar';
 import { useLike } from '../composables/useLike';
 import { useFollow } from '../composables/useFollow';
 import { useSessionStore } from '../store/session';
+import { COMMUNITY_ROLE } from '../types/community';
 
 interface Props {
   post: SafePost;
   isOwner: boolean;
+  hideCommunityName?: boolean;
+  isCommunityAdmin?: boolean;
+  authorCommunityRole?: 'founder' | 'admin' | 'member' | null;
 }
 
 const props = defineProps<Props>();
@@ -406,7 +474,6 @@ const toggleMenu = () => {
 };
 
 const closeMenuOnClickOutside = (event: MouseEvent) => {
-  // Don't close menus when modal is open
   if (showDeleteModal.value || showPostModal.value || showLikesModal.value || showAudienceModal.value) {
     return;
   }
@@ -541,7 +608,6 @@ const followButtonClass = computed(() => {
 
 const followButtonText = computed(() => {
   if (isFollowing.value) {
-    // Show Friends if mutual follow exists
     if (followsBack.value) {
       return followButtonHovered.value ? 'Unfollow' : 'Friends';
     }
@@ -563,6 +629,57 @@ const categoryName = computed(() => {
   }
 
   return null;
+});
+
+const communityName = computed(() => {
+  if (!props.post.community) return null;
+
+  if (typeof props.post.community === 'object' && props.post.community !== null) {
+    const communityObj = props.post.community as any;
+    return communityObj.name || null;
+  }
+
+  return null;
+});
+
+const communitySlug = computed(() => {
+  if (!props.post.community) return null;
+
+  if (typeof props.post.community === 'object' && props.post.community !== null) {
+    const communityObj = props.post.community as any;
+    return communityObj.slug || null;
+  }
+
+  return null;
+});
+
+const communityVisibility = computed(() => {
+  if (!props.post.community) return null;
+
+  if (typeof props.post.community === 'object' && props.post.community !== null) {
+    const communityObj = props.post.community as any;
+    return communityObj.visibility || null;
+  }
+
+  return null;
+});
+
+const displayVisibility = computed(() => {
+  if (props.post.community && communityVisibility.value) {
+    return communityVisibility.value;
+  }
+  if (props.post.visibility === 'community') {
+    return 'public';
+  }
+  return props.post.visibility;
+});
+
+const isCommunityPost = computed(() => {
+  return !!props.post.community || props.post.visibility === 'community';
+});
+
+const effectiveAuthorCommunityRole = computed(() => {
+  return props.authorCommunityRole || props.post.authorCommunityRole || null;
 });
 
 const contentPreview = computed(() => {
@@ -601,24 +718,20 @@ const formatDate = (date: Date | string): string => {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000);
 
-  // Just now (less than 1 minute)
   if (diffInSeconds < 60) {
     return 'Just now';
   }
 
-  // Minutes ago (less than 1 hour)
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `${diffInMinutes}m`;
   }
 
-  // Hours ago (less than 24 hours)
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
     return `${diffInHours}h`;
   }
 
-  // Yesterday
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   if (
@@ -629,18 +742,15 @@ const formatDate = (date: Date | string): string => {
     return 'Yesterday';
   }
 
-  // Less than 7 days ago - show day name
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
     return d.toLocaleDateString('en-US', { weekday: 'long' });
   }
 
-  // Less than a year - show month and day
   if (d.getFullYear() === now.getFullYear()) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  // More than a year - show full date
   return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -673,13 +783,11 @@ const confirmDelete = async () => {
     actionLoading.value = true;
     actionError.value = null;
 
-    // Delete from API
     await deletePost(props.post.id);
 
     actionLoading.value = false;
     actionError.value = null;
 
-    // Emit delete event to parent so it can update its state
     emit('delete', props.post.id);
   } catch (err: any) {
     actionLoading.value = false;
@@ -708,16 +816,39 @@ const handleVisibilityChange = async (newVisibility: 'public' | 'private' | 'fri
   }
 };
 
+const handleTogglePin = async () => {
+  if (!props.isCommunityAdmin) return;
+
+  showMenu.value = false;
+
+  try {
+    actionLoading.value = true;
+    actionError.value = null;
+
+    const updatedPost = await togglePinPost(props.post.id);
+    emit('update', updatedPost);
+  } catch (err: any) {
+    actionError.value = err.message || 'Failed to toggle pin status';
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
 const navigateToAuthorProfile = () => {
   if (authorUsername.value) {
     router.push(`/profile/${authorUsername.value}`);
   }
 };
 
+const navigateToCommunity = () => {
+  if (communitySlug.value) {
+    router.push(`/community/${communitySlug.value}`);
+  }
+};
+
 const toggleComments = async () => {
   showComments.value = !showComments.value;
 
-  // Fetch accurate count when opening comments
   if (showComments.value) {
     try {
       const { getCommentCount } = await import('../api/comment');
@@ -753,6 +884,13 @@ const handleCommentDeleted = async () => {
 
 const getPostUrl = () => {
   const baseUrl = window.location.origin;
+
+  // If post belongs to a community, return community URL with post slug
+  if (communitySlug.value) {
+    return `${baseUrl}/community/${communitySlug.value}/posts/${props.post.slug}`;
+  }
+
+  // Otherwise return profile post URL
   const username = typeof props.post.author === 'object' ? props.post.author.username : '';
   return `${baseUrl}/profile/${username}/posts/${props.post.slug}`;
 };

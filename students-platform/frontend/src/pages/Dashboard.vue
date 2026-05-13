@@ -1,328 +1,423 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-10">
-    <div class="max-w-6xl mx-auto px-4">
-
-      <!-- Header -->
-      <section class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <p class="inline-block bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-full mb-4">
-              My Dashboard
-            </p>
-
-            <h1 class="text-4xl font-bold text-blue-900 mb-3">
-              Welcome back{{ user?.name ? `, ${user.name}` : "" }}!
-            </h1>
-
-            <p class="text-gray-600 text-lg max-w-2xl">
-              Track your saved universities, scholarships, communities, and study abroad progress in one place.
-            </p>
-          </div>
-
-          <router-link
-            to="/edit-profile"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl text-center"
-          >
-            Edit Profile
-          </router-link>
-        </div>
-      </section>
-
-      <!-- Stats -->
-      <section class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
-        <div class="stat-card">
-          <p class="stat-number">{{ savedUniversities.length }}</p>
-          <p class="stat-label">Saved Universities</p>
-        </div>
-
-        <div class="stat-card">
-          <p class="stat-number">3</p>
-          <p class="stat-label">Scholarships</p>
-        </div>
-
-        <div class="stat-card">
-          <p class="stat-number">2</p>
-          <p class="stat-label">Communities Joined</p>
-        </div>
-
-        <div class="stat-card">
-          <p class="stat-number">5</p>
-          <p class="stat-label">Posts Created</p>
-        </div>
-      </section>
-
-      <!-- Main Grid -->
-      <section class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
-
-        <!-- Left -->
-        <main class="space-y-8">
-
-          <!-- Quick Actions -->
-          <div class="bg-white rounded-2xl shadow-lg p-8">
-            <h2 class="text-2xl font-bold text-blue-900 mb-6">Quick Actions</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <router-link to="/universities" class="action-card">
-                <div class="action-icon">🏛️</div>
-                <h3>Find Universities</h3>
-                <p>Search universities by country.</p>
-              </router-link>
-
-              <router-link to="/scholarships" class="action-card">
-                <div class="action-icon">🎓</div>
-                <h3>Find Scholarships</h3>
-                <p>Explore funding opportunities.</p>
-              </router-link>
-
-              <router-link to="/community" class="action-card">
-                <div class="action-icon">👥</div>
-                <h3>Join Communities</h3>
-                <p>Connect with other students.</p>
-              </router-link>
-            </div>
-          </div>
-
-          <!-- Saved Universities -->
-          <div class="bg-white rounded-2xl shadow-lg p-8">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-2xl font-bold text-blue-900">Saved Universities</h2>
-
-              <router-link to="/universities" class="text-blue-600 font-bold">
-                Search more
-              </router-link>
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div class="px-6 py-8">
+      <div class="flex gap-6">
+        <aside class="w-72 flex-shrink-0">
+          <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden sticky top-20">
+            <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600">
+              <h2 class="text-2xl font-bold text-white">Dashboard</h2>
+              <p class="text-blue-100 text-sm mt-1">Manage your account</p>
             </div>
 
-            <div v-if="isLoading" class="text-gray-500">
-              Loading saved universities...
-            </div>
-
-            <div v-else-if="savedUniversities.length === 0" class="empty-card">
-              <p class="font-semibold text-blue-900">No saved universities yet</p>
-              <p class="text-gray-500 mt-1">Start searching and save universities you like.</p>
-            </div>
-
-            <ul v-else class="space-y-4">
-              <li
-                v-for="university in savedUniversities"
-                :key="university.id || university.name"
-                class="border border-blue-100 rounded-xl p-5 flex justify-between items-center"
+            <nav class="p-4">
+              <button
+                v-for="tab in tabs"
+                :key="tab.id"
+                @click="activeTab = tab.id"
+                :class="[
+                  'w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium transition-all mb-2',
+                  activeTab === tab.id
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 transform scale-[1.02]'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                ]"
               >
-                <div>
-                  <h3 class="font-bold text-blue-900">
-                    {{ university.name }}
-                  </h3>
-                  <p class="text-gray-500 text-sm">
-                    {{ university.country || "Country not listed" }}
-                  </p>
-                </div>
-
-                <a
-                  v-if="university.website"
-                  :href="university.website"
-                  target="_blank"
-                  class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg"
-                >
-                  Visit
-                </a>
-              </li>
-            </ul>
+                <component :is="tab.icon" class="w-5 h-5 flex-shrink-0" />
+                <span>{{ tab.label }}</span>
+              </button>
+            </nav>
           </div>
-
-        </main>
-
-        <!-- Right Sidebar -->
-        <aside class="space-y-8">
-
-          <!-- Profile Summary -->
-          <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-blue-900 mb-5">Profile Summary</h2>
-
-            <div class="flex items-center gap-4 mb-5">
-              <img
-                :src="user?.profilePicture || 'https://via.placeholder.com/150'"
-                class="w-16 h-16 rounded-full object-cover border-4 border-blue-100"
-              />
-
-              <div>
-                <p class="font-bold text-blue-900">
-                  {{ user?.name || "Student" }}
-                </p>
-                <p class="text-sm text-gray-500">
-                  {{ user?.study || "Study abroad explorer" }}
-                </p>
-              </div>
-            </div>
-
-            <router-link
-              to="/profile/101"
-              class="block text-center bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-4 py-3 rounded-xl"
-            >
-              View Profile
-            </router-link>
-          </div>
-
-          <!-- My Communities -->
-          <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-blue-900 mb-5">My Communities</h2>
-
-            <div class="space-y-3">
-              <router-link to="/community/1" class="community-pill">
-                Study in Germany
-              </router-link>
-
-              <router-link to="/community/2" class="community-pill">
-                Scholarship Seekers
-              </router-link>
-            </div>
-          </div>
-
-          <!-- Progress -->
-          <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-blue-900 mb-5">Study Abroad Progress</h2>
-
-            <div class="space-y-4">
-              <div>
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-600">Profile completed</span>
-                  <span class="font-bold text-blue-700">75%</span>
-                </div>
-                <div class="h-2 bg-blue-100 rounded-full">
-                  <div class="h-2 bg-blue-600 rounded-full w-3/4"></div>
-                </div>
-              </div>
-
-              <ul class="space-y-2 text-sm text-gray-600">
-                <li>✅ Profile created</li>
-                <li>✅ Joined communities</li>
-                <li>🔲 Saved 3 universities</li>
-                <li>🔲 Applied for scholarship</li>
-              </ul>
-            </div>
-          </div>
-
         </aside>
-      </section>
 
+        <main class="flex-1 min-w-0">
+          <DashboardGeneral
+            v-if="activeTab === 'general'"
+            :user="user"
+            :saved-universities-count="savedUniversities.length"
+            :communities-count="communitiesCount"
+            :posts-count="postsCount"
+          />
+
+          <DashboardChangePassword v-else-if="activeTab === 'change-password'" />
+
+          <DashboardStudentStatus v-else-if="activeTab === 'student-status'" />
+
+          <DashboardSavedUniversities v-else-if="activeTab === 'saved-universities'" />
+
+          <DashboardSavedScholarships v-else-if="activeTab === 'saved-scholarships'" />
+
+          <DashboardDrafts
+            v-else-if="activeTab === 'drafts'"
+            ref="draftsRef"
+            :success-message="deleteSuccessMessage"
+            @edit="editDraft"
+            @delete="deleteDraft"
+          />
+
+          <DashboardNotifications v-else-if="activeTab === 'notifications'" />
+
+          <DashboardRequests
+            v-else-if="activeTab === 'requests'"
+            ref="requestsRef"
+            :success-message="requestSuccessMessage"
+            @approve-join="approveJoinRequest"
+            @reject-join="rejectJoinRequest"
+            @cancel-join="cancelMyJoinRequest"
+            @accept-invitation="acceptInvitation"
+            @decline-invitation="declineInvitation"
+            @accept-transfer="acceptOwnershipTransfer"
+            @reject-transfer="rejectOwnershipTransfer"
+          />
+        </main>
+      </div>
     </div>
   </div>
+
+  <EditPostModal
+    v-if="showEditPostModal && selectedPost"
+    :post="selectedPost"
+    :is-open="showEditPostModal"
+    :is-community-post="!!selectedPost.community"
+    @close="handleCloseEditModal"
+    @updated="handlePostUpdated"
+  />
+
+  <ConfirmModal
+    :show="showDeleteModal"
+    title="Delete Draft"
+    message="Are you sure you want to delete this draft? This action cannot be undone."
+    confirm-text="Delete"
+    cancel-text="Cancel"
+    @confirm="confirmDeleteDraft"
+    @cancel="cancelDeleteDraft"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { api } from "../services/api";
-import axios from "axios";
+import { ref, onMounted, h } from 'vue';
+import { api } from '../services/api';
+import { deletePost } from '../api/post';
+import { useRouter } from 'vue-router';
+import DashboardGeneral from '../components/dashboard/DashboardGeneral.vue';
+import DashboardChangePassword from '../components/dashboard/DashboardChangePassword.vue';
+import DashboardStudentStatus from '../components/dashboard/DashboardStudentStatus.vue';
+import DashboardSavedUniversities from '../components/dashboard/DashboardSavedUniversities.vue';
+import DashboardSavedScholarships from '../components/dashboard/DashboardSavedScholarships.vue';
+import DashboardDrafts from '../components/dashboard/DashboardDrafts.vue';
+import DashboardNotifications from '../components/dashboard/DashboardNotifications.vue';
+import DashboardRequests from '../components/dashboard/DashboardRequests.vue';
+import EditPostModal from '../components/EditPostModal.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 
+const router = useRouter();
+const activeTab = ref('general');
 const user = ref<any>(null);
 const savedUniversities = ref<any[]>([]);
-const isLoading = ref(false);
+const communitiesCount = ref(0);
+const postsCount = ref(0);
+const showEditPostModal = ref(false);
+const selectedPost = ref<any>(null);
+const showDeleteModal = ref(false);
+const draftToDelete = ref<any>(null);
+const deleteSuccessMessage = ref('');
+const requestSuccessMessage = ref('');
+const draftsRef = ref<InstanceType<typeof DashboardDrafts> | null>(null);
+const requestsRef = ref<InstanceType<typeof DashboardRequests> | null>(null);
 
-onMounted(() => {
-  fetchUserProfile();
-  fetchSavedUniversities();
+const tabs = [
+  {
+    id: 'general',
+    label: 'General',
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' })
+    ])
+  },
+  {
+    id: 'change-password',
+    label: 'Change Password',
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z' })
+    ])
+  },
+  {
+    id: 'student-status',
+    label: 'Student Status',
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z' })
+    ])
+  },
+  {
+    id: 'saved-universities',
+    label: 'Saved Universities',
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' })
+    ])
+  },
+  {
+    id: 'saved-scholarships',
+    label: 'Saved Scholarships',
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
+    ])
+  },
+  {
+    id: 'drafts',
+    label: 'Post Drafts',
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' })
+    ])
+  },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' })
+    ])
+  },
+  {
+    id: 'requests',
+    label: 'Requests',
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' })
+    ])
+  }
+];
+
+onMounted(async () => {
+  await fetchUserProfile();
+  fetchSavedUniversitiesCount();
+  fetchCommunitiesCount();
+  fetchPostsCount();
 });
 
 const fetchUserProfile = async () => {
   try {
-    const response = await api.get("users/get-profile");
+    const response = await api.get('users/get-profile');
     user.value = response.data;
   } catch (error) {
-    console.error("Failed to fetch user profile:", error);
+    console.error('Failed to fetch user profile:', error);
   }
 };
 
-const fetchSavedUniversities = async () => {
-  isLoading.value = true;
-
+const fetchSavedUniversitiesCount = async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:3000/api/users/my-saved-universities"
-    );
+    const response = await api.get('users/my-saved-universities');
     savedUniversities.value = response.data;
   } catch (error) {
-    console.error("Failed to fetch saved universities:", error);
-  } finally {
-    isLoading.value = false;
+    console.error('Failed to fetch saved universities:', error);
+  }
+};
+
+const fetchCommunitiesCount = async () => {
+  try {
+    const response = await api.get('communities?limit=1000');
+    const communities = response.data.communities || [];
+    const joinedCount = communities.filter((c: any) => c.joined).length;
+    communitiesCount.value = joinedCount;
+  } catch (error) {
+    console.error('Failed to fetch communities count:', error);
+  }
+};
+
+const fetchPostsCount = async () => {
+  try {
+    const response = await api.get('posts/my-posts/count');
+    postsCount.value = response.data.count || 0;
+  } catch (error) {
+    console.error('Failed to fetch posts count:', error);
+  }
+};
+
+const editDraft = (draft: any) => {
+  selectedPost.value = draft;
+  showEditPostModal.value = true;
+};
+
+const handlePostUpdated = async (updatedPost?: any) => {
+  showEditPostModal.value = false;
+  const wasPublished = updatedPost && updatedPost.status !== 'draft';
+  selectedPost.value = null;
+
+  if (wasPublished) {
+    deleteSuccessMessage.value = `Post "${updatedPost.title}" has been published successfully!`;
+    setTimeout(() => {
+      deleteSuccessMessage.value = '';
+    }, 5000);
+  }
+
+  if (draftsRef.value) {
+    draftsRef.value.fetchDrafts();
+  }
+};
+
+const handleCloseEditModal = () => {
+  showEditPostModal.value = false;
+  selectedPost.value = null;
+};
+
+const deleteDraft = (draft: any) => {
+  draftToDelete.value = draft;
+  showDeleteModal.value = true;
+};
+
+const confirmDeleteDraft = async () => {
+  if (!draftToDelete.value) return;
+
+  try {
+    await deletePost(draftToDelete.value.id);
+    showDeleteModal.value = false;
+    const deletedTitle = draftToDelete.value.title;
+    draftToDelete.value = null;
+
+    deleteSuccessMessage.value = `Draft "${deletedTitle}" has been successfully deleted.`;
+    setTimeout(() => {
+      deleteSuccessMessage.value = '';
+    }, 5000);
+
+    if (draftsRef.value) {
+      draftsRef.value.fetchDrafts();
+    }
+  } catch (error: any) {
+    console.error('Failed to delete draft:', error);
+    alert(error.message || 'Failed to delete draft. Please try again.');
+  }
+};
+
+const cancelDeleteDraft = () => {
+  showDeleteModal.value = false;
+  draftToDelete.value = null;
+};
+
+const approveJoinRequest = async (request: any) => {
+  try {
+    const { approveJoinRequest: approveAPI } = await import('../api/community');
+    await approveAPI(request.community, request.id);
+    requestSuccessMessage.value = `Approved ${request.user?.name || 'user'}'s request to join ${request.communityName}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to approve request');
+  }
+};
+
+const rejectJoinRequest = async (request: any) => {
+  try {
+    const { rejectJoinRequest: rejectAPI } = await import('../api/community');
+    await rejectAPI(request.community, request.id);
+    requestSuccessMessage.value = `Rejected ${request.user?.name || 'user'}'s request to join ${request.communityName}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to reject request');
+  }
+};
+
+const cancelMyJoinRequest = async (community: any) => {
+  try {
+    const { cancelJoinRequest } = await import('../api/community');
+    await cancelJoinRequest(community.id);
+    requestSuccessMessage.value = `Cancelled request to join ${community.name}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to cancel request');
+  }
+};
+
+const acceptOwnershipTransfer = async (transfer: any) => {
+  try {
+    const { acceptOwnershipTransfer: acceptAPI } = await import('../api/community');
+    await acceptAPI(transfer.id);
+    requestSuccessMessage.value = `ownership-transfer:${transfer.community?.name}:${transfer.community?.slug}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to accept ownership transfer');
+  }
+};
+
+const rejectOwnershipTransfer = async (transfer: any) => {
+  try {
+    const { rejectOwnershipTransfer: rejectAPI } = await import('../api/community');
+    await rejectAPI(transfer.id);
+    requestSuccessMessage.value = `Rejected ownership transfer for ${transfer.community?.name}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to reject ownership transfer');
+  }
+};
+
+const acceptInvitation = async (invitation: any) => {
+  try {
+    const { acceptInvitation: acceptAPI } = await import('../api/community');
+    await acceptAPI(invitation.id);
+    requestSuccessMessage.value = `You have joined ${invitation.communityName}!`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to accept invitation');
+  }
+};
+
+const declineInvitation = async (invitation: any) => {
+  try {
+    const { cancelInvitation } = await import('../api/community');
+    await cancelInvitation(invitation.communityId, invitation.id);
+    requestSuccessMessage.value = `Declined invitation to ${invitation.communityName}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to decline invitation');
   }
 };
 </script>
 
 <style scoped>
-.stat-card {
-  background: white;
-  border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 12px 30px rgba(15, 42, 95, 0.1);
-  border: 1px solid #e5efff;
-}
-
-.stat-number {
-  color: #0f2a5f;
-  font-size: 32px;
-  font-weight: 900;
-}
-
-.stat-label {
-  color: #64748b;
-  font-weight: 600;
-}
-
-.action-card {
-  background: #f8fbff;
-  border: 1px solid #e5efff;
-  border-radius: 18px;
-  padding: 22px;
-  text-decoration: none;
-  transition: 0.2s ease;
-}
-
-.action-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px rgba(15, 42, 95, 0.12);
-}
-
-.action-icon {
-  width: 56px;
-  height: 56px;
-  background: #eff6ff;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  margin-bottom: 16px;
-}
-
-.action-card h3 {
-  color: #0f2a5f;
-  font-size: 18px;
-  font-weight: 800;
-  margin-bottom: 8px;
-}
-
-.action-card p {
-  color: #64748b;
-  font-size: 14px;
-}
-
-.empty-card {
-  background: #f8fbff;
-  border: 1px dashed #bfdbfe;
-  border-radius: 16px;
-  padding: 28px;
+.empty-state {
   text-align: center;
+  padding: 64px 32px;
 }
 
-.community-pill {
-  display: block;
-  background: #eff6ff;
-  color: #2563eb;
-  font-weight: 700;
-  padding: 12px 14px;
-  border-radius: 12px;
-  text-decoration: none;
-}
-
-.community-pill:hover {
-  background: #dbeafe;
+.empty-state-small {
+  text-align: center;
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-radius: 1rem;
+  border: 2px dashed #e5e7eb;
 }
 </style>

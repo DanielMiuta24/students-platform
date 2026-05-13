@@ -7,6 +7,7 @@ export interface CreatePostDTO {
   title: string;
   content: PostContent;
   category: string;
+  communityId?: string;
   status?: PostStatus;
   visibility?: PostVisibility;
   images?: ImageMetadata[];
@@ -16,6 +17,7 @@ export interface UpdatePostDTO {
   title: string;
   content: PostContent;
   category: string;
+  communityId?: string;
   status: PostStatus;
   visibility?: PostVisibility;
   images?: ImageMetadata[];
@@ -35,6 +37,7 @@ export interface GetPostsDTO {
   status?: PostStatus;
   visibility?: PostVisibility;
   categoryId?: string;
+  communityId?: string;
   authorId?: string;
 }
 
@@ -54,14 +57,25 @@ export interface SafePost {
   slug: string;
   content: PostContent;
   category?: string;
+  community?: string | SafeCommunity;
+  authorCommunityRole?: 'founder' | 'admin' | 'member' | null;
   status: PostStatus;
   visibility: PostVisibility;
+  isPinned: boolean;
   images: ImageMetadata[];
   likeCount: number;
   commentCount: number;
   viewCount: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface SafeCommunity {
+  id: string;
+  name: string;
+  slug: string;
+  coverImage?: string;
+  visibility?: string;
 }
 
 export interface CursorPostsResult {

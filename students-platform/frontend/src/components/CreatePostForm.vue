@@ -94,7 +94,7 @@
         />
       </div>
 
-      <div class="form-field">
+      <div v-if="!isCommunityPost" class="form-field">
         <label for="category" class="field-label">
           Category <span class="required">*</span>
         </label>
@@ -131,7 +131,7 @@
         <div v-if="errors.images" class="field-error">{{ errors.images }}</div>
       </div>
 
-      <div class="form-field">
+      <div v-if="!isCommunityPost" class="form-field">
         <label for="visibility" class="field-label">
           Visibility
         </label>
@@ -173,7 +173,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed } from 'vue';
+import { defineComponent, ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import RichTextEditor from './RichTextEditor.vue';
 import ImageUpload, { type ImageUpload as ImageUploadType } from './ImageUpload.vue';
@@ -200,9 +200,17 @@ export default defineComponent({
     ImageUpload,
   },
 
+  props: {
+    communityId: {
+      type: String,
+      required: false,
+      default: undefined,
+    },
+  },
+
   emits: ['success', 'error'],
 
-  setup(_, { emit }) {
+  setup(props, { emit }) {
     const session = useSessionStore();
     const router = useRouter();
 
@@ -225,9 +233,13 @@ export default defineComponent({
       }
     };
 
+    // Check if this is a community post
+    const isCommunityPost = computed(() => !!props.communityId && props.communityId.length > 0);
+
     const postTitle = ref('');
     const postContent = ref<LexicalEditorState | null>(null);
-    const postCategory = ref('');
+    // Initialize with placeholder for community posts, will be set properly in onMounted
+    const postCategory = ref(props.communityId ? 'community-placeholder' : '');
     const postImages = ref<ImageUploadType[]>([]);
     const postVisibility = ref<'public' | 'private' | 'friends'>('public');
 
@@ -248,7 +260,20 @@ export default defineComponent({
     const generalError = ref('');
     const successMessage = ref('');
 
+    // Watch for changes in communityId and update category accordingly
+    watch(() => props.communityId, (newCommunityId) => {
+      if (newCommunityId && newCommunityId.length > 0) {
+        postCategory.value = 'community-placeholder';
+      } else if (postCategory.value === 'community-placeholder') {
+        postCategory.value = '';
+      }
+    });
+
     onMounted(async () => {
+      // For community posts, set a placeholder category
+      if (isCommunityPost.value) {
+        postCategory.value = 'community-placeholder';
+      }
       await fetchCategories();
     });
 
@@ -311,6 +336,11 @@ export default defineComponent({
     };
 
     const validateCategory = (): boolean => {
+      // Skip category validation for community posts
+      if (isCommunityPost.value) {
+        return true;
+      }
+
       errors.value.category = '';
 
       if (!postCategory.value) {
@@ -348,9 +378,16 @@ export default defineComponent({
 
       formData.append('title', postTitle.value.trim());
       formData.append('content', JSON.stringify(postContent.value));
-      formData.append('category', postCategory.value);
       formData.append('status', status);
-      formData.append('visibility', postVisibility.value);
+
+      // For community posts, include communityId and skip category/visibility
+      // Backend will override these based on community
+      if (isCommunityPost.value) {
+        formData.append('communityId', props.communityId!);
+      } else {
+        formData.append('category', postCategory.value);
+        formData.append('visibility', postVisibility.value);
+      }
 
       postImages.value.forEach((image) => {
         formData.append('images', image.file);
@@ -362,7 +399,7 @@ export default defineComponent({
     const resetForm = () => {
       postTitle.value = '';
       postContent.value = null;
-      postCategory.value = '';
+      postCategory.value = isCommunityPost.value ? 'community-placeholder' : '';
       postImages.value = [];
       postVisibility.value = 'public';
       errors.value = {
@@ -404,6 +441,7 @@ export default defineComponent({
 
         const post = await createPost(formData);
 
+        console.log('Post created successfully, emitting success event:', post);
         successMessage.value = 'Post published successfully!';
         emit('success', post);
 
@@ -412,8 +450,19 @@ export default defineComponent({
           successMessage.value = '';
         }, 2000);
       } catch (error: any) {
-        generalError.value = error.message || 'Failed to publish post. Please try again.';
+        const errorMessage = error.message || 'Failed to publish post. Please try again.';
+        generalError.value = errorMessage;
         emit('error', error);
+
+        // If it's a permission error, close the form after showing the error
+        if (errorMessage.includes('Only admins can post') || errorMessage.includes('must be a member')) {
+          setTimeout(() => {
+            isExpanded.value = false;
+            generalError.value = '';
+            // Reload the page to refresh permissions
+            window.location.reload();
+          }, 3000);
+        }
       } finally {
         isSubmitting.value = false;
         isPublishing.value = false;
@@ -445,8 +494,19 @@ export default defineComponent({
           successMessage.value = '';
         }, 2000);
       } catch (error: any) {
-        generalError.value = error.message || 'Failed to save draft. Please try again.';
+        const errorMessage = error.message || 'Failed to save draft. Please try again.';
+        generalError.value = errorMessage;
         emit('error', error);
+
+        // If it's a permission error, close the form after showing the error
+        if (errorMessage.includes('Only admins can post') || errorMessage.includes('must be a member')) {
+          setTimeout(() => {
+            isExpanded.value = false;
+            generalError.value = '';
+            // Reload the page to refresh permissions
+            window.location.reload();
+          }, 3000);
+        }
       } finally {
         isSubmitting.value = false;
         isDraftSaving.value = false;
@@ -467,6 +527,7 @@ export default defineComponent({
       userFirstName,
       userAvatar,
       userProfileUrl,
+      isCommunityPost,
 
       postTitle,
       postContent,

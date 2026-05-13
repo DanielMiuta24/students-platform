@@ -14,31 +14,39 @@ import {
 
 const router = Router();
 
-router.get('/feed', postController.getFeed);
+router.get('/my-posts/count', authMiddleware, postController.getPostsCountByAuthor);
 
-router.get('/feed/scored', postController.getScoredFeed);
+router.get('/my-drafts', authMiddleware, postController.getDraftsByAuthor);
+
+router.get('/feed', authMiddleware, postController.getFeed);
+
+router.get('/feed/scored', authMiddleware, postController.getScoredFeed);
+
+router.get('/community/:communityId/feed', optionalAuthMiddleware, postController.getCommunityScoredFeed);
 
 router.get(
   '/category/:categoryId',
+  authMiddleware,
   validateCategoryIdParam,
   postController.getPostsByCategory
 );
 
 router.get(
   '/author/:authorId',
+  authMiddleware,
   validateAuthorId,
   postController.getPostsByAuthor
 );
 
 router.get(
   '/slug/:slug',
-  optionalAuthMiddleware,
+  authMiddleware,
   postController.getPostBySlug
 );
 
 router.get(
   '/:postId',
-  optionalAuthMiddleware,
+  authMiddleware,
   validatePostId,
   postController.getPostById
 );
@@ -76,6 +84,13 @@ router.patch(
   validatePostId,
   validateVisibility,
   postController.updateVisibility
+);
+
+router.patch(
+  '/:postId/pin',
+  authMiddleware,
+  validatePostId,
+  postController.togglePinPost
 );
 
 router.delete(

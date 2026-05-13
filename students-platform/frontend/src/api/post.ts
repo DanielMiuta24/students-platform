@@ -4,13 +4,13 @@ import { api } from '../services/api';
 
 export const createPost = async (formData: FormData): Promise<SafePost> => {
   try {
-    const response = await secureApi.post<SafePost>('/posts', formData, {
+    const response = await secureApi.post<{ message: string; post: SafePost }>('/posts', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
 
-    return response.data;
+    return response.data.post;
   } catch (error: any) {
     if (error.response?.status === 401) {
       throw new Error('You must be logged in to create a post');
@@ -32,13 +32,13 @@ export const createPost = async (formData: FormData): Promise<SafePost> => {
 
 export const updatePost = async (postId: string, formData: FormData): Promise<SafePost> => {
   try {
-    const response = await secureApi.put<SafePost>(`/posts/${postId}`, formData, {
+    const response = await secureApi.put<{ message: string; post: SafePost }>(`/posts/${postId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
 
-    return response.data;
+    return response.data.post;
   } catch (error: any) {
     if (error.response?.status === 401) {
       throw new Error('You must be logged in to update a post');
@@ -145,6 +145,25 @@ export const getPostsByAuthor = async (
   }
 };
 
+export const getCommunityScoredFeed = async (
+  communityId: string,
+  cursor?: string,
+  limit: number = 10
+): Promise<CursorPostsResult> => {
+  try {
+    const params = new URLSearchParams();
+    if (cursor) params.append('cursor', cursor);
+    params.append('limit', limit.toString());
+
+    const response = await api.get<CursorPostsResult>(
+      `/posts/community/${communityId}/feed?${params.toString()}`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch community posts');
+  }
+};
+
 export const deletePost = async (postId: string): Promise<void> => {
   try {
     await secureApi.delete(`/posts/${postId}`);
@@ -180,5 +199,22 @@ export const updatePostVisibility = async (
     }
 
     throw new Error(error.response?.data?.message || 'Failed to update post visibility');
+  }
+};
+
+export const togglePinPost = async (postId: string): Promise<SafePost> => {
+  try {
+    const response = await secureApi.patch<{message: string; post: SafePost}>(`/posts/${postId}/pin`);
+    return response.data.post;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      throw new Error('You must be logged in to pin posts');
+    } else if (error.response?.status === 403) {
+      throw new Error('Only community admins can pin posts');
+    } else if (error.response?.status === 404) {
+      throw new Error('Post not found');
+    }
+
+    throw new Error(error.response?.data?.message || 'Failed to pin post');
   }
 };

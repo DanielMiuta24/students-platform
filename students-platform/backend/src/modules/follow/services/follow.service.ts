@@ -230,6 +230,10 @@ export class FollowService {
   }
 
   async getFriendIds(userId: string): Promise<string[]> {
+    if (typeof userId !== 'string' || !userId) {
+      throw new Error('Invalid userId: must be a non-empty string');
+    }
+
     const user = await User.findById(userId).select('followers following');
     if (!user) {
       return [];
@@ -244,6 +248,10 @@ export class FollowService {
   }
 
   async getFollowingIds(userId: string): Promise<string[]> {
+    if (typeof userId !== 'string' || !userId) {
+      throw new Error('Invalid userId: must be a non-empty string');
+    }
+
     const user = await User.findById(userId).select('following');
     if (!user) {
       return [];

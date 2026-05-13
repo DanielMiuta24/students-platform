@@ -40,13 +40,23 @@ class PostController {
 
     const errorResponse = PostController.ERROR_RESPONSES[err.message];
 
-    if (!errorResponse) {
-      return next(err);
+    if (errorResponse) {
+      return res.status(errorResponse.status).json({
+        message: errorResponse.message,
+      });
     }
 
-    return res.status(errorResponse.status).json({
-      message: errorResponse.message,
-    });
+    // Handle community permission errors
+    if (err.message.includes('Only admins can post') ||
+        err.message.includes('must be a member') ||
+        err.message.includes('Community not found')) {
+      return res.status(403).json({
+        message: err.message,
+      });
+    }
+
+    // For any other error, pass to next middleware
+    return next(err);
   }
 
   createPost = async (
@@ -79,16 +89,16 @@ class PostController {
   ) => {
     try {
       const { postId } = req.params;
-      const post = await postService.getPostById(postId);
+      const userId = (req as AuthenticatedRequest).user!.id;
+      const post = await postService.getPostById(postId, userId);
 
       if (!post) {
         return res.status(PostController.HTTP_STATUS.NOT_FOUND).json({ message: 'Post not found' });
       }
 
       if (req.query.incrementView === 'true') {
-        const userId = (req as AuthenticatedRequest).user?.id;
         await postService.incrementViewCount(postId, userId);
-        if (!userId || !(post as any).viewedBy?.includes(userId)) {
+        if (!(post as any).viewedBy?.includes(userId)) {
           post.viewCount += 1;
         }
       }
@@ -108,16 +118,16 @@ class PostController {
   ) => {
     try {
       const { slug } = req.params;
-      const post = await postService.getPostBySlug(slug);
+      const userId = (req as AuthenticatedRequest).user!.id;
+      const post = await postService.getPostBySlug(slug, userId);
 
       if (!post) {
         return res.status(PostController.HTTP_STATUS.NOT_FOUND).json({ message: 'Post not found' });
       }
 
       if (req.query.incrementView === 'true') {
-        const userId = (req as AuthenticatedRequest).user?.id;
         await postService.incrementViewCount(post._id.toString(), userId);
-        if (!userId || !(post as any).viewedBy?.includes(userId)) {
+        if (!(post as any).viewedBy?.includes(userId)) {
           post.viewCount += 1;
         }
       }
@@ -202,8 +212,11 @@ class PostController {
         req.query.cursor as string,
         req.query.limit as string
       );
+      const viewerId = (req as AuthenticatedRequest).user!.id;
+
       const result = await postService.getPostsByAuthor(
         req.params.authorId,
+        viewerId,
         cursor,
         limit
       );
@@ -245,6 +258,35 @@ class PostController {
     }
   };
 
+  getCommunityScoredFeed = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const communityId = req.params.communityId;
+      const cursor = req.query.cursor as string | undefined;
+      const limitQuery = req.query.limit as string;
+      const limit = parseInt(limitQuery || String(POST_VALIDATION.DEFAULT_PAGINATION_LIMIT), 10);
+      const safeLimit = Number.isNaN(limit) || limit <= 0
+        ? POST_VALIDATION.DEFAULT_PAGINATION_LIMIT
+        : limit;
+
+      const userId = req.user!.id;
+
+      const result = await postService.getCommunityScoredFeed(
+        communityId,
+        userId,
+        cursor,
+        safeLimit
+      );
+
+      return res.status(PostController.HTTP_STATUS.OK).json(result);
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
   deletePost = async (
     req: AuthenticatedRequest,
     res: Response,
@@ -277,6 +319,53 @@ class PostController {
         message: 'Post visibility updated successfully',
         post: PostMapper.toSafePost(updatedPost),
       });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  togglePinPost = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const updatedPost = await postService.togglePinPost(
+        req.params.postId,
+        req.user!.id
+      );
+
+      return res.status(PostController.HTTP_STATUS.OK).json({
+        message: updatedPost.isPinned ? 'Post pinned successfully' : 'Post unpinned successfully',
+        post: PostMapper.toSafePost(updatedPost),
+      });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  getPostsCountByAuthor = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const count = await postService.getPostsCountByAuthor(req.user!.id);
+      return res.status(PostController.HTTP_STATUS.OK).json({ count });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  getDraftsByAuthor = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const drafts = await postService.getDraftsByAuthor(req.user!.id);
+      const safeDrafts = drafts.map(draft => PostMapper.toSafePost(draft));
+      return res.status(PostController.HTTP_STATUS.OK).json({ drafts: safeDrafts });
     } catch (err: unknown) {
       return this.handleError(err, res, next);
     }

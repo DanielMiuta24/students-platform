@@ -50,6 +50,7 @@
           :post="post"
           :is-owner="isOwner(post)"
           @edit="handleEdit"
+          @update="handlePostUpdate"
           @delete="handleDelete"
         />
       </TransitionGroup>
@@ -86,8 +87,8 @@
     <!-- Success Toast -->
     <Toast
       :show="showSuccessToast"
-      title="Post deleted"
-      message="Your post has been successfully deleted."
+      :title="toastTitle"
+      :message="toastMessage"
       type="success"
       @close="showSuccessToast = false"
     />
@@ -108,6 +109,8 @@ const sessionStore = useSessionStore();
 const loadMoreTrigger = ref<HTMLElement | null>(null);
 const editingPost = ref<SafePost | null>(null);
 const showSuccessToast = ref(false);
+const toastTitle = ref('');
+const toastMessage = ref('');
 let observer: IntersectionObserver | null = null;
 
 // Check if the current user owns a post
@@ -179,14 +182,29 @@ const handleEdit = (post: SafePost) => {
 };
 
 const handleDelete = async (postId: string) => {
-  // PostCard already deleted from API, just remove from store and show success
   const index = postFeedStore.posts.findIndex(p => p.id === postId);
   if (index !== -1) {
     postFeedStore.posts.splice(index, 1);
   }
 
-  // Show success toast
+  toastTitle.value = 'Post deleted';
+  toastMessage.value = 'Your post has been successfully deleted.';
   showSuccessToast.value = true;
+};
+
+const handlePostUpdate = async (updatedPost: SafePost) => {
+  const index = postFeedStore.posts.findIndex(p => p.id === updatedPost.id);
+  if (index !== -1) {
+    postFeedStore.posts[index] = updatedPost;
+  }
+
+  toastTitle.value = 'Audience updated';
+  toastMessage.value = 'Your post audience has been updated successfully.';
+  showSuccessToast.value = true;
+
+  setTimeout(() => {
+    window.location.reload();
+  }, 1500);
 };
 
 const handlePostUpdated = () => {

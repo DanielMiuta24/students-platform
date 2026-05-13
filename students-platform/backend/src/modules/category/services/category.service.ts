@@ -83,6 +83,11 @@ export class CategoryService {
       .sort({ order: 1, name: 1 })
       .exec();
   }
+
+  async isActiveCategory(categoryId: string): Promise<boolean> {
+    const category = await CategoryModel.findOne({ _id: categoryId, isActive: true });
+    return !!category;
+  }
 }
 
 export const categoryService = new CategoryService();

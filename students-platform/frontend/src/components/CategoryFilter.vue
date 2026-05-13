@@ -1,9 +1,10 @@
 <template>
-  <div class="flex flex-wrap gap-3">
+  <div :class="vertical ? 'flex flex-col gap-2' : 'flex flex-wrap gap-3'">
     <button
       @click="selectCategory(null)"
       :class="[
         'px-4 py-2 rounded-full font-semibold transition',
+        vertical ? 'w-full text-left' : '',
         selectedCategory === null
           ? 'bg-blue-600 text-white'
           : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
@@ -18,6 +19,7 @@
       @click="selectCategory(category.id)"
       :class="[
         'px-4 py-2 rounded-full font-semibold transition',
+        vertical ? 'w-full text-left' : '',
         selectedCategory === category.id
           ? 'bg-blue-600 text-white'
           : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
@@ -41,6 +43,14 @@
 import { ref, onMounted } from 'vue';
 import { getActiveCategories } from '../api/category';
 import type { Category } from '../types/category';
+
+interface Props {
+  vertical?: boolean;
+}
+
+withDefaults(defineProps<Props>(), {
+  vertical: false
+});
 
 const emit = defineEmits<{
   (e: 'change', categoryId: string | null): void;

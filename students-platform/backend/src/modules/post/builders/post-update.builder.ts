@@ -30,6 +30,13 @@ export class PostUpdateBuilder {
     return this;
   }
 
+  setCommunity(communityId?: string | null): this {
+    if (communityId !== undefined) {
+      this.data.community = communityId;
+    }
+    return this;
+  }
+
   setStatus(status: PostStatus): this {
     this.data.status = status;
     return this;
@@ -54,6 +61,7 @@ export class PostUpdateBuilder {
       .setSlug(dto.title)
       .setContent(dto.content)
       .setCategory(dto.category)
+      .setCommunity(dto.communityId)
       .setStatus(dto.status)
       .setVisibility(dto.visibility)
       .setImages(dto.images);

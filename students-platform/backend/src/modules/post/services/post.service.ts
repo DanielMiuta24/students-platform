@@ -6,25 +6,42 @@ import type {
   CursorPostsResult,
   GetScoredFeedDTO,
   ScoredFeedResult,
-  ScoredPost
+  ScoredPost,
+  SafePost
 } from '../types/post.types';
 import { POST_ERROR, POST_VALIDATION } from '../constants/post.constants';
 import { PostQueryBuilder, PostCreateBuilder, PostUpdateBuilder } from '../builders';
 import { PostMapper } from '../mappers';
-import { CategoryModel } from '../../category/models';
+import { categoryService } from '../../category/services';
+import { communityService } from '../../community/services';
+import { COMMUNITY_ROLE } from '../../community/constants';
 import { PostScorer } from './post.scorer';
-import { imageService, type UploadedFile, type UploadResult } from '../../image/services';
-import { CommentModel } from '../../comment/models';
-import { LikeModel } from '../../like/models';
+import { imageService, type UploadedFile } from '../../image/services';
+import { commentService } from '../../comment/services';
+import { likeService } from '../../like/services';
 import { followService } from '../../follow/services';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
 
   async createPost(data: CreatePostDTO, files?: UploadedFile[]): Promise<PostDoc> {
-    const category = await CategoryModel.findById(data.category);
-    if (!category || !category.isActive) {
-      throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
+    if (data.communityId) {
+      await this.validateCommunityPostPermission(data.communityId, data.authorId);
+      const community = await communityService.getCommunityById(data.communityId, data.authorId);
+
+      if (!community.category) {
+        throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
+      }
+
+      data.category = typeof community.category === 'string'
+        ? community.category
+        : community.category._id.toString();
+      data.visibility = 'community';
+    } else {
+      const isCategoryActive = await categoryService.isActiveCategory(data.category);
+      if (!isCategoryActive) {
+        throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
+      }
     }
 
     const imageIds = await this.handleImages(files, data.images, data.authorId);
@@ -35,23 +52,92 @@ export class PostService {
       .build();
 
     const post = new PostModel(postData);
-    return post.save();
+    const savedPost = await post.save();
+
+    if (data.communityId && savedPost.status === 'published') {
+      await communityService.incrementPostCount(data.communityId);
+    }
+
+    // Populate author, category, community, and images before returning
+    await savedPost.populate('author', 'name username avatar email type');
+    await savedPost.populate('category', 'name slug');
+    await savedPost.populate({
+      path: 'community',
+      select: 'name slug coverImage visibility',
+      populate: {
+        path: 'coverImage',
+        select: 'url'
+      }
+    });
+    await savedPost.populate('images');
+
+    return savedPost;
   }
 
-  async getPostById(postId: string): Promise<PostDoc | null> {
-    return PostModel.findById(postId)
+  async getPostById(postId: string, userId: string): Promise<PostDoc | null> {
+    const post = await PostModel.findById(postId)
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .exec();
+
+    if (!post) {
+      return null;
+    }
+
+    if (post.community) {
+      const communityId = typeof post.community === 'string'
+        ? post.community
+        : post.community._id.toString();
+
+      const accessResult = await communityService.canAccessCommunity(communityId, userId);
+      if (!accessResult.canAccess) {
+        throw new Error(POST_ERROR.UNAUTHORIZED);
+      }
+    }
+
+    return post;
   }
 
-  async getPostBySlug(slug: string): Promise<PostDoc | null> {
-    return PostModel.findOne({ slug })
+  async getPostBySlug(slug: string, userId: string): Promise<PostDoc | null> {
+    const post = await PostModel.findOne({ slug })
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .exec();
+
+    if (!post) {
+      return null;
+    }
+
+    if (post.community) {
+      const communityId = typeof post.community === 'string'
+        ? post.community
+        : post.community._id.toString();
+
+      const accessResult = await communityService.canAccessCommunity(communityId, userId);
+      if (!accessResult.canAccess) {
+        throw new Error(POST_ERROR.UNAUTHORIZED);
+      }
+    }
+
+    return post;
   }
 
   async updatePost(postId: string, data: UpdatePostDTO, authorId: string, files?: UploadedFile[]): Promise<PostDoc | null> {
@@ -69,9 +155,40 @@ export class PostService {
       throw new Error(POST_ERROR.UNAUTHORIZED);
     }
 
-    const category = await CategoryModel.findById(data.category);
-    if (!category || !category.isActive) {
-      throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
+    // Prevent changing community association - posts should not be moved between communities
+    const existingCommunityId = existingPost.community?.toString();
+    if (data.communityId !== existingCommunityId) {
+      if (existingCommunityId && !data.communityId) {
+        throw new Error('Cannot remove post from community. Community posts must remain in their community.');
+      }
+      if (!existingCommunityId && data.communityId) {
+        throw new Error('Cannot move regular post to a community. Create a new post in the community instead.');
+      }
+      if (existingCommunityId && data.communityId) {
+        throw new Error('Cannot move post between communities.');
+      }
+    }
+
+    if (data.communityId) {
+      if (data.communityId !== existingPost.community?.toString()) {
+        await this.validateCommunityPostPermission(data.communityId, authorId);
+      }
+
+      const community = await communityService.getCommunityById(data.communityId, authorId);
+
+      if (!community.category) {
+        throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
+      }
+
+      data.category = typeof community.category === 'string'
+        ? community.category
+        : community.category._id.toString();
+      data.visibility = 'community';
+    } else {
+      const isCategoryActive = await categoryService.isActiveCategory(data.category);
+      if (!isCategoryActive) {
+        throw new Error(POST_ERROR.CATEGORY_NOT_FOUND);
+      }
     }
 
     const imageIds = await this.handleImages(files, data.existingImages || data.images, authorId);
@@ -88,6 +205,14 @@ export class PostService {
     )
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .exec();
 
@@ -111,7 +236,6 @@ export class PostService {
       .limit(limit + 1)
       .exec();
 
-
     return this.buildCursorResult(posts, limit);
   }
 
@@ -125,41 +249,56 @@ export class PostService {
     });
   }
 
-  async getPostsByAuthor(authorId: string, cursor?: string, limit?: number): Promise<CursorPostsResult> {
-    return this.getFeed({
-      authorId,
-      cursor,
-      limit,
-    });
+  async getPostsByAuthor(authorId: string, viewerId: string, cursor?: string, limit?: number): Promise<CursorPostsResult> {
+    const safeLimit = limit || this.DEFAULT_LIMIT;
+
+    const queryBuilder = new PostQueryBuilder()
+      .setAuthorFeedVisibility(authorId, viewerId);
+
+    if (cursor) {
+      queryBuilder.setCursor(cursor);
+    }
+
+    const query = queryBuilder.build();
+
+    query.community = null;
+
+    const posts = await PostModel.find(query)
+      .populate('author', 'name username avatar email type')
+      .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
+      .populate('images')
+      .sort({ _id: -1 })
+      .limit(safeLimit + 1)
+      .exec();
+
+    return this.buildCursorResult(posts, safeLimit);
   }
 
-  async incrementViewCount(postId: string, userId?: string): Promise<void> {
-    if (!userId) {
-      await PostModel.findByIdAndUpdate(
-        postId,
-        { $inc: { viewCount: 1 } }
-      );
+  async incrementViewCount(postId: string, userId: string): Promise<void> {
+    const alreadyViewed = await PostModel.exists({
+      _id: postId,
+      viewedBy: userId
+    });
+
+    if (alreadyViewed) {
       return;
     }
 
-    const post = await PostModel.findById(postId).select('viewedBy');
-    if (!post) {
-      return;
-    }
-
-    const alreadyViewed = post.viewedBy?.some(
-      (viewerId) => viewerId.toString() === userId
+    await PostModel.findByIdAndUpdate(
+      postId,
+      {
+        $inc: { viewCount: 1 },
+        $addToSet: { viewedBy: userId }
+      }
     );
-
-    if (!alreadyViewed) {
-      await PostModel.findByIdAndUpdate(
-        postId,
-        {
-          $addToSet: { viewedBy: userId },
-          $inc: { viewCount: 1 }
-        }
-      );
-    }
   }
 
   private async handleImages(
@@ -214,6 +353,7 @@ export class PostService {
 
     let friends = friendIds;
     let following = followingIds;
+    let memberCommunityIds: string[] = [];
 
     if (userId && (friendIds.length === 0 || followingIds.length === 0)) {
       [friends, following] = await Promise.all([
@@ -222,8 +362,12 @@ export class PostService {
       ]);
     }
 
+    if (userId) {
+      memberCommunityIds = await communityService.getMemberCommunityIds(userId);
+    }
+
     const queryBuilder = userId
-      ? new PostQueryBuilder().setFeedVisibilityForUser(userId, friends)
+      ? new PostQueryBuilder().setFeedVisibilityForUserWithCommunities(userId, friends, memberCommunityIds)
       : new PostQueryBuilder().setPublicFeedDefaults();
 
     if (cursor) {
@@ -235,13 +379,22 @@ export class PostService {
     const posts = await PostModel.find(query)
       .populate('author', 'name username avatar email type')
       .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
       .populate('images')
       .sort({ _id: -1 })
       .limit(limit * 3)
       .exec();
 
-    const scoredPosts = posts.map(post => {
+    const scoredPosts = await Promise.all(posts.map(async (post) => {
       const safePost = PostMapper.toSafePost(post);
+      await this.enrichWithAuthorCommunityRole(safePost);
       const score = PostScorer.calculateScore(post, {
         preferredCategories,
         currentUserId: userId,
@@ -249,7 +402,7 @@ export class PostService {
         friendIds: friends
       });
       return { ...safePost, score };
-    });
+    }));
 
     scoredPosts.sort((a, b) => (b.score || 0) - (a.score || 0));
 
@@ -258,6 +411,66 @@ export class PostService {
       ? resultPosts[resultPosts.length - 1].id
       : null;
     const hasMore = posts.length >= limit * 3;
+
+    return {
+      posts: resultPosts,
+      nextCursor,
+      hasMore
+    };
+  }
+
+  async getCommunityScoredFeed(communityId: string, userId: string, cursor?: string, limit?: number): Promise<ScoredFeedResult> {
+    const safeLimit = limit && limit > 0 && limit <= 100 ? limit : this.DEFAULT_LIMIT;
+
+    // Check access - userId can be undefined for non-authenticated users viewing public communities
+    const accessResult = await communityService.canAccessCommunity(communityId, userId);
+    if (!accessResult.canAccess) {
+      throw new Error(accessResult.reason);
+    }
+
+    const queryBuilder = new PostQueryBuilder()
+      .setCommunityFeedDefaults(communityId);
+
+    if (cursor) {
+      queryBuilder.setCursor(cursor);
+    }
+
+    const query = queryBuilder.build();
+
+    const posts = await PostModel.find(query)
+      .populate('author', 'name username avatar email type')
+      .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
+      .populate('images')
+      .sort({ isPinned: -1, _id: -1 })
+      .limit(safeLimit * 3)
+      .exec();
+
+    const scoredPosts = posts.map(post => {
+      const safePost = PostMapper.toSafePost(post);
+      // Use community score for authenticated users, simple chronological for non-authenticated
+      // Pinned posts get a massive boost to always appear first
+      let score = userId ? PostScorer.calculateCommunityScore(post, userId) : Date.now();
+      if (post.isPinned) {
+        score += 999999999999; // Ensure pinned posts always come first
+      }
+      return { ...safePost, score };
+    });
+
+    scoredPosts.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+    const resultPosts = scoredPosts.slice(0, safeLimit);
+    const nextCursor = resultPosts.length > 0
+      ? resultPosts[resultPosts.length - 1].id
+      : null;
+    const hasMore = posts.length >= safeLimit * 3;
 
     return {
       posts: resultPosts,
@@ -277,23 +490,56 @@ export class PostService {
       ? post.author
       : post.author!.toString();
 
-    if (postAuthorId !== authorId) {
-      throw new Error(POST_ERROR.UNAUTHORIZED);
-    }
+    // Check if user is the post owner
+    const isOwner = postAuthorId === authorId;
 
-    const comments = await CommentModel.find({ post: postId }).select('_id');
-    const commentIds = comments.map(c => c._id);
+    // For community posts, also check if user is a community admin
+    let isAdmin = false;
+    if (post.community) {
+      const communityId = typeof post.community === 'string'
+        ? post.community
+        : post.community.toString();
 
-    if (commentIds.length > 0) {
-      await LikeModel.deleteMany({
-        likeable: { $in: commentIds },
-        likeableType: 'Comment'
+      const community = await communityService.getCommunityById(communityId, authorId);
+
+      // Check if user is the founder OR has admin role in members
+      // founder might be populated as an object or just an ObjectId
+      const founderId = typeof community.founder === 'string'
+        ? community.founder
+        : (community.founder as any)?._id?.toString() || community.founder?.toString();
+
+      const isFounder = founderId === authorId;
+      const hasAdminRole = community.members?.some((m: any) => {
+        // m.user might be populated as an object or just an ObjectId
+        const memberUserId = typeof m.user === 'string'
+          ? m.user
+          : (m.user as any)?._id?.toString() || m.user?.toString();
+        const isMatch = memberUserId === authorId && m.role === COMMUNITY_ROLE.ADMIN;
+        console.log('Checking member:', { memberUserId, authorId, role: m.role, isMatch });
+        return isMatch;
+      }) || false;
+
+      isAdmin = isFounder || hasAdminRole;
+
+      console.log('Delete authorization check:', {
+        postId,
+        authorId,
+        isOwner,
+        isFounder,
+        hasAdminRole,
+        isAdmin,
+        founderId,
+        membersCount: community.members?.length
       });
     }
 
-    await LikeModel.deleteMany({ likeable: postId, likeableType: 'Post' });
+    // User must be either the owner or a community admin
+    if (!isOwner && !isAdmin) {
+      throw new Error(POST_ERROR.UNAUTHORIZED);
+    }
 
-    await CommentModel.deleteMany({ post: postId });
+    await commentService.deleteCommentsByPost(postId);
+    await likeService.deleteLikesByPost(postId);
 
     if (post.images && post.images.length > 0) {
       for (const image of post.images) {
@@ -303,6 +549,11 @@ export class PostService {
           await imageService.deleteImageFromDb(imageDoc._id.toString());
         }
       }
+    }
+
+    if (post.community && post.status === 'published') {
+      const communityId = typeof post.community === 'string' ? post.community : post.community.toString();
+      await communityService.decrementPostCount(communityId);
     }
 
     await PostModel.findByIdAndDelete(postId);
@@ -323,6 +574,11 @@ export class PostService {
       throw new Error(POST_ERROR.UNAUTHORIZED);
     }
 
+    // Prevent changing visibility of community posts
+    if (post.community || post.visibility === 'community') {
+      throw new Error('Cannot change visibility of community posts. Community posts always have community visibility.');
+    }
+
     const updatedPost = await PostModel.findByIdAndUpdate(
       postId,
       { visibility },
@@ -334,6 +590,176 @@ export class PostService {
       .exec();
 
     return updatedPost!;
+  }
+
+  async togglePinPost(postId: string, userId: string): Promise<PostDoc> {
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+      throw new Error(POST_ERROR.NOT_FOUND);
+    }
+
+    // Only community posts can be pinned
+    if (!post.community) {
+      throw new Error('Only community posts can be pinned');
+    }
+
+    // Check if user is admin of the community
+    const communityId = typeof post.community === 'string'
+      ? post.community
+      : post.community.toString();
+
+    const community = await communityService.getCommunityById(communityId, userId);
+
+    // Check if user is the founder OR has admin role in members
+    // founder might be populated as an object or just an ObjectId
+    const founderId = typeof community.founder === 'string'
+      ? community.founder
+      : (community.founder as any)?._id?.toString() || community.founder?.toString();
+
+    const isFounder = founderId === userId;
+    const hasAdminRole = community.members?.some((m: any) => {
+      // m.user might be populated as an object or just an ObjectId
+      const memberUserId = typeof m.user === 'string'
+        ? m.user
+        : (m.user as any)?._id?.toString() || m.user?.toString();
+      return memberUserId === userId && m.role === COMMUNITY_ROLE.ADMIN;
+    }) || false;
+
+    const isAdmin = isFounder || hasAdminRole;
+
+    if (!isAdmin) {
+      throw new Error('Only community admins can pin posts');
+    }
+
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      postId,
+      { isPinned: !post.isPinned },
+      { new: true, runValidators: true }
+    )
+      .populate('author', 'name username avatar email type')
+      .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug coverImage visibility',
+        populate: {
+          path: 'coverImage',
+          select: 'url'
+        }
+      })
+      .populate('images')
+      .exec();
+
+    return updatedPost!;
+  }
+
+  async deletePostsByCommunity(communityId: string): Promise<void> {
+    const posts = await PostModel.find({ community: communityId }).populate('images').select('_id author images');
+
+    for (const post of posts) {
+      const postId = post._id.toString();
+
+      await commentService.deleteCommentsByPost(postId);
+      await likeService.deleteLikesByPost(postId);
+
+      if (post.images && post.images.length > 0) {
+        for (const image of post.images) {
+          const imageDoc = typeof image === 'string' ? null : image;
+          if (imageDoc && 'publicId' in imageDoc) {
+            await imageService.deleteImage(imageDoc.publicId as string);
+            await imageService.deleteImageFromDb(imageDoc._id.toString());
+          }
+        }
+      }
+    }
+
+    await PostModel.deleteMany({ community: communityId });
+  }
+
+  async deletePostsByAuthorInCommunity(communityId: string, authorId: string): Promise<number> {
+    const posts = await PostModel.find({
+      community: communityId,
+      author: authorId
+    }).populate('images').select('_id images');
+
+    let deletedCount = 0;
+
+    for (const post of posts) {
+      const postId = post._id.toString();
+
+      await commentService.deleteCommentsByPost(postId);
+      await likeService.deleteLikesByPost(postId);
+
+      if (post.images && post.images.length > 0) {
+        for (const image of post.images) {
+          const imageDoc = typeof image === 'string' ? null : image;
+          if (imageDoc && 'publicId' in imageDoc) {
+            await imageService.deleteImage(imageDoc.publicId as string);
+            await imageService.deleteImageFromDb(imageDoc._id.toString());
+          }
+        }
+      }
+
+      deletedCount++;
+    }
+
+    await PostModel.deleteMany({ community: communityId, author: authorId });
+
+    if (deletedCount > 0) {
+      await communityService.decrementPostCount(communityId, deletedCount);
+    }
+
+    return deletedCount;
+  }
+
+  private async validateCommunityPostPermission(communityId: string, userId: string): Promise<void> {
+    await communityService.validatePostPermission(communityId, userId);
+  }
+
+  private async enrichWithAuthorCommunityRole(safePost: SafePost): Promise<void> {
+    if (!safePost.community || typeof safePost.community === 'string') {
+      return;
+    }
+
+    const communityId = safePost.community.id;
+    const authorId = typeof safePost.author === 'string' ? safePost.author : safePost.author.id;
+
+    if (!communityId || !authorId) {
+      return;
+    }
+
+    try {
+      const role = await communityService.getMemberRole(communityId, authorId);
+      safePost.authorCommunityRole = role;
+    } catch (error) {
+      safePost.authorCommunityRole = null;
+    }
+  }
+
+  async getPostsCountByAuthor(authorId: string): Promise<number> {
+    const count = await PostModel.countDocuments({
+      author: authorId,
+      status: { $ne: 'draft' }
+    });
+    return count;
+  }
+
+  async getDraftsByAuthor(authorId: string): Promise<PostDoc[]> {
+    const drafts = await PostModel.find({
+      author: authorId,
+      status: 'draft'
+    })
+      .populate('author', 'name username avatar email type')
+      .populate('category', 'name slug')
+      .populate({
+        path: 'community',
+        select: 'name slug visibility',
+      })
+      .populate('images')
+      .sort({ updatedAt: -1 })
+      .exec();
+
+    return drafts;
   }
 }
 

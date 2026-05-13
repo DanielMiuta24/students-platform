@@ -88,7 +88,7 @@ describe('PostController', () => {
         mockNext
       );
 
-      expect(postService.getPostById).toHaveBeenCalledWith('post123');
+      expect(postService.getPostById).toHaveBeenCalledWith('post123', 'user123');
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({
         post: expect.objectContaining({
@@ -270,6 +270,7 @@ describe('PostController', () => {
       );
 
       expect(postService.getPostsByAuthor).toHaveBeenCalledWith(
+        'user123',
         'user123',
         undefined,
         10

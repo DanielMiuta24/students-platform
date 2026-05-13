@@ -25,14 +25,10 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 // Restore session before mounting the app
 const sessionStore = useSessionStore()
-console.log('[App] Starting session restoration...')
 sessionStore.restoreSession()
     .catch(err => {
-        console.warn('[App] Failed to restore session:', err)
     })
     .finally(() => {
-        console.log('[App] Session restoration complete, mounting app...')
-        console.log('[App] User after restoration:', sessionStore.user?.username)
         app.mount('#app')
     })
 
