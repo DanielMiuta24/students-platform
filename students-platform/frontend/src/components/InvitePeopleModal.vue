@@ -262,10 +262,12 @@ interface Person {
 interface Props {
   isOpen: boolean;
   subtitle?: string;
+  excludeUserIds?: string[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   subtitle: 'Invite people by email or select from friends and followers',
+  excludeUserIds: () => [],
 });
 
 const emit = defineEmits<{
@@ -375,10 +377,12 @@ watch(() => props.isOpen, (isOpen) => {
 });
 
 const filteredPeople = computed(() => {
-  if (!searchQuery.value) return people.value;
+  let filtered = people.value.filter(person => !props.excludeUserIds.includes(person.id));
+
+  if (!searchQuery.value) return filtered;
 
   const query = searchQuery.value.toLowerCase();
-  return people.value.filter(person =>
+  return filtered.filter(person =>
     person.name.toLowerCase().includes(query) ||
     person.username.toLowerCase().includes(query)
   );

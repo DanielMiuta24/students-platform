@@ -2077,6 +2077,7 @@
     <!-- Invite People Modal -->
     <InvitePeopleModal
       :is-open="showInviteModal"
+      :exclude-user-ids="memberIds"
       @close="showInviteModal = false"
       @send-invites="handleSendInvites"
     />
@@ -2407,6 +2408,10 @@ const transferableAdmins = computed(() => {
   return filteredMembers.value.filter(
     (member) => member.role === 'admin' && member.id !== sessionStore.user?.id
   );
+});
+
+const memberIds = computed(() => {
+  return members.value.map(member => member.id);
 });
 
 const regularMembers = computed(() => {
