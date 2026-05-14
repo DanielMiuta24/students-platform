@@ -79,7 +79,10 @@
               >
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="font-semibold text-gray-900">{{ request.user?.name || 'Unknown User' }}</p>
+                    <router-link v-if="request.user?.username" :to="`/profile/${request.user.username}`" class="font-semibold text-gray-900 hover:text-blue-600">
+                      {{ request.user.name }}
+                    </router-link>
+                    <p v-else class="font-semibold text-gray-900">{{ request.user?.name || 'Unknown User' }}</p>
                     <p class="text-sm text-gray-600">wants to join {{ request.communityName }}</p>
                     <p class="text-xs text-gray-500 mt-1">{{ new Date(request.createdAt).toLocaleDateString() }}</p>
                   </div>
@@ -160,7 +163,13 @@
                       {{ transfer.community?.name || 'Unknown Community' }}
                     </router-link>
                     <p v-else class="font-semibold text-gray-900">{{ transfer.community?.name || 'Unknown Community' }}</p>
-                    <p class="text-sm text-gray-600">from {{ transfer.currentOwner?.name || 'Unknown' }}</p>
+                    <p class="text-sm text-gray-600">
+                      from
+                      <router-link v-if="transfer.currentOwner?.username" :to="`/profile/${transfer.currentOwner.username}`" class="hover:text-blue-600">
+                        {{ transfer.currentOwner.name }}
+                      </router-link>
+                      <span v-else>{{ transfer.currentOwner?.name || 'Unknown' }}</span>
+                    </p>
                     <p class="text-xs text-gray-500 mt-1">{{ new Date(transfer.createdAt).toLocaleDateString() }}</p>
                   </div>
                   <div class="flex gap-2">
@@ -246,11 +255,14 @@
                       class="w-10 h-10 rounded-full object-cover"
                     />
                     <div>
-                      <p class="font-semibold text-gray-900">
+                      <router-link v-if="invitation.recipientUsername" :to="`/profile/${invitation.recipientUsername}`" class="font-semibold text-gray-900 hover:text-blue-600">
                         {{ invitation.recipientName }}
-                        <span v-if="invitation.recipientUsername" class="text-sm text-gray-500">
+                        <span class="text-sm text-gray-500">
                           @{{ invitation.recipientUsername }}
                         </span>
+                      </router-link>
+                      <p v-else class="font-semibold text-gray-900">
+                        {{ invitation.recipientName }}
                       </p>
                       <p class="text-sm text-gray-600">
                         Invited to
@@ -292,11 +304,14 @@
                       class="w-10 h-10 rounded-full object-cover"
                     />
                     <div>
-                      <p class="font-semibold text-gray-900">
+                      <router-link v-if="transfer.newOwner?.username" :to="`/profile/${transfer.newOwner.username}`" class="font-semibold text-gray-900 hover:text-blue-600">
                         {{ transfer.newOwner?.name }}
-                        <span v-if="transfer.newOwner?.username" class="text-sm text-gray-500">
+                        <span class="text-sm text-gray-500">
                           @{{ transfer.newOwner.username }}
                         </span>
+                      </router-link>
+                      <p v-else class="font-semibold text-gray-900">
+                        {{ transfer.newOwner?.name }}
                       </p>
                       <p class="text-sm text-gray-600">
                         Transfer ownership of

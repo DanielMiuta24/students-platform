@@ -1240,17 +1240,28 @@
               >
                 <div class="flex items-center gap-4">
                   <!-- User Avatar -->
-                  <div v-if="typeof request.user === 'object' && request.user.avatar" class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                    <img :src="request.user.avatar" :alt="typeof request.user === 'object' ? request.user.name : ''" class="w-full h-full object-cover" />
-                  </div>
+                  <router-link v-if="typeof request.user === 'object'" :to="`/profile/${request.user.username}`" class="flex-shrink-0">
+                    <img
+                      v-if="request.user.avatar"
+                      :src="request.user.avatar"
+                      :alt="request.user.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {{ request.user.name.charAt(0).toUpperCase() }}
+                    </div>
+                  </router-link>
                   <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                    {{ typeof request.user === 'object' ? request.user.name.charAt(0).toUpperCase() : '?' }}
+                    ?
                   </div>
 
                   <!-- User Info -->
                   <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold text-gray-900 truncate">
-                      {{ typeof request.user === 'object' ? request.user.name : 'Unknown User' }}
+                    <router-link v-if="typeof request.user === 'object'" :to="`/profile/${request.user.username}`" class="font-semibold text-gray-900 hover:text-blue-600 truncate block">
+                      {{ request.user.name }}
+                    </router-link>
+                    <h4 v-else class="font-semibold text-gray-900 truncate">
+                      Unknown User
                     </h4>
                     <p class="text-sm text-gray-600 truncate">
                       @{{ typeof request.user === 'object' ? request.user.username : 'unknown' }}
@@ -1322,9 +1333,17 @@
               >
                 <div class="flex items-center gap-4">
                   <!-- User Avatar or Email Icon -->
-                  <div v-if="invitation.recipientUser" class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
-                    {{ invitation.recipientUser.name.charAt(0).toUpperCase() }}
-                  </div>
+                  <router-link v-if="invitation.recipientUser" :to="`/profile/${invitation.recipientUser.username}`" class="flex-shrink-0">
+                    <img
+                      v-if="invitation.recipientUser.avatar"
+                      :src="invitation.recipientUser.avatar"
+                      :alt="invitation.recipientUser.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div v-else class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+                      {{ invitation.recipientUser.name.charAt(0).toUpperCase() }}
+                    </div>
+                  </router-link>
                   <div v-else class="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -1334,8 +1353,11 @@
 
                   <!-- User/Email Info -->
                   <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold text-gray-900 truncate">
-                      {{ invitation.recipientUser ? invitation.recipientUser.name : invitation.recipientEmail }}
+                    <router-link v-if="invitation.recipientUser" :to="`/profile/${invitation.recipientUser.username}`" class="font-semibold text-gray-900 hover:text-blue-600 truncate block">
+                      {{ invitation.recipientUser.name }}
+                    </router-link>
+                    <h4 v-else class="font-semibold text-gray-900 truncate">
+                      {{ invitation.recipientEmail }}
                     </h4>
                     <p v-if="invitation.recipientUser" class="text-sm text-gray-600 truncate">
                       @{{ invitation.recipientUser.username }}
