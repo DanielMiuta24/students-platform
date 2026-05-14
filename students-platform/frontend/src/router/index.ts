@@ -12,7 +12,6 @@ import Feed from '../pages/Feed.vue';
 import UserProfile from '../pages/UserProfile.vue';
 import Messages from '../pages/Messages.vue';
 import EditProfile from '../pages/EditProfile.vue';
-import ChangePassword from '../pages/ChangePassword.vue';
 import ViewCommunity from '../pages/ViewCommunity.vue';
 import EditPost from '../pages/EditPost.vue';
 import { useSessionStore } from '../store/session';
@@ -23,7 +22,6 @@ const routes = [
   { path: '/login', component: Login, meta: { guestOnly: true } },
   { path: '/register', component: Register, meta: { guestOnly: true } },
   { path: '/edit-profile', component: EditProfile, name: 'EditProfile', meta: { requiresAuth: true } },
-  { path: '/change-password', component: ChangePassword, name: 'ChangePassword', meta: { requiresAuth: true } },
   { path: '/posts/:id/edit', component: EditPost, name: 'EditPost', meta: { requiresAuth: true } },
   {
     path: '/dashboard',
