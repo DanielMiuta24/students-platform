@@ -58,7 +58,7 @@
         <div class="space-y-8">
           <!-- Join Requests to My Communities -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Community Join Requests</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Join Requests</h3>
             <div v-if="joinRequestsToMyCommunities.length === 0" class="empty-state-small">
               <p class="text-gray-600">No pending join requests</p>
             </div>
@@ -95,7 +95,7 @@
 
           <!-- Received Invitations -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Community Invitations Received</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Invitations</h3>
             <div v-if="myInvitations.length === 0" class="empty-state-small">
               <p class="text-gray-600">No pending invitations</p>
             </div>
@@ -137,7 +137,7 @@
 
           <!-- Received Ownership Transfer Requests -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfer Requests Received</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfers</h3>
             <div v-if="ownershipTransferRequests.length === 0" class="empty-state-small">
               <p class="text-gray-600">No pending ownership transfers</p>
             </div>
@@ -186,7 +186,7 @@
         <div class="space-y-8">
           <!-- My Join Requests -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">My Join Requests</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Join Requests</h3>
             <div v-if="myJoinRequests.length === 0" class="empty-state-small">
               <p class="text-gray-600">No pending join requests</p>
             </div>
@@ -219,9 +219,9 @@
 
           <!-- Sent Invitations -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Invitations Sent</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Invitations</h3>
             <div v-if="mySentInvitations.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending sent invitations</p>
+              <p class="text-gray-600">No pending invitations</p>
             </div>
             <div v-else class="space-y-3">
               <div
@@ -268,7 +268,7 @@
 
           <!-- Sent Ownership Transfer Requests -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfers Sent</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfers</h3>
             <div v-if="sentOwnershipTransferRequests.length === 0" class="empty-state-small">
               <p class="text-gray-600">No pending ownership transfers</p>
             </div>
