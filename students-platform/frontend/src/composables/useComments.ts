@@ -54,18 +54,12 @@ export function useComments(postId: string) {
       isSubmitting.value = true;
       error.value = null;
 
-      console.log('[useComments] Creating comment:', { postId, content, parentCommentId });
-
       const newComment = await createComment({
         postId,
         content,
         parentCommentId,
       });
 
-      console.log('[useComments] Comment created successfully:', newComment);
-
-      // Add comment optimistically for immediate feedback
-      // The duplicate check in CommentSection will prevent duplicates when realtime event arrives
       if (!parentCommentId) {
         comments.value.unshift(newComment);
         pagination.value.total += 1;

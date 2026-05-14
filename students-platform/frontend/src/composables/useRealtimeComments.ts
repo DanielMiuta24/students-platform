@@ -34,21 +34,18 @@ export function useRealtimeComments(
   const isConnected = ref(false);
 
   const handleCommentCreated = (payload: CommentEventPayload) => {
-    console.log('[Realtime] Comment created:', payload);
     if (onCommentCreated && 'content' in payload.data) {
       onCommentCreated(payload.data as SafeComment);
     }
   };
 
   const handleCommentUpdated = (payload: CommentEventPayload) => {
-    console.log('[Realtime] Comment updated:', payload);
     if (onCommentUpdated && 'content' in payload.data) {
       onCommentUpdated(payload.data as SafeComment);
     }
   };
 
   const handleCommentDeleted = (payload: CommentEventPayload) => {
-    console.log('[Realtime] Comment deleted:', payload);
     if (onCommentDeleted && 'commentId' in payload.data) {
       const data = payload.data as { commentId: string; childCommentIds: string[] };
       onCommentDeleted(data.commentId, data.childCommentIds);
