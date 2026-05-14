@@ -1,6 +1,6 @@
 <template>
   <el-dropdown trigger="click" @visible-change="handleDropdownVisibleChange" placement="bottom-end">
-    <button class="notifications-button" :class="{ 'has-unread': unreadCount > 0 }" title="Notifications">
+    <button class="notifications-button" :class="{ 'notifications-button-active': isDropdownOpen || unreadCount > 0 }" title="Notifications">
       <el-icon><Bell /></el-icon>
       <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
     </button>
@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationStore } from '../stores/notification';
 import { Bell, BellFilled, User, Loading, Check, Close } from '@element-plus/icons-vue';
@@ -115,6 +115,7 @@ import { getAvatarUrl } from '../utils/avatar';
 const router = useRouter();
 const notificationStore = useNotificationStore();
 
+const isDropdownOpen = ref(false);
 const notifications = computed(() => notificationStore.notifications);
 const unreadCount = computed(() => notificationStore.unreadCount);
 const loading = computed(() => notificationStore.loading);
@@ -122,6 +123,7 @@ const loading = computed(() => notificationStore.loading);
 const displayNotifications = computed(() => notifications.value.slice(0, 10));
 
 const handleDropdownVisibleChange = async (visible: boolean) => {
+  isDropdownOpen.value = visible;
   if (visible && notifications.value.length === 0) {
     await notificationStore.fetchNotifications();
   }
@@ -320,12 +322,12 @@ onUnmounted(() => {
   background-color: #d8dadf;
 }
 
-.notifications-button.has-unread {
+.notifications-button-active {
   background-color: #3b82f6;
   color: white;
 }
 
-.notifications-button.has-unread:hover {
+.notifications-button-active:hover {
   background-color: #2563eb;
 }
 
