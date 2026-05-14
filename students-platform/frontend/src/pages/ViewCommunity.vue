@@ -1460,7 +1460,7 @@
           </div>
 
           <!-- Transfer Ownership Section (Founder only) -->
-          <div v-if="isFounder" class="border border-amber-200 bg-amber-50 rounded-lg p-6">
+          <div v-if="isFounder && !pendingOwnershipTransfer" class="border border-amber-200 bg-amber-50 rounded-lg p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -1480,6 +1480,32 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
               Transfer Ownership
+            </button>
+          </div>
+
+          <!-- Pending Ownership Transfer Section (Founder who sent the request) -->
+          <div v-if="isFounder && pendingOwnershipTransfer" class="border border-purple-200 bg-purple-50 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Pending Transfer Ownership Request
+            </h3>
+
+            <div class="bg-white border border-purple-200 rounded-lg p-4 mb-4">
+              <p class="text-sm text-gray-700">
+                You have sent an ownership transfer request to <span class="font-semibold">{{ pendingOwnershipTransfer.newOwner?.name || 'an admin' }}</span>
+              </p>
+            </div>
+
+            <button
+              @click="handleCancelOwnershipTransferByCommunity"
+              class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancel Request
             </button>
           </div>
 
@@ -2004,6 +2030,54 @@
       @confirm="showRejectOwnershipError = false"
     />
 
+    <!-- Cancel Ownership Confirmation Modal -->
+    <ConfirmationModal
+      :is-open="showCancelOwnershipConfirmation"
+      variant="warning"
+      title="Cancel Transfer Request?"
+      message="Are you sure you want to cancel this ownership transfer request?"
+      :info-box="{
+        icon: '<svg fill=\'currentColor\' viewBox=\'0 0 20 20\'><path fill-rule=\'evenodd\' d=\'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z\' clip-rule=\'evenodd\' /></svg>',
+        title: 'This will:',
+        items: [
+          'Remove the pending transfer request',
+          'The selected admin will no longer see the transfer request',
+          'You can send a new transfer request later'
+        ]
+      }"
+      confirm-text="Yes, Cancel Request"
+      cancel-text="Keep Request"
+      :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M6 18L18 6M6 6l12 12\' /></svg>'"
+      @close="showCancelOwnershipConfirmation = false"
+      @confirm="confirmCancelOwnershipTransfer"
+    />
+
+    <!-- Cancel Ownership Success Modal -->
+    <ConfirmationModal
+      :is-open="showCancelOwnershipSuccess"
+      variant="success"
+      title="Request Cancelled"
+      message="Ownership transfer request has been cancelled successfully."
+      confirm-text="Got it"
+      :show-cancel="false"
+      :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg>'"
+      @close="showCancelOwnershipSuccess = false"
+      @confirm="showCancelOwnershipSuccess = false"
+    />
+
+    <!-- Cancel Ownership Error Modal -->
+    <ConfirmationModal
+      :is-open="showCancelOwnershipError"
+      variant="danger"
+      title="Cancel Failed"
+      :message="ownershipErrorMessage"
+      confirm-text="OK"
+      :show-cancel="false"
+      :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg>'"
+      @close="showCancelOwnershipError = false"
+      @confirm="showCancelOwnershipError = false"
+    />
+
     <!-- Promote Member Confirmation Modal -->
     <ConfirmationModal
       :is-open="showPromoteConfirmation"
@@ -2426,7 +2500,7 @@ import { getScoredFeed, getCommunityScoredFeed } from '../api/post';
 import type { SafePost } from '../types/post';
 import { useCommunity } from '../composables/useCommunity';
 import { useCommunityMembers } from '../composables/useCommunityMembers';
-import { sendInvitations, getInvitations, cancelInvitation, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, canViewCommunityPosts } from '../api/community';
+import { sendInvitations, getInvitations, cancelInvitation, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, cancelOwnershipTransfer, canViewCommunityPosts } from '../api/community';
 import type { InviteUsersPayload, SafeJoinRequest, CommunityMember } from '../types/community';
 import { COMMUNITY_ROLE } from '../types/community';
 import { getAvatarUrl } from '../utils/avatar';
@@ -2533,6 +2607,9 @@ const showAcceptOwnershipConfirmation = ref(false);
 const showAcceptOwnershipSuccess = ref(false);
 const showRejectOwnershipConfirmation = ref(false);
 const showRejectOwnershipSuccess = ref(false);
+const showCancelOwnershipConfirmation = ref(false);
+const showCancelOwnershipSuccess = ref(false);
+const showCancelOwnershipError = ref(false);
 const showTransferOwnershipSuccess = ref(false);
 const showTransferOwnershipError = ref(false);
 const showAcceptOwnershipError = ref(false);
@@ -3109,6 +3186,8 @@ const handleTransferOwnership = async () => {
     showTransferOwnershipModal.value = false;
     selectedNewOwnerId.value = '';
 
+    await fetchPendingOwnershipTransfer();
+
     showTransferOwnershipSuccess.value = true;
     setTimeout(() => {
       showTransferOwnershipSuccess.value = false;
@@ -3479,6 +3558,30 @@ const confirmRejectOwnership = async () => {
     console.error('Failed to reject ownership transfer:', err);
     ownershipErrorMessage.value = err.message || 'Failed to reject ownership transfer';
     showRejectOwnershipError.value = true;
+  }
+};
+
+const handleCancelOwnershipTransferByCommunity = () => {
+  showCancelOwnershipConfirmation.value = true;
+};
+
+const confirmCancelOwnershipTransfer = async () => {
+  if (!community.value) return;
+
+  showCancelOwnershipConfirmation.value = false;
+
+  try {
+    await cancelOwnershipTransfer(community.value.id);
+    pendingOwnershipTransfer.value = null;
+
+    showCancelOwnershipSuccess.value = true;
+    setTimeout(() => {
+      showCancelOwnershipSuccess.value = false;
+    }, 3000);
+  } catch (err: any) {
+    console.error('Failed to cancel ownership transfer:', err);
+    ownershipErrorMessage.value = err.message || 'Failed to cancel ownership transfer';
+    showCancelOwnershipError.value = true;
   }
 };
 

@@ -2,16 +2,20 @@
   <div class="space-y-6">
     <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
       <div class="flex items-start gap-6">
-        <img
-          :src="getAvatarUrl(user?.name || 'User', user?.avatar)"
-          :alt="user?.name || 'User'"
-          class="w-24 h-24 rounded-full object-cover shadow-lg flex-shrink-0"
-        />
+        <router-link :to="`/profile/${user?.username}`" class="flex-shrink-0">
+          <img
+            :src="getAvatarUrl(user?.name || 'User', user?.avatar)"
+            :alt="user?.name || 'User'"
+            class="w-24 h-24 rounded-full object-cover shadow-lg cursor-pointer hover:opacity-80 transition-opacity"
+          />
+        </router-link>
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-2">
-            <h1 class="text-3xl font-bold text-blue-900">
-              {{ user?.name || "User" }}
-            </h1>
+            <router-link :to="`/profile/${user?.username}`" class="hover:opacity-80 transition-opacity">
+              <h1 class="text-3xl font-bold text-blue-900">
+                {{ user?.name || "User" }}
+              </h1>
+            </router-link>
             <span :class="userTypeClass">
               <svg class="w-3.5 h-3.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path v-if="userTypeIcon === 'student'" d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
@@ -38,7 +42,11 @@
               <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span class="text-gray-700"><strong>Username:</strong> @{{ user?.username || 'N/A' }}</span>
+              <span class="text-gray-700"><strong>Username:</strong>
+                <router-link :to="`/profile/${user?.username}`" class="text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+                  @{{ user?.username || 'N/A' }}
+                </router-link>
+              </span>
             </div>
 
             <div class="flex items-center gap-2 text-sm">

@@ -254,10 +254,7 @@ const getNotificationMessage = (notification: Notification): {
         return {
           text: 'invited you to join',
           targetName: notification.target.community.name || 'a community',
-          targetLink: `/community/${notification.target.community.slug || notification.target.community._id}`,
-          extraText: ' - ',
-          extraLink: '/dashboard/requests/invitations',
-          extraLinkText: 'view invitation'
+          targetLink: `/community/${notification.target.community.slug || notification.target.community._id}`
         };
       }
       return {

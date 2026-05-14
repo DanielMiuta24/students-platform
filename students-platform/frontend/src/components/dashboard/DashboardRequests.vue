@@ -351,7 +351,7 @@
                   </router-link>
                   <div v-else class="flex-shrink-0">
                     <img
-                      :src="getAvatarUrl(invitation.recipientName || 'User', invitation.recipientAvatar)"
+                      :src="getAvatarUrl(invitation.recipientName || 'User')"
                       :alt="invitation.recipientName"
                       class="w-12 h-12 rounded-full object-cover"
                     />
@@ -408,7 +408,7 @@
                   </router-link>
                   <div v-else class="flex-shrink-0">
                     <img
-                      :src="getAvatarUrl(transfer.newOwner?.name || 'User', transfer.newOwner?.avatar)"
+                      :src="getAvatarUrl(transfer.newOwner?.name || 'User')"
                       :alt="transfer.newOwner?.name"
                       class="w-12 h-12 rounded-full object-cover"
                     />

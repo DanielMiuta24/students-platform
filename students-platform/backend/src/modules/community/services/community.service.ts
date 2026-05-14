@@ -1036,7 +1036,7 @@ export class CommunityService {
       status: 'pending',
     })
       .populate('community', 'name slug')
-      .populate('currentOwner', 'name username')
+      .populate('currentOwner', 'name username avatar')
       .sort({ createdAt: -1 })
       .exec();
 
@@ -1051,6 +1051,7 @@ export class CommunityService {
         id: (transfer.currentOwner as any)._id.toString(),
         name: (transfer.currentOwner as any).name,
         username: (transfer.currentOwner as any).username,
+        avatar: (transfer.currentOwner as any).avatar,
       },
       expiresAt: transfer.expiresAt,
       createdAt: transfer.createdAt,
