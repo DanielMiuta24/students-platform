@@ -269,8 +269,7 @@ const getNotificationMessage = (notification: Notification): {
         const commentId = notification.target._id;
         if (!postSlug) {
           return {
-            text: 'commented on your',
-            targetName: 'post',
+            text: 'commented on your post',
           };
         }
 
@@ -282,8 +281,7 @@ const getNotificationMessage = (notification: Notification): {
         }
 
         return {
-          text: 'commented on your',
-          targetName: 'post',
+          text: 'commented on your post',
           targetLink
         };
       }
@@ -295,8 +293,8 @@ const getNotificationMessage = (notification: Notification): {
         postLink = `/profile/${post.author}/posts/${post.slug}`;
       }
       return {
-        text: 'commented on your',
-        targetName: 'post',
+        text: 'commented on your post',
+        targetName: post.title ? `"${post.title}"` : undefined,
         targetLink: postLink
       };
     case 'reply':
@@ -304,10 +302,16 @@ const getNotificationMessage = (notification: Notification): {
         const target = notification.target as any;
         const postSlug = target.postSlug;
         const commentId = notification.target._id;
+        const commentContent = target.content;
+
+        const truncatedContent = commentContent && commentContent.length > 50
+          ? commentContent.substring(0, 50) + '...'
+          : commentContent;
+
         if (!postSlug) {
           return {
-            text: 'replied to your',
-            targetName: 'comment',
+            text: 'replied to your comment',
+            targetName: truncatedContent ? `"${truncatedContent}"` : undefined,
           };
         }
 
@@ -319,8 +323,8 @@ const getNotificationMessage = (notification: Notification): {
         }
 
         return {
-          text: 'replied to your',
-          targetName: 'comment',
+          text: 'replied to your comment',
+          targetName: truncatedContent ? `"${truncatedContent}"` : undefined,
           targetLink
         };
       }
@@ -332,8 +336,7 @@ const getNotificationMessage = (notification: Notification): {
         replyPostLink = `/profile/${replyPost.author}/posts/${replyPost.slug}`;
       }
       return {
-        text: 'replied to your',
-        targetName: 'comment',
+        text: 'replied to your comment',
         targetLink: replyPostLink
       };
     case 'like':
