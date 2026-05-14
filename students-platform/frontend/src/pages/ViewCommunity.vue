@@ -2411,7 +2411,10 @@ const memberIds = computed(() => {
   const requestUserIds = joinRequests.value.map(request =>
     typeof request.user === 'string' ? request.user : request.user.id
   );
-  return [...ids, ...requestUserIds];
+  const invitedUserIds = pendingInvitations.value
+    .filter(inv => inv.recipientUser)
+    .map(inv => inv.recipientUser.id);
+  return [...ids, ...requestUserIds, ...invitedUserIds];
 });
 
 const regularMembers = computed(() => {
@@ -2496,6 +2499,7 @@ const joinRequestsLoading = ref(false);
 const joinRequestsError = ref<string | null>(null);
 const processingRequestId = ref<string | null>(null);
 const showPostDeleteSuccess = ref(false);
+const pendingInvitations = ref<any[]>([]);
 
 const bannedUsers = ref<CommunityMember[]>([]);
 const bannedUsersLoading = ref(false);
@@ -2844,13 +2848,17 @@ const handleInvitePeople = async () => {
     return;
   }
 
-  // Fetch join requests to exclude users with pending requests
+  // Fetch join requests and pending invitations to exclude users
   if (isAdmin.value && community.value?.id) {
     try {
-      const response = await getJoinRequests(community.value.id);
-      joinRequests.value = response.requests;
+      const [joinRequestsResponse, invitationsResponse] = await Promise.all([
+        getJoinRequests(community.value.id),
+        getInvitations(community.value.id)
+      ]);
+      joinRequests.value = joinRequestsResponse.requests;
+      pendingInvitations.value = invitationsResponse.invitations || [];
     } catch (err) {
-      console.error('Failed to fetch join requests:', err);
+      console.error('Failed to fetch join requests or invitations:', err);
     }
   }
 
