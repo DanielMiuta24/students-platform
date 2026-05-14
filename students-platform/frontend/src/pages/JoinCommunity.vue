@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
     <section class="max-w-6xl mx-auto px-4 py-12 md:py-16">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
         <div>
@@ -39,7 +39,8 @@
           </div>
           <button
             @click="router.push('/community/create')"
-            class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
+            class="px-6 py-3 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
+            style="background-color: #0f2a5f;"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -103,7 +104,8 @@
             <p class="text-gray-600 mb-4">Be the first to create a community!</p>
             <button
               @click="router.push('/community/create')"
-              class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all"
+              class="px-6 py-2 text-white font-semibold rounded-lg transition-all"
+              style="background-color: #0f2a5f;"
             >
               Create Community
             </button>

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
     <div class="px-6 py-8">
       <div class="flex gap-6">
         <aside class="w-72 flex-shrink-0">

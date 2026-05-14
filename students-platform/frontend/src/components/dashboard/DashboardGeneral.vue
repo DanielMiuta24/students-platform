@@ -206,7 +206,7 @@ const userTypeClass = computed(() => {
   if (userType.includes('student')) {
     return `${baseClass} bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200`;
   } else if (userType.includes('studyseeker')) {
-    return `${baseClass} bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200`;
+    return `${baseClass} bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200`;
   } else if (userType.includes('admin')) {
     return `${baseClass} bg-gradient-to-r from-red-50 to-red-100 text-red-700 border border-red-200`;
   }

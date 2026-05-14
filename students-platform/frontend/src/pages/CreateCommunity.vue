@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 py-12 px-4">
     <div class="max-w-3xl mx-auto">
       <div class="text-center mb-10">
         <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">

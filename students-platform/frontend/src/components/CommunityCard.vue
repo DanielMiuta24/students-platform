@@ -20,7 +20,8 @@
       <!-- Fallback Gradient when no cover image -->
       <div
         v-else
-        class="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700"
+        class="absolute inset-0"
+        style="background: linear-gradient(to right, #2563eb, #4f46e5, #0f2a5f);"
       >
         <div class="absolute inset-0 opacity-20">
           <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
