@@ -1289,6 +1289,8 @@ export class CommunityService {
         targetId: communityId,
       }).catch(err => console.error('Failed to create ownership transfer rejection notification:', err));
     }
+
+    return { message: 'Ownership transfer rejected successfully' };
   }
 
   private checkMembership(community: CommunityDoc, userId: string): boolean {
