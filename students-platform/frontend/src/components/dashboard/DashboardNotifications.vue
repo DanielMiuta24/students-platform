@@ -262,7 +262,7 @@ const getNotificationRoute = (notification: Notification): string | null => {
     case 'community_invite':
       return '/dashboard/requests/incoming';
     case 'community_join_request':
-      return '/dashboard/requests/outgoing';
+      return '/dashboard/requests/incoming';
     case 'community_join_approved':
       if (notification.targetModel === 'Community') {
         return `/community/${notification.target.slug}`;
@@ -461,10 +461,9 @@ const getNotificationMessage = (notification: Notification): {
       };
     case 'ownership_transfer':
       return {
-        text: 'transferred ownership of',
+        text: 'took over the ownership of',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target.slug}`,
-        extraText: ' to you'
+        targetLink: `/community/${notification.target.slug}`
       };
     default:
       return {
