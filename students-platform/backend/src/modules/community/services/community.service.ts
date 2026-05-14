@@ -571,7 +571,7 @@ export class CommunityService {
       typeof invitation.recipientUser === 'string' ? invitation.recipientUser : invitation.recipientUser?.toString();
 
     const isRecipient = recipientUserId === userId;
-    const isSender = invitation.invitedBy.toString() === userId;
+    const isSender = invitation.invitedBy?.toString() === userId;
     const isAdmin = this.isAdmin(community, userId);
 
     if (!isAdmin && !isRecipient && !isSender) {
@@ -1236,11 +1236,7 @@ export class CommunityService {
       ? transfer.currentOwner
       : transfer.currentOwner?.toString();
 
-    const communityId = typeof transfer.community === 'string'
-      ? transfer.community
-      : transfer.community?.toString();
-
-    if (!communityId) {
+    if (!currentOwnerId || !communityId) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
     }
 

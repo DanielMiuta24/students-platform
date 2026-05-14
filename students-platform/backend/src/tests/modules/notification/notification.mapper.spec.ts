@@ -22,20 +22,14 @@ describe('NotificationMapper', () => {
 
       const mockNotification = {
         _id: 'notif123',
-        recipient: 'recipient123',
-        actor: 'actor123',
+        recipient: recipientData,
+        actor: actorData,
         type: 'comment' as const,
         targetModel: 'Post' as const,
-        target: 'post123',
+        target: targetData,
         read: false,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
-        populated: jest.fn((field: string) => {
-          if (field === 'recipient') return recipientData;
-          if (field === 'actor') return actorData;
-          if (field === 'target') return targetData;
-          return null;
-        }),
       } as any as NotificationDoc;
 
       const result = NotificationMapper.toDTO(mockNotification);
@@ -44,12 +38,14 @@ describe('NotificationMapper', () => {
       expect(result.recipient).toEqual({
         _id: 'recipient123',
         name: 'Recipient User',
-        profilePicture: 'recipient.jpg',
+        username: '',
+        profilePicture: '',
       });
       expect(result.actor).toEqual({
         _id: 'actor123',
         name: 'Actor User',
-        profilePicture: 'actor.jpg',
+        username: '',
+        profilePicture: '',
       });
       expect(result.target).toHaveProperty('_id', 'post123');
       expect(result.target).toHaveProperty('title', 'Test Post');
@@ -73,20 +69,14 @@ describe('NotificationMapper', () => {
 
       const mockNotification = {
         _id: 'notif123',
-        recipient: 'recipient123',
-        actor: 'actor123',
+        recipient: recipientData,
+        actor: actorData,
         type: 'reply' as const,
         targetModel: 'Comment' as const,
-        target: 'comment123',
+        target: targetData,
         read: false,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
-        populated: jest.fn((field: string) => {
-          if (field === 'recipient') return recipientData;
-          if (field === 'actor') return actorData;
-          if (field === 'target') return targetData;
-          return null;
-        }),
       } as any as NotificationDoc;
 
       const result = NotificationMapper.toDTO(mockNotification);
@@ -112,20 +102,14 @@ describe('NotificationMapper', () => {
 
       const mockNotification = {
         _id: 'notif123',
-        recipient: 'recipient123',
-        actor: 'actor123',
+        recipient: recipientData,
+        actor: actorData,
         type: 'community_join' as const,
         targetModel: 'Community' as const,
-        target: 'community123',
+        target: targetData,
         read: false,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
-        populated: jest.fn((field: string) => {
-          if (field === 'recipient') return recipientData;
-          if (field === 'actor') return actorData;
-          if (field === 'target') return targetData;
-          return null;
-        }),
       } as any as NotificationDoc;
 
       const result = NotificationMapper.toDTO(mockNotification);
@@ -147,25 +131,19 @@ describe('NotificationMapper', () => {
       const targetData = {
         _id: 'user123',
         name: 'Target User',
-        profilePicture: 'target.jpg',
+        avatar: 'target.jpg',
       };
 
       const mockNotification = {
         _id: 'notif123',
-        recipient: 'recipient123',
-        actor: 'actor123',
+        recipient: recipientData,
+        actor: actorData,
         type: 'follow' as const,
         targetModel: 'User' as const,
-        target: 'user123',
+        target: targetData,
         read: false,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
-        populated: jest.fn((field: string) => {
-          if (field === 'recipient') return recipientData;
-          if (field === 'actor') return actorData;
-          if (field === 'target') return targetData;
-          return null;
-        }),
       } as any as NotificationDoc;
 
       const result = NotificationMapper.toDTO(mockNotification);
@@ -191,28 +169,22 @@ describe('NotificationMapper', () => {
 
       const mockNotification = {
         _id: 'notif123',
-        recipient: 'recipient123',
-        actor: 'actor123',
+        recipient: recipientData,
+        actor: actorData,
         type: 'like' as const,
         targetModel: 'Post' as const,
-        target: 'post123',
+        target: targetData,
         read: true,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
-        populated: jest.fn((field: string) => {
-          if (field === 'recipient') return recipientData;
-          if (field === 'actor') return actorData;
-          if (field === 'target') return targetData;
-          return null;
-        }),
       } as any as NotificationDoc;
 
       const result = NotificationMapper.toDTO(mockNotification);
 
       expect(result._id).toBe('notif123');
       expect(result.read).toBe(true);
-      expect(result.recipient.profilePicture).toBeUndefined();
-      expect(result.actor.profilePicture).toBeUndefined();
+      expect(result.recipient.profilePicture).toBe('');
+      expect(result.actor.profilePicture).toBe('');
     });
   });
 });

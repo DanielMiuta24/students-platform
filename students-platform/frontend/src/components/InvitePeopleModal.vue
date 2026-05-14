@@ -287,10 +287,6 @@ const error = ref<string | null>(null);
 
 // Fetch friends, followers, and following when modal opens
 const fetchPeople = async () => {
-  console.log('[InvitePeopleModal] fetchPeople called');
-  console.log('[InvitePeopleModal] isAuthenticated:', session.isAuthenticated);
-  console.log('[InvitePeopleModal] user:', session.user);
-
   if (!session.isAuthenticated || !session.user?.id) {
     console.error('User not authenticated or user ID not available');
     return;
@@ -300,23 +296,14 @@ const fetchPeople = async () => {
     loading.value = true;
     error.value = null;
 
-    console.log('[InvitePeopleModal] Fetching data from APIs...');
     const [friendsRes, followersRes, followingRes] = await Promise.all([
       getFriends(session.user.id, 1, 100),
       getFollowers(session.user.id, 1, 100),
       getFollowing(session.user.id, 1, 100)
     ]);
 
-    console.log('[InvitePeopleModal] API responses:', {
-      friends: friendsRes.users?.length || 0,
-      followers: followersRes.users?.length || 0,
-      following: followingRes.users?.length || 0
-    });
-
-    // Combine and deduplicate by user ID
     const peopleMap = new Map<string, Person>();
 
-    // Add friends
     (friendsRes.users || []).forEach((user: any) => {
       peopleMap.set(user.id, {
         id: user.id,
@@ -328,7 +315,6 @@ const fetchPeople = async () => {
       });
     });
 
-    // Add followers (if not already added as friend)
     (followersRes.users || []).forEach((user: any) => {
       if (!peopleMap.has(user.id)) {
         peopleMap.set(user.id, {
@@ -342,7 +328,6 @@ const fetchPeople = async () => {
       }
     });
 
-    // Add following (if not already added as friend or follower)
     (followingRes.users || []).forEach((user: any) => {
       if (!peopleMap.has(user.id)) {
         peopleMap.set(user.id, {
@@ -357,8 +342,6 @@ const fetchPeople = async () => {
     });
 
     people.value = Array.from(peopleMap.values());
-    console.log('[InvitePeopleModal] Fetched people:', people.value.length);
-    console.log('[InvitePeopleModal] People data:', people.value);
   } catch (err: any) {
     console.error('[InvitePeopleModal] Error fetching people:', err);
     error.value = err.message || 'Failed to load people';
@@ -367,9 +350,7 @@ const fetchPeople = async () => {
   }
 };
 
-// Fetch people when modal opens
 watch(() => props.isOpen, (isOpen) => {
-  console.log('[InvitePeopleModal] isOpen changed to:', isOpen);
   if (isOpen) {
     fetchPeople();
   }
