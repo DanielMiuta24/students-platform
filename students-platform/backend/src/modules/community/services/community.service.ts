@@ -1284,7 +1284,7 @@ export class CommunityService {
       await notificationService.createNotification({
         recipientId: currentOwnerId,
         actorId: newOwnerId,
-        type: 'ownership_transfer',
+        type: 'ownership_transfer_rejected',
         targetModel: 'Community',
         targetId: communityId,
       }).catch(err => console.error('Failed to create ownership transfer rejection notification:', err));

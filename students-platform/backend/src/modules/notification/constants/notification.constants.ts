@@ -31,4 +31,5 @@ export const NOTIFICATION_EMAIL_SUBJECTS = {
   admin_assign: 'You have been assigned as an admin',
   ownership_transfer_request: 'Request to transfer community ownership',
   ownership_transfer: 'Community ownership transferred',
+  ownership_transfer_rejected: 'Community ownership transfer rejected',
 } as const;

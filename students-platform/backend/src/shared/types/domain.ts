@@ -22,6 +22,7 @@ export const NOTIFICATION_TYPES = [
 'admin_assign',
 'ownership_transfer_request',
 'ownership_transfer',
+'ownership_transfer_rejected',
 ] as const;
 
 export type NotificationType = typeof NOTIFICATION_TYPES[number];
