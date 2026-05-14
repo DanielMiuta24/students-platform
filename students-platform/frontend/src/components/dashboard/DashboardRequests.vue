@@ -55,14 +55,23 @@
     <div v-else class="space-y-6">
       <!-- Incoming Requests -->
       <div v-if="activeSubTab === 'incoming'">
-        <div class="space-y-8">
+        <!-- Empty State for Entire Tab -->
+        <div
+          v-if="joinRequestsToMyCommunities.length === 0 && myInvitations.length === 0 && ownershipTransferRequests.length === 0"
+          class="empty-state-small"
+        >
+          <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+          <p class="text-gray-600 text-lg font-semibold">No incoming requests</p>
+          <p class="text-gray-500 text-sm mt-2">You don't have any pending requests at the moment</p>
+        </div>
+
+        <div v-else class="space-y-8">
           <!-- Join Requests to My Communities -->
-          <div>
+          <div v-if="joinRequestsToMyCommunities.length > 0">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Join Requests</h3>
-            <div v-if="joinRequestsToMyCommunities.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending join requests</p>
-            </div>
-            <div v-else class="space-y-3">
+            <div class="space-y-3">
               <div
                 v-for="request in joinRequestsToMyCommunities"
                 :key="request.id"
@@ -94,12 +103,9 @@
           </div>
 
           <!-- Received Invitations -->
-          <div>
+          <div v-if="myInvitations.length > 0">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Invitations</h3>
-            <div v-if="myInvitations.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending invitations</p>
-            </div>
-            <div v-else class="space-y-3">
+            <div class="space-y-3">
               <div
                 v-for="invitation in myInvitations"
                 :key="invitation.id"
@@ -136,12 +142,9 @@
           </div>
 
           <!-- Received Ownership Transfer Requests -->
-          <div>
+          <div v-if="ownershipTransferRequests.length > 0">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfers</h3>
-            <div v-if="ownershipTransferRequests.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending ownership transfers</p>
-            </div>
-            <div v-else class="space-y-3">
+            <div class="space-y-3">
               <div
                 v-for="transfer in ownershipTransferRequests"
                 :key="transfer.id"
@@ -183,14 +186,23 @@
 
       <!-- Outgoing Requests -->
       <div v-if="activeSubTab === 'outgoing'">
-        <div class="space-y-8">
+        <!-- Empty State for Entire Tab -->
+        <div
+          v-if="myJoinRequests.length === 0 && mySentInvitations.length === 0 && sentOwnershipTransferRequests.length === 0"
+          class="empty-state-small"
+        >
+          <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          <p class="text-gray-600 text-lg font-semibold">No outgoing requests</p>
+          <p class="text-gray-500 text-sm mt-2">You haven't sent any requests yet</p>
+        </div>
+
+        <div v-else class="space-y-8">
           <!-- My Join Requests -->
-          <div>
+          <div v-if="myJoinRequests.length > 0">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Join Requests</h3>
-            <div v-if="myJoinRequests.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending join requests</p>
-            </div>
-            <div v-else class="space-y-3">
+            <div class="space-y-3">
               <div
                 v-for="community in myJoinRequests"
                 :key="community.id"
@@ -218,12 +230,9 @@
           </div>
 
           <!-- Sent Invitations -->
-          <div>
+          <div v-if="mySentInvitations.length > 0">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Invitations</h3>
-            <div v-if="mySentInvitations.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending invitations</p>
-            </div>
-            <div v-else class="space-y-3">
+            <div class="space-y-3">
               <div
                 v-for="invitation in mySentInvitations"
                 :key="invitation.id"
@@ -267,12 +276,9 @@
           </div>
 
           <!-- Sent Ownership Transfer Requests -->
-          <div>
+          <div v-if="sentOwnershipTransferRequests.length > 0">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfers</h3>
-            <div v-if="sentOwnershipTransferRequests.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending ownership transfers</p>
-            </div>
-            <div v-else class="space-y-3">
+            <div class="space-y-3">
               <div
                 v-for="transfer in sentOwnershipTransferRequests"
                 :key="transfer.id"
