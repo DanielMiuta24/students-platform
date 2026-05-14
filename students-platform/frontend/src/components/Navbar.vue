@@ -1109,13 +1109,13 @@ const handleSelect = () => {
 }
 
 :deep(.el-dropdown-menu__item:hover) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #3b82f6;
   color: white;
   transform: translateX(4px);
 }
 
 :deep(.el-dropdown-menu__item:last-child:hover) {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #ef4444;
 }
 
 :deep(.el-dropdown-menu__item:not(:last-child)) {
@@ -1134,17 +1134,17 @@ const handleSelect = () => {
 }
 
 .user-name:hover {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(59, 130, 246, 0.1);
   transform: translateY(-2px);
 }
 
 .user-name img {
-  border: 2px solid #667eea;
+  border: 2px solid #3b82f6;
   transition: all 0.3s ease;
 }
 
 .user-name:hover img {
-  border-color: #764ba2;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 </style>
