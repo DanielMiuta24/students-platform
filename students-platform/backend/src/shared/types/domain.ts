@@ -20,6 +20,7 @@ export const NOTIFICATION_TYPES = [
 'community_join_request',
 'community_join_approved',
 'admin_assign',
+'ownership_transfer_request',
 'ownership_transfer',
 ] as const;
 

@@ -999,7 +999,7 @@ export class CommunityService {
     await notificationService.createNotification({
       recipientId: newOwnerId,
       actorId: currentOwnerId,
-      type: 'ownership_transfer',
+      type: 'ownership_transfer_request',
       targetModel: 'Community',
       targetId: communityId,
     }).catch(err => console.error('Failed to create ownership transfer notification:', err));

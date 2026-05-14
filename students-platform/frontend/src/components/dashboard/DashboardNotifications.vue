@@ -277,6 +277,7 @@ const getNotificationRoute = (notification: Notification): string | null => {
       }
       return null;
     case 'admin_assign':
+    case 'ownership_transfer_request':
     case 'ownership_transfer':
       if (notification.targetModel === 'Community') {
         return `/community/${notification.target.slug}`;
@@ -456,6 +457,12 @@ const getNotificationMessage = (notification: Notification): {
     case 'admin_assign':
       return {
         text: 'assigned you as an admin in',
+        targetName: notification.target.name || 'a community',
+        targetLink: `/community/${notification.target.slug}`
+      };
+    case 'ownership_transfer_request':
+      return {
+        text: 'requested you to take over the ownership of',
         targetName: notification.target.name || 'a community',
         targetLink: `/community/${notification.target.slug}`
       };

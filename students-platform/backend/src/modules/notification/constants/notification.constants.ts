@@ -29,5 +29,6 @@ export const NOTIFICATION_EMAIL_SUBJECTS = {
   community_join_request: 'New request to join your community',
   community_join_approved: 'Your request to join a community was approved',
   admin_assign: 'You have been assigned as an admin',
-  ownership_transfer: 'Community ownership transferred to you',
+  ownership_transfer_request: 'Request to transfer community ownership',
+  ownership_transfer: 'Community ownership transferred',
 } as const;
