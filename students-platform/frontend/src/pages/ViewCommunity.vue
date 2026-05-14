@@ -2566,7 +2566,10 @@ const memberIds = computed(() => {
   const invitedUserIds = pendingInvitations.value
     .filter(inv => inv.recipientUser)
     .map(inv => inv.recipientUser.id);
-  return [...ids, ...requestUserIds, ...invitedUserIds];
+  const bannedUserIds = (community.value?.bannedUsers || []).map((user: any) =>
+    typeof user === 'string' ? user : user.id
+  );
+  return [...ids, ...requestUserIds, ...invitedUserIds, ...bannedUserIds];
 });
 
 const regularMembers = computed(() => {
