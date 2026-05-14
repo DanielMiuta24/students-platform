@@ -5,7 +5,7 @@
     @click.self="handleClose"
   >
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all border-2 border-blue-200">
-      <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 px-6 py-4">
+      <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-800 px-6 py-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
@@ -171,6 +171,7 @@
                         'inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold',
                         getTypeBadgeClass(person.type)
                       ]"
+                      :style="person.type === 'following' ? { backgroundColor: '#0f2a5f' } : {}"
                     >
                       {{ getTypeLabel(person.type) }}
                     </span>
@@ -415,7 +416,7 @@ const getTypeBadgeClass = (type: string) => {
     case 'friend':
       return 'bg-blue-100 text-blue-700';
     case 'following':
-      return 'bg-purple-100 text-purple-700';
+      return 'text-white';
     case 'follower':
       return 'bg-green-100 text-green-700';
     default:
