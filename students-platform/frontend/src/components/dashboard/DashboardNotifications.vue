@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationStore } from '../../stores/notification';
 import { User, Loading, Check, Delete } from '@element-plus/icons-vue';
@@ -433,19 +433,19 @@ const getNotificationMessage = (notification: Notification): {
         return {
           text: 'invited you to join',
           targetName: notification.target.community.name || 'a community',
-          targetLink: `/community/${notification.target.community.slug}`
+          targetLink: '/dashboard/requests/incoming'
         };
       }
       return {
         text: 'invited you to',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target.slug}`
+        targetLink: '/dashboard/requests/incoming'
       };
     case 'community_join_request':
       return {
         text: 'requested to join',
         targetName: notification.target.community?.name || 'your community',
-        targetLink: '/dashboard/requests/outgoing'
+        targetLink: '/dashboard/requests/incoming'
       };
     case 'community_join_approved':
       return {
@@ -464,7 +464,7 @@ const getNotificationMessage = (notification: Notification): {
         text: 'transferred ownership of',
         targetName: notification.target.name || 'a community',
         targetLink: `/community/${notification.target.slug}`,
-        extraText: 'to you'
+        extraText: ' to you'
       };
     default:
       return {
@@ -504,12 +504,7 @@ const navigateToTarget = (targetLink?: string) => {
 };
 
 onMounted(() => {
-  notificationStore.setupRealtimeListeners();
   notificationStore.fetchNotifications(1, false);
-});
-
-onUnmounted(() => {
-  notificationStore.clearRealtimeListeners();
 });
 </script>
 
