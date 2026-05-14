@@ -37,6 +37,7 @@ export interface SafeCommunity {
   joined?: boolean;
   role?: string;
   hasPendingRequest?: boolean;
+  hasPendingInvitation?: boolean;
   isBanned?: boolean;
   createdAt: Date;
   updatedAt: Date;

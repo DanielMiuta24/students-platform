@@ -2,10 +2,11 @@ import type { CommunityDoc } from '../models';
 import type { SafeCommunity, SafeFounder, SafeCategory } from '../types';
 
 export class CommunityMapper {
-  static toSafeCommunity(community: CommunityDoc, userId?: string, pendingRequestCommunityIds?: string[]): SafeCommunity {
+  static toSafeCommunity(community: CommunityDoc, userId?: string, pendingRequestCommunityIds?: string[], pendingInvitationCommunityIds?: string[]): SafeCommunity {
     let joined: boolean | undefined;
     let role: string | undefined;
     let hasPendingRequest: boolean | undefined;
+    let hasPendingInvitation: boolean | undefined;
     let isBanned: boolean | undefined;
 
     if (userId) {
@@ -22,6 +23,11 @@ export class CommunityMapper {
       // Check if user has a pending join request for this community
       if (pendingRequestCommunityIds) {
         hasPendingRequest = pendingRequestCommunityIds.includes(community._id.toString());
+      }
+
+      // Check if user has a pending invitation for this community
+      if (pendingInvitationCommunityIds) {
+        hasPendingInvitation = pendingInvitationCommunityIds.includes(community._id.toString());
       }
     }
 
@@ -44,14 +50,15 @@ export class CommunityMapper {
       joined,
       role,
       hasPendingRequest,
+      hasPendingInvitation,
       isBanned,
       createdAt: community.createdAt,
       updatedAt: community.updatedAt,
     };
   }
 
-  static toSafeCommunities(communities: CommunityDoc[], userId?: string, pendingRequestCommunityIds?: string[]): SafeCommunity[] {
-    return communities.map(c => this.toSafeCommunity(c, userId, pendingRequestCommunityIds));
+  static toSafeCommunities(communities: CommunityDoc[], userId?: string, pendingRequestCommunityIds?: string[], pendingInvitationCommunityIds?: string[]): SafeCommunity[] {
+    return communities.map(c => this.toSafeCommunity(c, userId, pendingRequestCommunityIds, pendingInvitationCommunityIds));
   }
 
   private static mapFounder(founder: any): string | SafeFounder {

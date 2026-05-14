@@ -288,7 +288,18 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.ALREADY_MEMBER);
     }
 
-    if (community.requiresApproval && !bypassApproval) {
+    const pendingInvitation = await CommunityInvitationModel.findOne({
+      community: communityId,
+      recipientUser: userId,
+      status: 'pending',
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (pendingInvitation) {
+      await CommunityInvitationModel.findByIdAndUpdate(pendingInvitation._id, {
+        status: 'accepted',
+      });
+    } else if (community.requiresApproval && !bypassApproval) {
       throw new Error(COMMUNITY_ERROR.REQUIRES_APPROVAL);
     }
 

@@ -2407,7 +2407,9 @@ const transferableAdmins = computed(() => {
 });
 
 const memberIds = computed(() => {
-  return members.value.map(member => member.id);
+  const ids = members.value.map(member => member.id);
+  const requestUserIds = joinRequests.value.map(request => request.user.id);
+  return [...ids, ...requestUserIds];
 });
 
 const regularMembers = computed(() => {
