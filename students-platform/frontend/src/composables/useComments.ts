@@ -64,8 +64,12 @@ export function useComments(postId: string) {
 
       console.log('[useComments] Comment created successfully:', newComment);
 
-      // Don't add the comment locally - let the realtime event handle it
-      // This prevents duplicates since the realtime event will be received by everyone including the author
+      // Add comment optimistically for immediate feedback
+      // The duplicate check in CommentSection will prevent duplicates when realtime event arrives
+      if (!parentCommentId) {
+        comments.value.unshift(newComment);
+        pagination.value.total += 1;
+      }
 
       return newComment;
     } catch (err: any) {
