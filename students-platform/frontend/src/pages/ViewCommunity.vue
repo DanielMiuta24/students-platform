@@ -2869,8 +2869,21 @@ const handleSendInvites = async (data: { userIds: string[]; emails: string[]; us
   invitedCount.value = data.userIds.length + data.emails.length;
 
   try {
-    const payload: InviteUsersPayload = { userIds: data.userIds };
+    const payload: InviteUsersPayload = {
+      userIds: data.userIds,
+      emails: data.emails
+    };
     await sendInvitations(communityId.value, payload);
+
+    // Refresh pending invitations after sending
+    if (isAdmin.value && community.value?.id) {
+      try {
+        const invitationsResponse = await getInvitations(community.value.id);
+        pendingInvitations.value = invitationsResponse.invitations || [];
+      } catch (err) {
+        console.error('Failed to refresh invitations:', err);
+      }
+    }
 
     showInviteModal.value = false;
     showInviteSuccess.value = true;
