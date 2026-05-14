@@ -1291,6 +1291,83 @@
             </div>
           </div>
 
+          <!-- Pending Invitations Section (Admin/Founder only) -->
+          <div v-if="isAdmin" class="border border-purple-200 bg-purple-50 rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                Pending Invitations
+              </h3>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-200 text-purple-800">
+                {{ pendingInvitations.length }} {{ pendingInvitations.length === 1 ? 'Invitation' : 'Invitations' }}
+              </span>
+            </div>
+
+            <div v-if="pendingInvitations.length === 0" class="text-center py-8">
+              <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </div>
+              <p class="text-sm text-gray-600">No pending invitations</p>
+            </div>
+
+            <div v-else class="space-y-3">
+              <div
+                v-for="invitation in pendingInvitations"
+                :key="invitation.id"
+                class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div class="flex items-center gap-4">
+                  <!-- User Avatar or Email Icon -->
+                  <div v-if="invitation.recipientUser" class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+                    {{ invitation.recipientUser.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <div v-else class="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                  </div>
+
+                  <!-- User/Email Info -->
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-semibold text-gray-900 truncate">
+                      {{ invitation.recipientUser ? invitation.recipientUser.name : invitation.recipientEmail }}
+                    </h4>
+                    <p v-if="invitation.recipientUser" class="text-sm text-gray-600 truncate">
+                      @{{ invitation.recipientUser.username }}
+                    </p>
+                    <p v-else class="text-sm text-gray-600">
+                      Email invitation
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                      Invited by {{ invitation.invitedBy }} • {{ formatRequestDate(invitation.createdAt) }}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      Expires {{ formatRequestDate(invitation.expiresAt) }}
+                    </p>
+                  </div>
+
+                  <!-- Cancel Button -->
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      @click="handleCancelInvitation(invitation.id)"
+                      class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Member Management Section (Admin/Founder only) -->
           <div v-if="isAdmin" class="border border-gray-200 rounded-lg p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -3184,6 +3261,20 @@ const fetchJoinRequests = async () => {
   }
 };
 
+const fetchPendingInvitations = async () => {
+  if (!community.value?.id || !isAdmin.value) {
+    return;
+  }
+
+  try {
+    const response = await getInvitations(community.value.id);
+    pendingInvitations.value = response.invitations || [];
+    console.log('Fetched pending invitations:', response.invitations);
+  } catch (err: any) {
+    console.error('Failed to fetch pending invitations:', err);
+  }
+};
+
 const handleApproveRequest = async (request: SafeJoinRequest) => {
   selectedRequestToApprove.value = request;
   showApproveConfirmation.value = true;
@@ -3244,6 +3335,20 @@ const confirmRejectRequest = async () => {
     alert(err.message || 'Failed to reject join request');
   } finally {
     processingRequestId.value = null;
+  }
+};
+
+const handleCancelInvitation = async (invitationId: string) => {
+  if (!community.value?.id) return;
+
+  try {
+    const { cancelInvitation } = await import('../api/community');
+    await cancelInvitation(community.value.id, invitationId);
+
+    // Remove from local state
+    pendingInvitations.value = pendingInvitations.value.filter(inv => inv.id !== invitationId);
+  } catch (err: any) {
+    alert(err.message || 'Failed to cancel invitation');
   }
 };
 
@@ -3487,6 +3592,7 @@ watch(communitySlug, async (newSlug, oldSlug) => {
       }
       if (activeTab.value === 'settings') {
         fetchJoinRequests();
+        fetchPendingInvitations();
         fetchBannedUsers();
         fetchPendingOwnershipTransfer();
       }
@@ -3502,6 +3608,7 @@ watch(activeTab, (newTab, oldTab) => {
   }
   if (newTab === 'settings') {
     fetchJoinRequests();
+    fetchPendingInvitations();
     fetchBannedUsers();
     fetchPendingOwnershipTransfer();
   }
