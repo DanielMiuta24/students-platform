@@ -189,6 +189,12 @@ const getNotificationRoute = (notification: Notification): string | null => {
       return '/dashboard/requests/incoming';
     case 'new_post':
       return `/post/${notification.target._id}`;
+    case 'admin_assign':
+    case 'ownership_transfer':
+      if (notification.targetModel === 'Community') {
+        return `/community/${notification.target.slug || notification.target._id}`;
+      }
+      return null;
     default:
       return null;
   }
@@ -263,6 +269,19 @@ const getNotificationMessage = (notification: Notification): {
         text: 'invited you to',
         targetName: notification.target.name || 'a community',
         targetLink: `/community/${notification.target.slug || notification.target._id}`
+      };
+    case 'admin_assign':
+      return {
+        text: 'assigned you as an admin in',
+        targetName: notification.target.name || 'a community',
+        targetLink: `/community/${notification.target.slug || notification.target._id}`
+      };
+    case 'ownership_transfer':
+      return {
+        text: 'transferred ownership of',
+        targetName: notification.target.name || 'a community',
+        targetLink: `/community/${notification.target.slug || notification.target._id}`,
+        extraText: 'to you'
       };
     default:
       return {

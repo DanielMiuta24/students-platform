@@ -925,6 +925,16 @@ export class CommunityService {
       { _id: community._id, 'members.user': memberId },
       { $set: { 'members.$.role': role } }
     );
+
+    if (role === 'admin') {
+      await notificationService.createNotification({
+        recipientId: memberId,
+        actorId: adminId,
+        type: 'admin_assign',
+        targetModel: 'Community',
+        targetId: community._id.toString(),
+      }).catch(err => console.error('Failed to create admin assignment notification:', err));
+    }
   }
 
   async requestOwnershipTransfer(communityId: string, newOwnerId: string, currentOwnerId: string) {
@@ -965,6 +975,15 @@ export class CommunityService {
     });
 
     await transfer.save();
+
+    await notificationService.createNotification({
+      recipientId: newOwnerId,
+      actorId: currentOwnerId,
+      type: 'ownership_transfer',
+      targetModel: 'Community',
+      targetId: communityId,
+    }).catch(err => console.error('Failed to create ownership transfer notification:', err));
+
     return { message: 'Ownership transfer request sent successfully' };
   }
 
@@ -1189,7 +1208,14 @@ export class CommunityService {
       { $set: { founder: newOwnerId } }
     );
 
-    // Get updated community data
+    await notificationService.createNotification({
+      recipientId: currentOwnerId,
+      actorId: newOwnerId,
+      type: 'ownership_transfer',
+      targetModel: 'Community',
+      targetId: communityId,
+    }).catch(err => console.error('Failed to create ownership transfer acceptance notification:', err));
+
     const updatedCommunity = await this.getCommunityById(communityId, userId);
 
     // Check for pending join request
@@ -1224,7 +1250,25 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.UNAUTHORIZED);
     }
 
+    const currentOwnerId = typeof transfer.currentOwner === 'string'
+      ? transfer.currentOwner
+      : transfer.currentOwner?.toString();
+
+    const communityId = typeof transfer.community === 'string'
+      ? transfer.community
+      : transfer.community?.toString();
+
     await OwnershipTransferModel.findByIdAndUpdate(transferId, { status: 'rejected' });
+
+    if (currentOwnerId && communityId) {
+      await notificationService.createNotification({
+        recipientId: currentOwnerId,
+        actorId: newOwnerId,
+        type: 'ownership_transfer',
+        targetModel: 'Community',
+        targetId: communityId,
+      }).catch(err => console.error('Failed to create ownership transfer rejection notification:', err));
+    }
   }
 
   private checkMembership(community: CommunityDoc, userId: string): boolean {

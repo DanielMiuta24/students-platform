@@ -17,6 +17,8 @@ export const NOTIFICATION_TYPES = [
 'community_join',
 'community_post',
 'community_invite',
+'admin_assign',
+'ownership_transfer',
 ] as const;
 
 export type NotificationType = typeof NOTIFICATION_TYPES[number];

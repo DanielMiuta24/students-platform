@@ -47,6 +47,16 @@ export class NotificationService {
           .lean();
         target.community = community;
       }
+    } else if (populatedNotification.targetModel === 'Community' && populatedNotification.target) {
+      const target = populatedNotification.target as any;
+      if (!target.name || !target.slug) {
+        const community = await CommunityModel.findById(target._id || target)
+          .select('name slug')
+          .lean();
+        if (community) {
+          (populatedNotification as any).target = community;
+        }
+      }
     }
 
     const notificationDTO = NotificationMapper.toDTO(populatedNotification as any);
@@ -93,6 +103,16 @@ export class NotificationService {
             .select('name slug')
             .lean();
           target.community = community;
+        }
+      } else if (notification.targetModel === 'Community' && notification.target) {
+        const target = notification.target as any;
+        if (!target.name || !target.slug) {
+          const community = await CommunityModel.findById(target._id || target)
+            .select('name slug')
+            .lean();
+          if (community) {
+            (notification as any).target = community;
+          }
         }
       }
     }

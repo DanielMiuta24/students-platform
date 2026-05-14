@@ -79,6 +79,8 @@ export class EmailService {
       community_join: 'joined your community',
       community_post: 'posted in',
       community_invite: 'invited you to',
+      admin_assign: 'assigned you as an admin in',
+      ownership_transfer: 'transferred ownership to you for',
     };
     return actions[type] || 'interacted with';
   }
@@ -95,6 +97,8 @@ export class EmailService {
       community_join: 'Your community is growing!',
       community_post: 'New content in your community.',
       community_invite: 'You have been invited to join a community.',
+      admin_assign: 'You now have admin privileges in this community.',
+      ownership_transfer: 'You are now the owner of this community.',
     };
     return messages[type] || 'Check it out!';
   }

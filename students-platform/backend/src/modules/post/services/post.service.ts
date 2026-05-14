@@ -21,6 +21,7 @@ import { commentService } from '../../comment/services';
 import { likeService } from '../../like/services';
 import { followService } from '../../follow/services';
 import { notificationService } from '../../notification/services';
+import { User } from '../../user/models';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
@@ -72,9 +73,23 @@ export class PostService {
           targetId: savedPost._id.toString(),
         }).catch(err => console.error('Failed to create community post notification:', err));
       }
+    } else if (!data.communityId && savedPost.status === 'published') {
+      const author = await User.findById(data.authorId).select('followers');
+      if (author && author.followers && author.followers.length > 0) {
+        const followerIds = author.followers.map(id => id.toString());
+
+        for (const followerId of followerIds) {
+          await notificationService.createNotification({
+            recipientId: followerId,
+            actorId: data.authorId,
+            type: 'new_post',
+            targetModel: 'Post',
+            targetId: savedPost._id.toString(),
+          }).catch(err => console.error('Failed to create new post notification:', err));
+        }
+      }
     }
 
-    // Populate author, category, community, and images before returning
     await savedPost.populate('author', 'name username avatar email type');
     await savedPost.populate('category', 'name slug');
     await savedPost.populate({
