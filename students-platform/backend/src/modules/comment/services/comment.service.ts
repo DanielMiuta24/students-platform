@@ -95,19 +95,23 @@ export class CommentService {
       }
     } else {
       const post = await PostModel.findById(data.postId).select('author visibility community').populate('author', 'followers following');
-      if (post && post.author && post.author.toString() !== data.authorId) {
-        // Check if notification should be sent based on post visibility
+      if (post && post.author) {
+        // Extract post author ID consistently
         const postAuthorId = typeof post.author === 'string' ? post.author : post.author._id.toString();
-        const shouldNotify = await this.shouldNotifyForPost(post, data.authorId, postAuthorId);
 
-        if (shouldNotify) {
-          await notificationService.createNotification({
-            recipientId: postAuthorId,
-            actorId: data.authorId,
-            type: 'comment',
-            targetModel: 'Comment',
-            targetId: comment._id.toString(),
-          }).catch(err => console.error('Failed to create comment notification:', err));
+        // Check if notification should be sent (not self-action and passes visibility check)
+        if (postAuthorId !== data.authorId) {
+          const shouldNotify = await this.shouldNotifyForPost(post, data.authorId, postAuthorId);
+
+          if (shouldNotify) {
+            await notificationService.createNotification({
+              recipientId: postAuthorId,
+              actorId: data.authorId,
+              type: 'comment',
+              targetModel: 'Comment',
+              targetId: comment._id.toString(),
+            }).catch(err => console.error('Failed to create comment notification:', err));
+          }
         }
       }
     }
