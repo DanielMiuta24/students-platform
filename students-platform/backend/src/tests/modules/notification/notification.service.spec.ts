@@ -68,15 +68,20 @@ describe('NotificationService', () => {
 
       (User.exists as jest.Mock).mockResolvedValue({ _id: '507f1f77bcf86cd799439010' });
       (PostModel.exists as jest.Mock).mockResolvedValue({ _id: '507f1f77bcf86cd799439013' });
+      (PostModel.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        populate: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue({
+          _id: '507f1f77bcf86cd799439013',
+          slug: 'test-post',
+          title: 'Test Post',
+        }),
+      });
       (NotificationModel.create as jest.Mock).mockResolvedValue(mockNotification);
       (NotificationModel.findById as jest.Mock).mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockReturnValue({
-            populate: jest.fn().mockReturnValue({
-              exec: jest.fn().mockResolvedValue(mockPopulatedNotification),
-            }),
-          }),
-        }),
+        populate: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockPopulatedNotification),
       });
       (realtimeService.publishToRoom as jest.Mock).mockReturnValue(undefined);
 
@@ -165,18 +170,20 @@ describe('NotificationService', () => {
       ];
 
       (NotificationModel.find as jest.Mock).mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockReturnValue({
-            populate: jest.fn().mockReturnValue({
-              sort: jest.fn().mockReturnValue({
-                skip: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockReturnValue({
-                    exec: jest.fn().mockResolvedValue(mockNotifications),
-                  }),
-                }),
-              }),
-            }),
-          }),
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockNotifications),
+      });
+      (PostModel.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        populate: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue({
+          _id: '507f1f77bcf86cd799439013',
+          slug: 'test-post',
+          title: 'Test Post',
         }),
       });
       (NotificationModel.countDocuments as jest.Mock)
@@ -220,13 +227,9 @@ describe('NotificationService', () => {
 
       (NotificationModel.findOne as jest.Mock).mockResolvedValue(mockNotification);
       (NotificationModel.findById as jest.Mock).mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockReturnValue({
-            populate: jest.fn().mockReturnValue({
-              exec: jest.fn().mockResolvedValue(mockPopulatedNotification),
-            }),
-          }),
-        }),
+        populate: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockPopulatedNotification),
       });
 
       const result = await notificationService.markAsRead('507f1f77bcf86cd799439017', '507f1f77bcf86cd799439011');

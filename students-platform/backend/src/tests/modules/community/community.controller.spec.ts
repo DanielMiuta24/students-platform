@@ -9,6 +9,9 @@ jest.mock('../../../modules/community/models', () => ({
   CommunityJoinRequestModel: {
     findOne: jest.fn(),
   },
+  CommunityInvitationModel: {
+    findOne: jest.fn(),
+  },
 }));
 
 describe('CommunityController', () => {
@@ -89,12 +92,13 @@ describe('CommunityController', () => {
 
   describe('getCommunityById', () => {
     it('should return community', async () => {
-      const { CommunityJoinRequestModel } = require('../../../modules/community/models');
+      const { CommunityJoinRequestModel, CommunityInvitationModel } = require('../../../modules/community/models');
       mockReq.params.id = 'comm123';
 
       (communityService.getCommunityById as jest.Mock).mockResolvedValue(mockCommunity);
       (CommunityMapper.toSafeCommunity as jest.Mock).mockReturnValue(mockCommunity);
       (CommunityJoinRequestModel.findOne as jest.Mock).mockResolvedValue(null);
+      (CommunityInvitationModel.findOne as jest.Mock).mockResolvedValue(null);
 
       await communityController.getCommunityById(mockReq, mockRes, mockNext);
 

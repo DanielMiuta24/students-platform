@@ -47,9 +47,12 @@ describe('CommentService', () => {
     it('should create a comment successfully', async () => {
       (PostModel.exists as jest.Mock).mockResolvedValue(true);
       (PostModel.findById as jest.Mock).mockReturnValue({
-        select: jest.fn().mockResolvedValue({
-          _id: '507f1f77bcf86cd799439011',
-          author: '507f1f77bcf86cd799439099',
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockResolvedValue({
+            _id: '507f1f77bcf86cd799439011',
+            author: '507f1f77bcf86cd799439099',
+            visibility: 'public',
+          }),
         }),
       });
       (CommentModel as any).mockImplementation(() => mockSavedComment);
@@ -82,7 +85,19 @@ describe('CommentService', () => {
       (CommentModel.findById as jest.Mock).mockReturnValue({
         select: jest.fn().mockResolvedValue({
           _id: '507f1f77bcf86cd799439014',
-          author: '507f1f77bcf86cd799439099',
+          author: {
+            toString: () => '507f1f77bcf86cd799439099',
+          },
+          post: '507f1f77bcf86cd799439011',
+        }),
+      });
+      (PostModel.findById as jest.Mock).mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockResolvedValue({
+            _id: '507f1f77bcf86cd799439011',
+            author: '507f1f77bcf86cd799439099',
+            visibility: 'public',
+          }),
         }),
       });
       (CommentModel as any).mockImplementation(() => mockSavedComment);
@@ -118,9 +133,12 @@ describe('CommentService', () => {
 
       (PostModel.exists as jest.Mock).mockResolvedValue(true);
       (PostModel.findById as jest.Mock).mockReturnValue({
-        select: jest.fn().mockResolvedValue({
-          _id: '507f1f77bcf86cd799439011',
-          author: '507f1f77bcf86cd799439099',
+        select: jest.fn().mockReturnValue({
+          populate: jest.fn().mockResolvedValue({
+            _id: '507f1f77bcf86cd799439011',
+            author: '507f1f77bcf86cd799439099',
+            visibility: 'public',
+          }),
         }),
       });
       const mockConstructor = jest.fn();
