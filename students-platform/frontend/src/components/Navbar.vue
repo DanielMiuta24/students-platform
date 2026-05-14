@@ -103,7 +103,6 @@
               <el-dropdown-menu>
                 <el-dropdown-item @click="navigate(`/profile/${session.user?.username}`)">View Profile</el-dropdown-item>
                 <el-dropdown-item @click="navigate('/dashboard')">Dashboard</el-dropdown-item>
-                <el-dropdown-item @click="navigate('/messages')">Messages</el-dropdown-item>
                 <el-dropdown-item @click="navigate('/dashboard/change-password')">Change Password</el-dropdown-item>
                 <el-dropdown-item @click="logout">Logout</el-dropdown-item>
               </el-dropdown-menu>
@@ -166,7 +165,6 @@
         <p>Welcome, <b>{{ session.user?.name }}</b></p>
         <el-button class="w-100 mb-2" @click="navigate(`/profile/${session.user?.username}`)">View Profile</el-button>
         <el-button class="w-100 mb-2" @click="navigate('/dashboard')">Dashboard</el-button>
-        <el-button class="w-100 mb-2" @click="navigate('/messages')">Messages</el-button>
         <el-button class="w-100 mb-2" @click="navigate('/dashboard/change-password')">Change Password</el-button>
         <el-button type="danger" class="w-100" @click="logout">Logout</el-button>
       </template>
