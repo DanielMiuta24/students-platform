@@ -546,7 +546,7 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
     }
 
-    await this.joinCommunity(community._id.toString(), userId);
+    await this.joinCommunity(community._id.toString(), userId, true);
 
     await CommunityInvitationModel.findByIdAndDelete(invitationId);
 
@@ -559,12 +559,21 @@ export class CommunityService {
       status: 'pending',
       expiresAt: { $gt: new Date() },
     })
-      .populate('community', 'name slug')
+      .populate('community', 'name slug members')
       .populate('invitedBy', 'name username')
       .sort({ createdAt: -1 })
       .exec();
 
-    return invitations.map((invitation) => ({
+    // Filter out invitations where user is already a member
+    const filteredInvitations = invitations.filter((invitation) => {
+      const community = invitation.community as any;
+      if (!community || !community.members) return true;
+
+      const isMember = community.members.some((m: any) => m.user.toString() === userId);
+      return !isMember;
+    });
+
+    return filteredInvitations.map((invitation) => ({
       id: invitation._id.toString(),
       community: {
         id: (invitation.community as any)._id.toString(),

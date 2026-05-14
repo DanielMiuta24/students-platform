@@ -67,6 +67,16 @@
                   >
                     {{ getNotificationMessage(notification).targetName }}
                   </button>
+                  <template v-if="getNotificationMessage(notification).extraText">
+                    {{ getNotificationMessage(notification).extraText }}
+                    <button
+                      v-if="getNotificationMessage(notification).extraLink"
+                      @click.stop="navigateToTarget(getNotificationMessage(notification).extraLink)"
+                      class="target-link"
+                    >
+                      {{ getNotificationMessage(notification).extraLinkText }}
+                    </button>
+                  </template>
                 </p>
                 <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
               </div>
@@ -170,12 +180,13 @@ const getNotificationRoute = (notification: Notification): string | null => {
       return `/profile/${notification.actor.username}`;
     case 'community_join':
     case 'community_post':
-      return `/community/${notification.target._id}`;
-    case 'community_invite':
-      if (notification.targetModel === 'CommunityInvitation') {
-        return '/dashboard/requests/invitations';
+      if (notification.targetModel === 'Community') {
+        return `/community/${notification.target._id}`;
       }
-      return `/community/${notification.target._id}`;
+      return null;
+    case 'community_invite':
+      // Always go to invitations tab for community invites
+      return '/dashboard/requests/invitations';
     case 'new_post':
       return `/post/${notification.target._id}`;
     default:
@@ -183,7 +194,14 @@ const getNotificationRoute = (notification: Notification): string | null => {
   }
 };
 
-const getNotificationMessage = (notification: Notification): { text: string; targetName?: string; targetLink?: string } => {
+const getNotificationMessage = (notification: Notification): {
+  text: string;
+  targetName?: string;
+  targetLink?: string;
+  extraText?: string;
+  extraLink?: string;
+  extraLinkText?: string;
+} => {
   const actorName = notification.actor.name;
 
   switch (notification.type) {
@@ -234,11 +252,14 @@ const getNotificationMessage = (notification: Notification): { text: string; tar
         targetLink: `/community/${notification.target._id}`
       };
     case 'community_invite':
-      if (notification.targetModel === 'CommunityInvitation') {
+      if (notification.targetModel === 'CommunityInvitation' && notification.target.community) {
         return {
           text: 'invited you to join',
-          targetName: notification.target.community?.name || 'a community',
-          targetLink: '/dashboard/requests/invitations'
+          targetName: notification.target.community.name || 'a community',
+          targetLink: `/community/${notification.target.community._id}`,
+          extraText: ' - ',
+          extraLink: '/dashboard/requests/invitations',
+          extraLinkText: 'view invitation'
         };
       }
       return {
