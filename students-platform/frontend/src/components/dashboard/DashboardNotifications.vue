@@ -195,15 +195,15 @@ const getNotificationRoute = (notification: Notification): string | null => {
       }
       return null;
     case 'follow':
-      return `/profile/${notification.actor._id}`;
+      return `/profile/${notification.actor.username}`;
     case 'community_join':
     case 'community_post':
-      return `/community/${notification.target._id}`;
+      return `/community/${notification.target.slug || notification.target._id}`;
     case 'community_invite':
       if (notification.targetModel === 'CommunityInvitation') {
         return null;
       }
-      return `/community/${notification.target._id}`;
+      return `/community/${notification.target.slug || notification.target._id}`;
     case 'new_post':
       return `/post/${notification.target._id}`;
     default:

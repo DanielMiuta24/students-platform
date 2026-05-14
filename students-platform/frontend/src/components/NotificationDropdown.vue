@@ -43,11 +43,9 @@
                 @click.stop="navigateToProfile(notification.actor.username)"
               >
                 <img
-                  v-if="notification.actor.profilePicture"
-                  :src="notification.actor.profilePicture"
+                  :src="getActorAvatar(notification.actor)"
                   :alt="notification.actor.name"
                 />
-                <el-icon v-else><User /></el-icon>
               </div>
 
               <div class="notification-content" @click="handleNotificationClick(notification)">
@@ -112,6 +110,7 @@ import { useRouter } from 'vue-router';
 import { useNotificationStore } from '../stores/notification';
 import { Bell, BellFilled, User, Loading, Check, Close } from '@element-plus/icons-vue';
 import type { Notification } from '../api/notification';
+import { getAvatarUrl } from '../utils/avatar';
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
@@ -181,7 +180,7 @@ const getNotificationRoute = (notification: Notification): string | null => {
     case 'community_join':
     case 'community_post':
       if (notification.targetModel === 'Community') {
-        return `/community/${notification.target._id}`;
+        return `/community/${notification.target.slug || notification.target._id}`;
       }
       return null;
     case 'community_invite':
@@ -243,20 +242,20 @@ const getNotificationMessage = (notification: Notification): {
       return {
         text: 'joined',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target._id}`
+        targetLink: `/community/${notification.target.slug || notification.target._id}`
       };
     case 'community_post':
       return {
         text: 'posted in',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target._id}`
+        targetLink: `/community/${notification.target.slug || notification.target._id}`
       };
     case 'community_invite':
       if (notification.targetModel === 'CommunityInvitation' && notification.target.community) {
         return {
           text: 'invited you to join',
           targetName: notification.target.community.name || 'a community',
-          targetLink: `/community/${notification.target.community._id}`,
+          targetLink: `/community/${notification.target.community.slug || notification.target.community._id}`,
           extraText: ' - ',
           extraLink: '/dashboard/requests/invitations',
           extraLinkText: 'view invitation'
@@ -265,7 +264,7 @@ const getNotificationMessage = (notification: Notification): {
       return {
         text: 'invited you to',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target._id}`
+        targetLink: `/community/${notification.target.slug || notification.target._id}`
       };
     default:
       return {
@@ -288,6 +287,10 @@ const formatTime = (date: Date): string => {
   if (diffDays < 7) return `${diffDays}d ago`;
 
   return notificationDate.toLocaleDateString();
+};
+
+const getActorAvatar = (actor: { name: string; profilePicture?: string }): string => {
+  return getAvatarUrl(actor.name, actor.profilePicture);
 };
 
 onMounted(() => {

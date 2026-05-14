@@ -104,7 +104,12 @@
           >
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-semibold text-gray-900">{{ community.name }}</p>
+                <router-link
+                  :to="`/community/${community.communitySlug}`"
+                  class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                >
+                  {{ community.name }}
+                </router-link>
                 <p class="text-sm text-gray-600">Request pending approval</p>
               </div>
               <button
@@ -135,7 +140,12 @@
               >
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="font-semibold text-gray-900">{{ invitation.communityName }}</p>
+                    <router-link
+                      :to="`/community/${invitation.communitySlug}`"
+                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                    >
+                      {{ invitation.communityName }}
+                    </router-link>
                     <p class="text-sm text-gray-600">Invited to join this community</p>
                     <p class="text-xs text-gray-500 mt-1">{{ new Date(invitation.createdAt).toLocaleDateString() }}</p>
                   </div>
@@ -172,7 +182,14 @@
               >
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="font-semibold text-gray-900">{{ transfer.community?.name || 'Unknown Community' }}</p>
+                    <router-link
+                      v-if="transfer.community?.slug"
+                      :to="`/community/${transfer.community.slug}`"
+                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                    >
+                      {{ transfer.community?.name || 'Unknown Community' }}
+                    </router-link>
+                    <p v-else class="font-semibold text-gray-900">{{ transfer.community?.name || 'Unknown Community' }}</p>
                     <p class="text-sm text-gray-600">from {{ transfer.currentOwner?.name || 'Unknown' }}</p>
                     <p class="text-xs text-gray-500 mt-1">{{ new Date(transfer.createdAt).toLocaleDateString() }}</p>
                   </div>
