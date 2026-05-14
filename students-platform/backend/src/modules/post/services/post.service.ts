@@ -59,45 +59,61 @@ export class PostService {
     if (data.communityId && savedPost.status === 'published' && savedPost.visibility !== 'private') {
       await communityService.incrementPostCount(data.communityId);
 
-      const community = await communityService.getCommunityById(data.communityId, data.authorId);
+      if (savedPost.visibility === 'public' || savedPost.visibility === 'community') {
+        const community = await communityService.getCommunityById(data.communityId, data.authorId);
 
-      // Extract member IDs, handling both populated and unpopulated user fields
-      const communityMemberIds = community.members
-        ?.filter((m: any) => {
-          const userId = typeof m.user === 'string' ? m.user : m.user?._id?.toString();
-          return userId && userId !== data.authorId;
-        })
-        .map((m: any) => {
-          // Extract user ID properly - handle both ObjectId and populated User
-          if (typeof m.user === 'string') {
-            return m.user;
-          } else if (m.user?._id) {
-            return m.user._id.toString();
+        // Extract member IDs, handling both populated and unpopulated user fields
+        const communityMemberIds = community.members
+          ?.filter((m: any) => {
+            const userId = typeof m.user === 'string' ? m.user : m.user?._id?.toString();
+            return userId && userId !== data.authorId;
+          })
+          .map((m: any) => {
+            // Extract user ID properly - handle both ObjectId and populated User
+            if (typeof m.user === 'string') {
+              return m.user;
+            } else if (m.user?._id) {
+              return m.user._id.toString();
+            }
+            return null;
+          })
+          .filter((id: any) => id !== null) || [];
+
+        if (communityMemberIds.length > 0) {
+          console.log(`[PostService] Creating ${communityMemberIds.length} community post notifications`);
+          for (const memberId of communityMemberIds) {
+            await notificationService.createNotification({
+              recipientId: memberId,
+              actorId: data.authorId,
+              type: 'community_post',
+              targetModel: 'Post',
+              targetId: savedPost._id.toString(),
+            }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
           }
-          return null;
-        })
-        .filter((id: any) => id !== null) || [];
-
-      if (communityMemberIds.length > 0) {
-        console.log(`[PostService] Creating ${communityMemberIds.length} community post notifications`);
-        for (const memberId of communityMemberIds) {
-          await notificationService.createNotification({
-            recipientId: memberId,
-            actorId: data.authorId,
-            type: 'community_post',
-            targetModel: 'Post',
-            targetId: savedPost._id.toString(),
-          }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
         }
       }
     } else if (!data.communityId && savedPost.status === 'published' && savedPost.visibility !== 'private') {
-      const author = await User.findById(data.authorId).select('followers');
-      if (author && author.followers && author.followers.length > 0) {
-        const followerIds = author.followers.map(id => id.toString());
+      const author = await User.findById(data.authorId).select('followers following');
 
-        for (const followerId of followerIds) {
+      let recipientIds: string[] = [];
+
+      if (savedPost.visibility === 'friends') {
+        // For friends visibility, notify only people the author is following (mutual friends concept)
+        if (author && author.following && author.following.length > 0) {
+          recipientIds = author.following.map(id => id.toString());
+        }
+      } else if (savedPost.visibility === 'public') {
+        // For public visibility, notify all followers
+        if (author && author.followers && author.followers.length > 0) {
+          recipientIds = author.followers.map(id => id.toString());
+        }
+      }
+      // For 'community' visibility on profile posts, don't send notifications (it's meant for community posts only)
+
+      if (recipientIds.length > 0) {
+        for (const recipientId of recipientIds) {
           await notificationService.createNotification({
-            recipientId: followerId,
+            recipientId: recipientId,
             actorId: data.authorId,
             type: 'new_post',
             targetModel: 'Post',
