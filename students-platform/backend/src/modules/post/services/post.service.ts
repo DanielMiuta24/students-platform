@@ -56,7 +56,7 @@ export class PostService {
     const post = new PostModel(postData);
     const savedPost = await post.save();
 
-    if (data.communityId && savedPost.status === 'published') {
+    if (data.communityId && savedPost.status === 'published' && savedPost.visibility !== 'private') {
       await communityService.incrementPostCount(data.communityId);
 
       const community = await communityService.getCommunityById(data.communityId, data.authorId);
@@ -90,7 +90,7 @@ export class PostService {
           }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
         }
       }
-    } else if (!data.communityId && savedPost.status === 'published') {
+    } else if (!data.communityId && savedPost.status === 'published' && savedPost.visibility !== 'private') {
       const author = await User.findById(data.authorId).select('followers');
       if (author && author.followers && author.followers.length > 0) {
         const followerIds = author.followers.map(id => id.toString());
