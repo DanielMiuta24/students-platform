@@ -91,6 +91,41 @@ export class PostService {
             }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
           }
         }
+      } else if (savedPost.visibility === 'friends') {
+        // For friends visibility in community: notify only community members who author is following
+        const author = await User.findById(data.authorId).select('following');
+        const community = await communityService.getCommunityById(data.communityId, data.authorId);
+
+        if (author && author.following && author.following.length > 0) {
+          const followingIds = new Set(author.following.map(id => id.toString()));
+
+          const communityMemberIds = community.members
+            ?.filter((m: any) => {
+              const userId = typeof m.user === 'string' ? m.user : m.user?._id?.toString();
+              return userId && userId !== data.authorId && followingIds.has(userId);
+            })
+            .map((m: any) => {
+              if (typeof m.user === 'string') {
+                return m.user;
+              } else if (m.user?._id) {
+                return m.user._id.toString();
+              }
+              return null;
+            })
+            .filter((id: any) => id !== null) || [];
+
+          if (communityMemberIds.length > 0) {
+            for (const memberId of communityMemberIds) {
+              await notificationService.createNotification({
+                recipientId: memberId,
+                actorId: data.authorId,
+                type: 'community_post',
+                targetModel: 'Post',
+                targetId: savedPost._id.toString(),
+              }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
+            }
+          }
+        }
       }
     } else if (!data.communityId && savedPost.status === 'published' && savedPost.visibility !== 'private') {
       const author = await User.findById(data.authorId).select('followers following');
@@ -98,9 +133,12 @@ export class PostService {
       let recipientIds: string[] = [];
 
       if (savedPost.visibility === 'friends') {
-        // For friends visibility, notify only people the author is following (mutual friends concept)
-        if (author && author.following && author.following.length > 0) {
-          recipientIds = author.following.map(id => id.toString());
+        // For friends visibility, notify only mutual followers (followers who author is also following)
+        if (author && author.followers && author.followers.length > 0 && author.following && author.following.length > 0) {
+          const followingIds = new Set(author.following.map(id => id.toString()));
+          recipientIds = author.followers
+            .map(id => id.toString())
+            .filter(id => followingIds.has(id));
         }
       } else if (savedPost.visibility === 'public') {
         // For public visibility, notify all followers
