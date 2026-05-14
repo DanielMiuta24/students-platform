@@ -39,8 +39,7 @@
           </div>
           <button
             @click="router.push('/community/create')"
-            class="px-6 py-3 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
-            style="background-color: #0f2a5f;"
+            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -104,8 +103,7 @@
             <p class="text-gray-600 mb-4">Be the first to create a community!</p>
             <button
               @click="router.push('/community/create')"
-              class="px-6 py-2 text-white font-semibold rounded-lg transition-all"
-              style="background-color: #0f2a5f;"
+              class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
             >
               Create Community
             </button>
