@@ -1005,6 +1005,34 @@ export class CommunityService {
     }));
   }
 
+  async getMySentOwnershipTransferRequests(userId: string) {
+    const transfers = await OwnershipTransferModel.find({
+      currentOwner: userId,
+      status: 'pending',
+    })
+      .populate('community', 'name slug')
+      .populate('newOwner', 'name username avatar')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return transfers.map((transfer) => ({
+      id: transfer._id.toString(),
+      community: {
+        id: (transfer.community as any)._id.toString(),
+        name: (transfer.community as any).name,
+        slug: (transfer.community as any).slug,
+      },
+      newOwner: {
+        id: (transfer.newOwner as any)._id.toString(),
+        name: (transfer.newOwner as any).name,
+        username: (transfer.newOwner as any).username,
+        avatar: (transfer.newOwner as any).avatar,
+      },
+      expiresAt: transfer.expiresAt,
+      createdAt: transfer.createdAt,
+    }));
+  }
+
   async cancelOwnershipTransfer(transferId: string, userId: string) {
     const transfer = await OwnershipTransferModel.findById(transferId);
 

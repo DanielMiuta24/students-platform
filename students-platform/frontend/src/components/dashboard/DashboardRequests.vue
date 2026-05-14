@@ -219,9 +219,9 @@
 
           <!-- Ownership Transfer Requests -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfer Requests</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Received Ownership Transfer Requests</h3>
             <div v-if="ownershipTransferRequests.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No ownership transfer requests</p>
+              <p class="text-gray-600">No received ownership transfer requests</p>
             </div>
             <div v-else class="space-y-3">
               <div
@@ -260,6 +260,57 @@
               </div>
             </div>
           </div>
+
+          <!-- Sent Ownership Transfer Requests -->
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Sent Ownership Transfer Requests</h3>
+            <div v-if="sentOwnershipTransferRequests.length === 0" class="empty-state-small">
+              <p class="text-gray-600">No pending sent ownership transfers</p>
+            </div>
+            <div v-else class="space-y-3">
+              <div
+                v-for="transfer in sentOwnershipTransferRequests"
+                :key="transfer.id"
+                class="bg-white border border-gray-200 rounded-lg p-4"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <img
+                      :src="getAvatarUrl(transfer.newOwner?.name || 'User', transfer.newOwner?.avatar)"
+                      :alt="transfer.newOwner?.name"
+                      class="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <p class="font-semibold text-gray-900">
+                        {{ transfer.newOwner?.name }}
+                        <span v-if="transfer.newOwner?.username" class="text-sm text-gray-500">
+                          @{{ transfer.newOwner.username }}
+                        </span>
+                      </p>
+                      <p class="text-sm text-gray-600">
+                        Transfer ownership of
+                        <router-link
+                          v-if="transfer.community?.slug"
+                          :to="`/community/${transfer.community.slug}`"
+                          class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                        >
+                          {{ transfer.community?.name }}
+                        </router-link>
+                        <span v-else class="font-semibold text-gray-900">{{ transfer.community?.name }}</span>
+                      </p>
+                      <p class="text-xs text-gray-500 mt-1">{{ new Date(transfer.createdAt).toLocaleDateString() }}</p>
+                    </div>
+                  </div>
+                  <button
+                    @click="$emit('cancel-sent-transfer', transfer)"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -290,6 +341,7 @@ const emit = defineEmits<{
   (e: 'cancel-sent-invitation', invitation: any): void;
   (e: 'accept-transfer', transfer: any): void;
   (e: 'reject-transfer', transfer: any): void;
+  (e: 'cancel-sent-transfer', transfer: any): void;
 }>();
 
 const joinRequestsToMyCommunities = ref<any[]>([]);
@@ -297,6 +349,7 @@ const myJoinRequests = ref<any[]>([]);
 const myInvitations = ref<any[]>([]);
 const mySentInvitations = ref<any[]>([]);
 const ownershipTransferRequests = ref<any[]>([]);
+const sentOwnershipTransferRequests = ref<any[]>([]);
 const isLoading = ref(false);
 
 const activeSubTab = computed(() => {
@@ -321,7 +374,7 @@ const requestTabs = computed(() => [
   {
     id: 'invitations',
     label: 'Invitations',
-    count: myInvitations.value.length + mySentInvitations.value.length + ownershipTransferRequests.value.length
+    count: myInvitations.value.length + mySentInvitations.value.length + ownershipTransferRequests.value.length + sentOwnershipTransferRequests.value.length
   }
 ]);
 
@@ -399,6 +452,15 @@ const fetchRequests = async () => {
     } catch (err) {
       console.error('Failed to fetch ownership transfers:', err);
       ownershipTransferRequests.value = [];
+    }
+
+    try {
+      const { getMySentOwnershipTransferRequests } = await import('../../api/community');
+      const sentTransfers = await getMySentOwnershipTransferRequests();
+      sentOwnershipTransferRequests.value = sentTransfers || [];
+    } catch (err) {
+      console.error('Failed to fetch sent ownership transfers:', err);
+      sentOwnershipTransferRequests.value = [];
     }
   } catch (error) {
     console.error('Failed to fetch requests:', error);

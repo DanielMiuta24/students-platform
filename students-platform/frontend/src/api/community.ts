@@ -687,6 +687,24 @@ export const getMyOwnershipTransferRequests = async (): Promise<any[]> => {
 };
 
 /**
+ * Get my sent ownership transfer requests (transfers I initiated)
+ */
+export const getMySentOwnershipTransferRequests = async (): Promise<any[]> => {
+  try {
+    const response = await secureApi.get<any[]>(
+      '/communities/ownership-transfers/sent'
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      throw new Error('You must be logged in to view sent ownership transfers');
+    }
+
+    throw new Error(error.response?.data?.message || 'Failed to fetch sent ownership transfers');
+  }
+};
+
+/**
  * Reject ownership transfer request (target admin only)
  */
 export const rejectOwnershipTransfer = async (transferId: string): Promise<{ message: string }> => {

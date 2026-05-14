@@ -211,6 +211,12 @@ router.get(
   communityController.getMyOwnershipTransferRequests
 );
 
+router.get(
+  '/ownership-transfers/sent',
+  authMiddleware,
+  communityController.getMySentOwnershipTransferRequests
+);
+
 router.delete(
   '/ownership-transfers/:transferId',
   authMiddleware,

@@ -67,6 +67,7 @@
             @cancel-sent-invitation="cancelSentInvitation"
             @accept-transfer="acceptOwnershipTransfer"
             @reject-transfer="rejectOwnershipTransfer"
+            @cancel-sent-transfer="cancelSentOwnershipTransfer"
           />
         </main>
       </div>
@@ -435,6 +436,23 @@ const cancelSentInvitation = async (invitation: any) => {
     }
   } catch (error: any) {
     alert(error.message || 'Failed to cancel invitation');
+  }
+};
+
+const cancelSentOwnershipTransfer = async (transfer: any) => {
+  try {
+    const { cancelOwnershipTransfer } = await import('../api/community');
+    await cancelOwnershipTransfer(transfer.id);
+    requestSuccessMessage.value = `Cancelled ownership transfer request for ${transfer.community?.name}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to cancel ownership transfer');
   }
 };
 </script>

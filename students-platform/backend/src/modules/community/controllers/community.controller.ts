@@ -645,6 +645,20 @@ class CommunityController {
     }
   };
 
+  getMySentOwnershipTransferRequests = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await communityService.getMySentOwnershipTransferRequests(req.user!.id);
+
+      return res.status(CommunityController.HTTP_STATUS.OK).json(result);
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
   cancelOwnershipTransfer = async (
     req: AuthenticatedRequest,
     res: Response,
