@@ -2408,7 +2408,9 @@ const transferableAdmins = computed(() => {
 
 const memberIds = computed(() => {
   const ids = members.value.map(member => member.id);
-  const requestUserIds = joinRequests.value.map(request => request.user.id);
+  const requestUserIds = joinRequests.value.map(request =>
+    typeof request.user === 'string' ? request.user : request.user.id
+  );
   return [...ids, ...requestUserIds];
 });
 
@@ -2836,11 +2838,22 @@ const confirmLeaveGroup = async () => {
   }
 };
 
-const handleInvitePeople = () => {
+const handleInvitePeople = async () => {
   if (!canInvite.value) {
     alert('You do not have permission to invite members to this community');
     return;
   }
+
+  // Fetch join requests to exclude users with pending requests
+  if (isAdmin.value && community.value?.id) {
+    try {
+      const response = await getJoinRequests(community.value.id);
+      joinRequests.value = response.requests;
+    } catch (err) {
+      console.error('Failed to fetch join requests:', err);
+    }
+  }
+
   showInviteModal.value = true;
 };
 
