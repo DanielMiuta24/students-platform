@@ -4,6 +4,9 @@ import { LIKE_ERROR } from '../constants';
 import { PostModel } from '../../post/models';
 import { CommentModel } from '../../comment/models';
 import { LikeBuilder } from '../builders';
+import { notificationService } from '../../notification/services';
+import { CommunityModel } from '../../community/models';
+import { User } from '../../user/models';
 
 export class LikeService {
   async like(data: CreateLikeDTO): Promise<LikeDoc> {
@@ -30,6 +33,48 @@ export class LikeService {
     await like.save();
 
     await this.incrementLikeCount(data);
+
+    // Extract entity owner ID, handling both populated and unpopulated author
+    let entityOwnerId: string | undefined;
+    if (entity.author) {
+      if (typeof entity.author === 'string') {
+        entityOwnerId = entity.author;
+      } else if (entity.author._id) {
+        entityOwnerId = entity.author._id.toString();
+      }
+    }
+
+    if (entityOwnerId && entityOwnerId !== data.userId) {
+      // Check if notification should be sent based on post visibility
+      let shouldNotify = false;
+
+      if (data.likeableType === 'Post') {
+        // For post likes, check post visibility
+        const post = await PostModel.findById(data.likeableId).select('visibility community').populate('author', 'followers following');
+        if (post) {
+          shouldNotify = await this.shouldNotifyForPost(post, data.userId, entityOwnerId);
+        }
+      } else if (data.likeableType === 'Comment') {
+        // For comment likes, get the parent post and check its visibility
+        const comment = await CommentModel.findById(data.likeableId).select('post');
+        if (comment) {
+          const post = await PostModel.findById(comment.post).select('visibility community').populate('author', 'followers following');
+          if (post) {
+            shouldNotify = await this.shouldNotifyForPost(post, data.userId, entityOwnerId);
+          }
+        }
+      }
+
+      if (shouldNotify) {
+        await notificationService.createNotification({
+          recipientId: entityOwnerId,
+          actorId: data.userId,
+          type: 'like',
+          targetModel: data.likeableType === 'Post' ? 'Post' : 'Comment',
+          targetId: data.likeableId,
+        }).catch(err => console.error('Failed to create like notification:', err));
+      }
+    }
 
     return like;
   }
@@ -114,6 +159,59 @@ export class LikeService {
 
   async deleteLikesByPost(postId: string): Promise<void> {
     await LikeModel.deleteMany({ likeable: postId, likeableType: 'Post' });
+  }
+
+  private async shouldNotifyForPost(post: any, actorId: string, recipientId: string): Promise<boolean> {
+    // Private posts: never notify
+    if (post.visibility === 'private') {
+      return false;
+    }
+
+    // Public posts: always notify (anyone can access public posts)
+    if (post.visibility === 'public') {
+      return true;
+    }
+
+    // Community posts: only notify if recipient is still a member
+    if (post.visibility === 'community' && post.community) {
+      const communityId = typeof post.community === 'string' ? post.community : post.community.toString();
+      return await this.isUserMemberOfCommunity(recipientId, communityId);
+    }
+
+    // Friends posts: only notify if recipient and post author are mutual followers
+    if (post.visibility === 'friends') {
+      return await this.areMutualFollowers(recipientId, post.author._id?.toString() || post.author.toString());
+    }
+
+    return false;
+  }
+
+  private async isUserMemberOfCommunity(userId: string, communityId: string): Promise<boolean> {
+    const community = await CommunityModel.findById(communityId).select('members').lean();
+
+    if (!community) {
+      return false;
+    }
+
+    return community.members?.some((m: any) => {
+      const memberUserId = typeof m.user === 'string' ? m.user : m.user?.toString();
+      return memberUserId === userId;
+    }) || false;
+  }
+
+  private async areMutualFollowers(userId1: string, userId2: string): Promise<boolean> {
+    const user1 = await User.findById(userId1).select('followers following').lean();
+    const user2 = await User.findById(userId2).select('followers following').lean();
+
+    if (!user1 || !user2) {
+      return false;
+    }
+
+    const user1Followers = (user1.followers || []).map((id: any) => id.toString());
+    const user1Following = (user1.following || []).map((id: any) => id.toString());
+
+    // Check if they follow each other
+    return user1Followers.includes(userId2) && user1Following.includes(userId2);
   }
 }
 

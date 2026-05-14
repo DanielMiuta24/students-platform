@@ -225,6 +225,7 @@ describe('CommunityService', () => {
     it('should throw error when approval is required', async () => {
       const communityWithApproval = { ...mockCommunity, requiresApproval: true };
       (CommunityModel.findById as jest.Mock).mockResolvedValue(communityWithApproval);
+      (CommunityInvitationModel.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(communityService.joinCommunity(mockCommunityId, mockUserId)).rejects.toThrow(COMMUNITY_ERROR.REQUIRES_APPROVAL);
     });
@@ -281,7 +282,13 @@ describe('CommunityService', () => {
 
     it('should send user invitations', async () => {
       (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
-      (CommunityInvitationModel.insertMany as jest.Mock).mockResolvedValue([]);
+      (CommunityInvitationModel.findOne as jest.Mock).mockResolvedValue(null);
+      (CommunityInvitationModel.create as jest.Mock).mockResolvedValue({
+        _id: {
+          toString: () => 'inv123',
+        },
+        recipientUser: mockUserId,
+      });
 
       const result = await communityService.sendInvitations(mockCommunityId, mockFounderId, {
         userIds: [mockUserId]
@@ -297,6 +304,9 @@ describe('CommunityService', () => {
       (CommunityModel.findById as jest.Mock).mockResolvedValue(communityWithApproval);
       (CommunityJoinRequestModel.findOne as jest.Mock).mockResolvedValue(null);
       (CommunityJoinRequestModel as any).mockImplementation(() => ({
+        _id: {
+          toString: () => 'req123',
+        },
         save: jest.fn().mockResolvedValue({}),
       }));
 

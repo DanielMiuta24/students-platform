@@ -5,7 +5,7 @@ import { CommunityMapper } from '../mappers';
 import { COMMUNITY_ERROR } from '../constants';
 import { parseCursorParams } from '../validators';
 import type { UploadRequest } from '../../image/services';
-import { CommunityJoinRequestModel } from '../models';
+import { CommunityJoinRequestModel, CommunityInvitationModel } from '../models';
 
 class CommunityController {
   private static readonly HTTP_STATUS = {
@@ -137,21 +137,34 @@ class CommunityController {
       const userId = (req as AuthenticatedRequest).user?.id;
       const community = await communityService.getCommunityById(req.params.id, userId);
 
-      // Check if user has a pending join request for this community
       let pendingRequestCommunityIds: string[] = [];
+      let pendingInvitationCommunityIds: string[] = [];
+
       if (userId) {
-        const pendingRequest = await CommunityJoinRequestModel.findOne({
-          user: userId,
-          community: community._id,
-          status: 'pending',
-        });
+        const [pendingRequest, pendingInvitation] = await Promise.all([
+          CommunityJoinRequestModel.findOne({
+            user: userId,
+            community: community._id,
+            status: 'pending',
+          }),
+          CommunityInvitationModel.findOne({
+            recipientUser: userId,
+            community: community._id,
+            status: 'pending',
+            expiresAt: { $gt: new Date() },
+          })
+        ]);
+
         if (pendingRequest) {
           pendingRequestCommunityIds = [community._id.toString()];
+        }
+        if (pendingInvitation) {
+          pendingInvitationCommunityIds = [community._id.toString()];
         }
       }
 
       return res.status(CommunityController.HTTP_STATUS.OK).json({
-        community: CommunityMapper.toSafeCommunity(community, userId, pendingRequestCommunityIds),
+        community: CommunityMapper.toSafeCommunity(community, userId, pendingRequestCommunityIds, pendingInvitationCommunityIds),
       });
     } catch (err: unknown) {
       return this.handleError(err, res, next);
@@ -375,6 +388,20 @@ class CommunityController {
   ) => {
     try {
       const invitations = await communityService.getMyInvitations(req.user!.id);
+
+      return res.status(CommunityController.HTTP_STATUS.OK).json(invitations);
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  getMySentInvitations = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const invitations = await communityService.getMySentInvitations(req.user!.id);
 
       return res.status(CommunityController.HTTP_STATUS.OK).json(invitations);
     } catch (err: unknown) {
@@ -631,6 +658,20 @@ class CommunityController {
     }
   };
 
+  getMySentOwnershipTransferRequests = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await communityService.getMySentOwnershipTransferRequests(req.user!.id);
+
+      return res.status(CommunityController.HTTP_STATUS.OK).json(result);
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
   cancelOwnershipTransfer = async (
     req: AuthenticatedRequest,
     res: Response,
@@ -639,6 +680,25 @@ class CommunityController {
     try {
       await communityService.cancelOwnershipTransfer(
         req.params.transferId,
+        req.user!.id
+      );
+
+      return res.status(CommunityController.HTTP_STATUS.OK).json({
+        message: 'Ownership transfer request cancelled successfully',
+      });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
+  cancelOwnershipTransferByCommunity = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await communityService.cancelOwnershipTransferByCommunity(
+        req.params.id,
         req.user!.id
       );
 

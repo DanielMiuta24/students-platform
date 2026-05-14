@@ -12,7 +12,6 @@ import Feed from '../pages/Feed.vue';
 import UserProfile from '../pages/UserProfile.vue';
 import Messages from '../pages/Messages.vue';
 import EditProfile from '../pages/EditProfile.vue';
-import ChangePassword from '../pages/ChangePassword.vue';
 import ViewCommunity from '../pages/ViewCommunity.vue';
 import EditPost from '../pages/EditPost.vue';
 import { useSessionStore } from '../store/session';
@@ -23,9 +22,25 @@ const routes = [
   { path: '/login', component: Login, meta: { guestOnly: true } },
   { path: '/register', component: Register, meta: { guestOnly: true } },
   { path: '/edit-profile', component: EditProfile, name: 'EditProfile', meta: { requiresAuth: true } },
-  { path: '/change-password', component: ChangePassword, name: 'ChangePassword', meta: { requiresAuth: true } },
   { path: '/posts/:id/edit', component: EditPost, name: 'EditPost', meta: { requiresAuth: true } },
-  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
+  {
+    path: '/dashboard',
+    component: Dashboard,
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', redirect: '/dashboard/general' },
+      { path: 'general', name: 'DashboardGeneral' },
+      { path: 'change-password', name: 'DashboardChangePassword' },
+      { path: 'student-status', name: 'DashboardStudentStatus' },
+      { path: 'saved-universities', name: 'DashboardSavedUniversities' },
+      { path: 'saved-scholarships', name: 'DashboardSavedScholarships' },
+      { path: 'drafts', name: 'DashboardDrafts' },
+      { path: 'notifications', name: 'DashboardNotifications' },
+      { path: 'requests', redirect: '/dashboard/requests/incoming' },
+      { path: 'requests/incoming', name: 'DashboardRequestsIncoming' },
+      { path: 'requests/outgoing', name: 'DashboardRequestsOutgoing' },
+    ]
+  },
   { path: '/community', component: Community, meta: { requiresAuth: true }},
   { path: '/community/join', component: JoinCommunity, name: 'JoinCommunity', meta: { requiresAuth: true }},
   { path: '/community/create', component: CreateCommunity, name: 'CreateCommunity', meta: { requiresAuth: true }},

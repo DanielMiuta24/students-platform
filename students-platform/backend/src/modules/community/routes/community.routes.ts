@@ -121,6 +121,12 @@ router.get(
   communityController.getMyInvitations
 );
 
+router.get(
+  '/invitations/sent',
+  authMiddleware,
+  communityController.getMySentInvitations
+);
+
 router.post(
   '/:id/join-requests',
   authMiddleware,
@@ -199,10 +205,23 @@ router.get(
   communityController.getPendingOwnershipTransfer
 );
 
+router.delete(
+  '/:id/ownership-transfer',
+  authMiddleware,
+  validateCommunityId,
+  communityController.cancelOwnershipTransferByCommunity
+);
+
 router.get(
   '/ownership-transfers/me',
   authMiddleware,
   communityController.getMyOwnershipTransferRequests
+);
+
+router.get(
+  '/ownership-transfers/sent',
+  authMiddleware,
+  communityController.getMySentOwnershipTransferRequests
 );
 
 router.delete(

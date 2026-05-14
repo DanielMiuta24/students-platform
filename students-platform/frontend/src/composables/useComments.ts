@@ -54,15 +54,11 @@ export function useComments(postId: string) {
       isSubmitting.value = true;
       error.value = null;
 
-      console.log('[useComments] Creating comment:', { postId, content, parentCommentId });
-
       const newComment = await createComment({
         postId,
         content,
         parentCommentId,
       });
-
-      console.log('[useComments] Comment created successfully:', newComment);
 
       if (!parentCommentId) {
         comments.value.unshift(newComment);

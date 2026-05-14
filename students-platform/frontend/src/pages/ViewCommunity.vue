@@ -48,7 +48,8 @@
         <!-- Fallback Gradient when no cover image -->
         <div
           v-else
-          class="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700"
+          class="absolute inset-0"
+          style="background: linear-gradient(to right, #2563eb, #4f46e5, #0f2a5f);"
         >
           <div class="absolute inset-0 opacity-20">
             <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -700,11 +701,8 @@
               </h3>
               <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border-2 border-blue-200">
                 <div class="flex items-center gap-3">
-                  <div v-if="community.founder.avatar" class="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white shadow-md">
-                    <img :src="community.founder.avatar" :alt="community.founder.name" class="w-full h-full object-cover" />
-                  </div>
-                  <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg ring-2 ring-white shadow-md">
-                    {{ community.founder.name.charAt(0).toUpperCase() }}
+                  <div class="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white shadow-md">
+                    <img :src="getAvatarUrl(community.founder.name, community.founder.avatar)" :alt="community.founder.name" class="w-full h-full object-cover" />
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="text-base font-semibold text-gray-900 truncate">{{ community.founder.name }}</p>
@@ -838,11 +836,8 @@
                   class="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0 relative"
                 >
                   <div class="flex items-center gap-4">
-                    <div v-if="member.avatar" class="w-12 h-12 rounded-full overflow-hidden">
-                      <img :src="member.avatar" :alt="member.name" class="w-full h-full object-cover" />
-                    </div>
-                    <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {{ member.name.charAt(0).toUpperCase() }}
+                    <div class="w-12 h-12 rounded-full overflow-hidden">
+                      <img :src="getAvatarUrl(member.name, member.avatar)" :alt="member.name" class="w-full h-full object-cover" />
                     </div>
                     <div class="flex-1">
                       <div class="flex items-center gap-1.5 sm:gap-2">
@@ -914,11 +909,8 @@
                   class="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0 relative"
                 >
                   <div class="flex items-center gap-4">
-                    <div v-if="member.avatar" class="w-12 h-12 rounded-full overflow-hidden">
-                      <img :src="member.avatar" :alt="member.name" class="w-full h-full object-cover" />
-                    </div>
-                    <div v-else class="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {{ member.name.charAt(0).toUpperCase() }}
+                    <div class="w-12 h-12 rounded-full overflow-hidden">
+                      <img :src="getAvatarUrl(member.name, member.avatar)" :alt="member.name" class="w-full h-full object-cover" />
                     </div>
                     <div class="flex-1">
                       <h4 class="font-semibold text-gray-900">{{ member.name }}</h4>
@@ -1240,17 +1232,24 @@
               >
                 <div class="flex items-center gap-4">
                   <!-- User Avatar -->
-                  <div v-if="typeof request.user === 'object' && request.user.avatar" class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                    <img :src="request.user.avatar" :alt="typeof request.user === 'object' ? request.user.name : ''" class="w-full h-full object-cover" />
-                  </div>
-                  <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                    {{ typeof request.user === 'object' ? request.user.name.charAt(0).toUpperCase() : '?' }}
+                  <router-link v-if="typeof request.user === 'object'" :to="`/profile/${request.user.username}`" class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(request.user.name, request.user.avatar)"
+                      :alt="request.user.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </router-link>
+                  <div v-else class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                    <img :src="getAvatarUrl('Unknown User')" alt="Unknown User" class="w-12 h-12 rounded-full object-cover" />
                   </div>
 
                   <!-- User Info -->
                   <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold text-gray-900 truncate">
-                      {{ typeof request.user === 'object' ? request.user.name : 'Unknown User' }}
+                    <router-link v-if="typeof request.user === 'object'" :to="`/profile/${request.user.username}`" class="font-semibold text-gray-900 hover:text-blue-600 truncate block">
+                      {{ request.user.name }}
+                    </router-link>
+                    <h4 v-else class="font-semibold text-gray-900 truncate">
+                      Unknown User
                     </h4>
                     <p class="text-sm text-gray-600 truncate">
                       @{{ typeof request.user === 'object' ? request.user.username : 'unknown' }}
@@ -1284,6 +1283,90 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                       Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Invitations Section (Admin/Founder only) -->
+          <div v-if="isAdmin" class="border border-blue-200 bg-blue-50 rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                Pending Invitations
+              </h3>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-200 text-blue-800">
+                {{ pendingInvitations.length }} {{ pendingInvitations.length === 1 ? 'Invitation' : 'Invitations' }}
+              </span>
+            </div>
+
+            <div v-if="pendingInvitations.length === 0" class="text-center py-8">
+              <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </div>
+              <p class="text-sm text-gray-600">No pending invitations</p>
+            </div>
+
+            <div v-else class="space-y-3">
+              <div
+                v-for="invitation in pendingInvitations"
+                :key="invitation.id"
+                class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div class="flex items-center gap-4">
+                  <!-- User Avatar or Email Icon -->
+                  <router-link v-if="invitation.recipientUser" :to="`/profile/${invitation.recipientUser.username}`" class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(invitation.recipientUser.name, invitation.recipientUser.avatar)"
+                      :alt="invitation.recipientUser.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </router-link>
+                  <div v-else class="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                  </div>
+
+                  <!-- User/Email Info -->
+                  <div class="flex-1 min-w-0">
+                    <router-link v-if="invitation.recipientUser" :to="`/profile/${invitation.recipientUser.username}`" class="font-semibold text-gray-900 hover:text-blue-600 truncate block">
+                      {{ invitation.recipientUser.name }}
+                    </router-link>
+                    <h4 v-else class="font-semibold text-gray-900 truncate">
+                      {{ invitation.recipientEmail }}
+                    </h4>
+                    <p v-if="invitation.recipientUser" class="text-sm text-gray-600 truncate">
+                      @{{ invitation.recipientUser.username }}
+                    </p>
+                    <p v-else class="text-sm text-gray-600">
+                      Email invitation
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                      Invited by {{ invitation.invitedBy }} • {{ formatRequestDate(invitation.createdAt) }}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      Expires {{ formatRequestDate(invitation.expiresAt) }}
+                    </p>
+                  </div>
+
+                  <!-- Cancel Button -->
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      @click="handleCancelInvitation(invitation.id)"
+                      class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancel
                     </button>
                   </div>
                 </div>
@@ -1353,17 +1436,10 @@
               >
                 <div class="flex items-center gap-3 flex-1 min-w-0">
                   <img
-                    v-if="user.avatar"
-                    :src="user.avatar"
+                    :src="getAvatarUrl(user.name, user.avatar)"
                     :alt="user.name"
                     class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                   />
-                  <div
-                    v-else
-                    class="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center flex-shrink-0"
-                  >
-                    <span class="text-white font-bold text-sm">{{ user.name.charAt(0).toUpperCase() }}</span>
-                  </div>
                   <div class="flex-1 min-w-0">
                     <p class="font-semibold text-gray-900 truncate">{{ user.name }}</p>
                     <p class="text-sm text-gray-600 truncate">@{{ user.username }}</p>
@@ -1385,7 +1461,7 @@
           </div>
 
           <!-- Transfer Ownership Section (Founder only) -->
-          <div v-if="isFounder" class="border border-amber-200 bg-amber-50 rounded-lg p-6">
+          <div v-if="isFounder && !pendingOwnershipTransfer" class="border border-amber-200 bg-amber-50 rounded-lg p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -1408,16 +1484,42 @@
             </button>
           </div>
 
-          <!-- Pending Ownership Transfer Section (Admin only - NOT Founder) -->
-          <div v-if="isAdmin && !isFounder && pendingOwnershipTransfer" class="border border-purple-200 bg-purple-50 rounded-lg p-6">
+          <!-- Pending Ownership Transfer Section (Founder who sent the request) -->
+          <div v-if="isFounder && pendingOwnershipTransfer" class="border border-blue-200 bg-blue-50 rounded-lg p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Pending Transfer Ownership Request
+            </h3>
+
+            <div class="bg-white border border-blue-200 rounded-lg p-4 mb-4">
+              <p class="text-sm text-gray-700">
+                You have sent an ownership transfer request to <span class="font-semibold">{{ pendingOwnershipTransfer.newOwner?.name || 'an admin' }}</span>
+              </p>
+            </div>
+
+            <button
+              @click="handleCancelOwnershipTransferByCommunity"
+              class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancel Request
+            </button>
+          </div>
+
+          <!-- Pending Ownership Transfer Section (Admin only - NOT Founder) -->
+          <div v-if="isAdmin && !isFounder && pendingOwnershipTransfer" class="border border-blue-200 bg-blue-50 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
               Pending Ownership Transfer
             </h3>
 
-            <div class="bg-white border border-purple-200 rounded-lg p-4 mb-4">
+            <div class="bg-white border border-blue-200 rounded-lg p-4 mb-4">
               <p class="text-sm text-gray-700 mb-3">
                 <span class="font-semibold">{{ pendingOwnershipTransfer.fromUser?.name || 'Community Founder' }}</span> wants to transfer ownership of this community to you.
               </p>
@@ -1456,7 +1558,8 @@
                 </button>
                 <button
                   @click="handleAcceptOwnership"
-                  class="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-lg"
+                  class="flex-1 px-4 py-2.5 text-white font-semibold rounded-lg transition-colors shadow-lg"
+                  style="background-color: #0f2a5f;"
                 >
                   Accept Ownership
                 </button>
@@ -1929,6 +2032,54 @@
       @confirm="showRejectOwnershipError = false"
     />
 
+    <!-- Cancel Ownership Confirmation Modal -->
+    <ConfirmationModal
+      :is-open="showCancelOwnershipConfirmation"
+      variant="warning"
+      title="Cancel Transfer Request?"
+      message="Are you sure you want to cancel this ownership transfer request?"
+      :info-box="{
+        icon: '<svg fill=\'currentColor\' viewBox=\'0 0 20 20\'><path fill-rule=\'evenodd\' d=\'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z\' clip-rule=\'evenodd\' /></svg>',
+        title: 'This will:',
+        items: [
+          'Remove the pending transfer request',
+          'The selected admin will no longer see the transfer request',
+          'You can send a new transfer request later'
+        ]
+      }"
+      confirm-text="Yes, Cancel Request"
+      cancel-text="Keep Request"
+      :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M6 18L18 6M6 6l12 12\' /></svg>'"
+      @close="showCancelOwnershipConfirmation = false"
+      @confirm="confirmCancelOwnershipTransfer"
+    />
+
+    <!-- Cancel Ownership Success Modal -->
+    <ConfirmationModal
+      :is-open="showCancelOwnershipSuccess"
+      variant="success"
+      title="Request Cancelled"
+      message="Ownership transfer request has been cancelled successfully."
+      confirm-text="Got it"
+      :show-cancel="false"
+      :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg>'"
+      @close="showCancelOwnershipSuccess = false"
+      @confirm="showCancelOwnershipSuccess = false"
+    />
+
+    <!-- Cancel Ownership Error Modal -->
+    <ConfirmationModal
+      :is-open="showCancelOwnershipError"
+      variant="danger"
+      title="Cancel Failed"
+      :message="ownershipErrorMessage"
+      confirm-text="OK"
+      :show-cancel="false"
+      :icon="'<svg fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg>'"
+      @close="showCancelOwnershipError = false"
+      @confirm="showCancelOwnershipError = false"
+    />
+
     <!-- Promote Member Confirmation Modal -->
     <ConfirmationModal
       :is-open="showPromoteConfirmation"
@@ -2077,6 +2228,7 @@
     <!-- Invite People Modal -->
     <InvitePeopleModal
       :is-open="showInviteModal"
+      :exclude-user-ids="memberIds"
       @close="showInviteModal = false"
       @send-invites="handleSendInvites"
     />
@@ -2102,9 +2254,9 @@
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all border-2 border-blue-200 pointer-events-auto">
         <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 px-6 py-4">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
+              <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <div>
@@ -2159,11 +2311,9 @@
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
         <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
             <div>
               <h3 class="text-xl font-bold text-white">Delete Community</h3>
               <p class="text-red-100 text-sm">This action cannot be undone</p>
@@ -2249,11 +2399,9 @@
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
         <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </div>
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
             <div>
               <h3 class="text-xl font-bold text-white">Transfer Ownership</h3>
               <p class="text-amber-100 text-sm">Select the new community owner</p>
@@ -2354,9 +2502,10 @@ import { getScoredFeed, getCommunityScoredFeed } from '../api/post';
 import type { SafePost } from '../types/post';
 import { useCommunity } from '../composables/useCommunity';
 import { useCommunityMembers } from '../composables/useCommunityMembers';
-import { sendInvitations, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, canViewCommunityPosts } from '../api/community';
+import { sendInvitations, getInvitations, cancelInvitation, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, cancelOwnershipTransfer, canViewCommunityPosts } from '../api/community';
 import type { InviteUsersPayload, SafeJoinRequest, CommunityMember } from '../types/community';
 import { COMMUNITY_ROLE } from '../types/community';
+import { getAvatarUrl } from '../utils/avatar';
 
 const route = useRoute();
 const router = useRouter();
@@ -2409,6 +2558,20 @@ const transferableAdmins = computed(() => {
   );
 });
 
+const memberIds = computed(() => {
+  const ids = members.value.map(member => member.id);
+  const requestUserIds = joinRequests.value.map(request =>
+    typeof request.user === 'string' ? request.user : request.user.id
+  );
+  const invitedUserIds = pendingInvitations.value
+    .filter(inv => inv.recipientUser)
+    .map(inv => inv.recipientUser.id);
+  const bannedUserIds = (community.value?.bannedUsers || []).map((user: any) =>
+    typeof user === 'string' ? user : user.id
+  );
+  return [...ids, ...requestUserIds, ...invitedUserIds, ...bannedUserIds];
+});
+
 const regularMembers = computed(() => {
   return filteredMembers.value.filter(
     (member) => member.role !== 'admin' && member.role !== 'founder'
@@ -2449,6 +2612,9 @@ const showAcceptOwnershipConfirmation = ref(false);
 const showAcceptOwnershipSuccess = ref(false);
 const showRejectOwnershipConfirmation = ref(false);
 const showRejectOwnershipSuccess = ref(false);
+const showCancelOwnershipConfirmation = ref(false);
+const showCancelOwnershipSuccess = ref(false);
+const showCancelOwnershipError = ref(false);
 const showTransferOwnershipSuccess = ref(false);
 const showTransferOwnershipError = ref(false);
 const showAcceptOwnershipError = ref(false);
@@ -2491,6 +2657,7 @@ const joinRequestsLoading = ref(false);
 const joinRequestsError = ref<string | null>(null);
 const processingRequestId = ref<string | null>(null);
 const showPostDeleteSuccess = ref(false);
+const pendingInvitations = ref<any[]>([]);
 
 const bannedUsers = ref<CommunityMember[]>([]);
 const bannedUsersLoading = ref(false);
@@ -2833,11 +3000,26 @@ const confirmLeaveGroup = async () => {
   }
 };
 
-const handleInvitePeople = () => {
+const handleInvitePeople = async () => {
   if (!canInvite.value) {
     alert('You do not have permission to invite members to this community');
     return;
   }
+
+  // Fetch join requests and pending invitations to exclude users
+  if (isAdmin.value && community.value?.id) {
+    try {
+      const [joinRequestsResponse, invitationsResponse] = await Promise.all([
+        getJoinRequests(community.value.id),
+        getInvitations(community.value.id)
+      ]);
+      joinRequests.value = joinRequestsResponse.requests;
+      pendingInvitations.value = invitationsResponse.invitations || [];
+    } catch (err) {
+      console.error('Failed to fetch join requests or invitations:', err);
+    }
+  }
+
   showInviteModal.value = true;
 };
 
@@ -2845,8 +3027,21 @@ const handleSendInvites = async (data: { userIds: string[]; emails: string[]; us
   invitedCount.value = data.userIds.length + data.emails.length;
 
   try {
-    const payload: InviteUsersPayload = { userIds: data.userIds };
+    const payload: InviteUsersPayload = {
+      userIds: data.userIds,
+      emails: data.emails
+    };
     await sendInvitations(communityId.value, payload);
+
+    // Refresh pending invitations after sending
+    if (isAdmin.value && community.value?.id) {
+      try {
+        const invitationsResponse = await getInvitations(community.value.id);
+        pendingInvitations.value = invitationsResponse.invitations || [];
+      } catch (err) {
+        console.error('Failed to refresh invitations:', err);
+      }
+    }
 
     showInviteModal.value = false;
     showInviteSuccess.value = true;
@@ -2995,6 +3190,8 @@ const handleTransferOwnership = async () => {
 
     showTransferOwnershipModal.value = false;
     selectedNewOwnerId.value = '';
+
+    await fetchPendingOwnershipTransfer();
 
     showTransferOwnershipSuccess.value = true;
     setTimeout(() => {
@@ -3147,6 +3344,20 @@ const fetchJoinRequests = async () => {
   }
 };
 
+const fetchPendingInvitations = async () => {
+  if (!community.value?.id || !isAdmin.value) {
+    return;
+  }
+
+  try {
+    const response = await getInvitations(community.value.id);
+    pendingInvitations.value = response.invitations || [];
+    console.log('Fetched pending invitations:', response.invitations);
+  } catch (err: any) {
+    console.error('Failed to fetch pending invitations:', err);
+  }
+};
+
 const handleApproveRequest = async (request: SafeJoinRequest) => {
   selectedRequestToApprove.value = request;
   showApproveConfirmation.value = true;
@@ -3207,6 +3418,19 @@ const confirmRejectRequest = async () => {
     alert(err.message || 'Failed to reject join request');
   } finally {
     processingRequestId.value = null;
+  }
+};
+
+const handleCancelInvitation = async (invitationId: string) => {
+  if (!community.value?.id) return;
+
+  try {
+    await cancelInvitation(community.value.id, invitationId);
+
+    // Remove from local state
+    pendingInvitations.value = pendingInvitations.value.filter(inv => inv.id !== invitationId);
+  } catch (err: any) {
+    alert(err.message || 'Failed to cancel invitation');
   }
 };
 
@@ -3342,6 +3566,30 @@ const confirmRejectOwnership = async () => {
   }
 };
 
+const handleCancelOwnershipTransferByCommunity = () => {
+  showCancelOwnershipConfirmation.value = true;
+};
+
+const confirmCancelOwnershipTransfer = async () => {
+  if (!community.value) return;
+
+  showCancelOwnershipConfirmation.value = false;
+
+  try {
+    await cancelOwnershipTransfer(community.value.id);
+    pendingOwnershipTransfer.value = null;
+
+    showCancelOwnershipSuccess.value = true;
+    setTimeout(() => {
+      showCancelOwnershipSuccess.value = false;
+    }, 3000);
+  } catch (err: any) {
+    console.error('Failed to cancel ownership transfer:', err);
+    ownershipErrorMessage.value = err.message || 'Failed to cancel ownership transfer';
+    showCancelOwnershipError.value = true;
+  }
+};
+
 const checkAccess = async () => {
   try {
     checkingAccess.value = true;
@@ -3412,16 +3660,51 @@ onMounted(async () => {
   // Check if there's a post slug in the URL to scroll to
   const postSlug = route.params.postSlug as string | undefined;
   if (postSlug && isJoined.value) {
-    setTimeout(() => {
+    const checkAndHandlePost = () => {
       const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
-      if (postElement) {
-        postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        postElement.classList.add('highlight-post');
-        setTimeout(() => {
-          postElement.classList.remove('highlight-post');
-        }, 3000);
+
+      if (!postElement) {
+        // Post not loaded yet, try again
+        setTimeout(checkAndHandlePost, 500);
+        return;
       }
-    }, 1500);
+
+      // Scroll to post
+      postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      postElement.classList.add('highlight-post');
+      setTimeout(() => {
+        postElement.classList.remove('highlight-post');
+      }, 3000);
+
+      // Handle comment hash if present
+      const hash = route.hash;
+      if (hash && hash.startsWith('#comment-')) {
+        // Find the comments button - it's the second action button (first is like)
+        const actionButtons = postElement.querySelectorAll('button.action-btn');
+        const commentsButton = actionButtons[1] as HTMLElement; // Comments is the second button
+
+        if (commentsButton) {
+          // Click to open comments
+          commentsButton.click();
+
+          // Wait for comments to load, then scroll to and highlight the comment
+          setTimeout(() => {
+            const commentId = hash.substring(9); // Remove '#comment-'
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement) {
+              commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              commentElement.classList.add('highlight-comment');
+              setTimeout(() => {
+                commentElement.classList.remove('highlight-comment');
+              }, 3000);
+            }
+          }, 1500);
+        }
+      }
+    };
+
+    // Start checking after a delay to allow posts to load
+    setTimeout(checkAndHandlePost, 1500);
   }
 
   document.addEventListener('click', (e) => {
@@ -3450,6 +3733,7 @@ watch(communitySlug, async (newSlug, oldSlug) => {
       }
       if (activeTab.value === 'settings') {
         fetchJoinRequests();
+        fetchPendingInvitations();
         fetchBannedUsers();
         fetchPendingOwnershipTransfer();
       }
@@ -3465,6 +3749,7 @@ watch(activeTab, (newTab, oldTab) => {
   }
   if (newTab === 'settings') {
     fetchJoinRequests();
+    fetchPendingInvitations();
     fetchBannedUsers();
     fetchPendingOwnershipTransfer();
   }
@@ -3547,6 +3832,20 @@ watch(() => community.value?.requiresApproval, (newValue) => {
   50% {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
     transform: scale(1.02);
+  }
+}
+
+.highlight-comment {
+  animation: highlight-comment-pulse 3s ease-in-out;
+}
+
+@keyframes highlight-comment-pulse {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
 }
 

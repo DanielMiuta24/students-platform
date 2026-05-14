@@ -34,7 +34,7 @@
               <div>
                 <div class="flex items-center gap-3">
                   <h1 class="text-3xl font-bold text-blue-900">{{ user.name }}</h1>
-                  <span :class="userTypeClass">
+                  <span :class="userTypeClass" :style="user.study.toLowerCase().includes('studyseeker') ? { backgroundColor: '#0f2a5f' } : {}">
                     <svg class="w-3.5 h-3.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" preserveAspectRatio="xMidYMid meet">
                       <path v-if="userTypeIcon === 'student'" d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
                       <path v-else-if="userTypeIcon === 'seeker'" d="M9 9a2 2 0 114 0 2 2 0 01-4 0z M9 9a2 2 0 114 0 2 2 0 01-4 0zM9 9a2 2 0 114 0 2 2 0 01-4 0z M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -465,7 +465,7 @@ const userTypeClass = computed(() => {
   if (userType.includes('student')) {
     return `${baseClass} bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200`;
   } else if (userType.includes('studyseeker')) {
-    return `${baseClass} bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200`;
+    return `${baseClass} text-white border border-blue-900`;
   } else if (userType.includes('admin')) {
     return `${baseClass} bg-gradient-to-r from-red-50 to-red-100 text-red-700 border border-red-200`;
   }
@@ -555,42 +555,51 @@ onMounted(() => {
 
   const postSlug = route.params.slug as string | undefined;
   if (postSlug) {
-    const checkAndRedirectCommunityPost = async () => {
-      try {
-        const allPosts = posts.value;
-        const targetPost = allPosts.find(p => p.slug === postSlug);
+    const checkAndHandlePost = () => {
+      const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
 
-        if (targetPost?.community) {
-          const communitySlug = typeof targetPost.community === 'string'
-            ? targetPost.community
-            : targetPost.community.slug;
+      if (!postElement) {
+        // Post not loaded yet, try again
+        setTimeout(checkAndHandlePost, 500);
+        return;
+      }
 
-          if (communitySlug) {
-            router.push(`/community/${communitySlug}`);
-            return;
-          }
+      // Scroll to post
+      postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      postElement.classList.add('highlight-post');
+      setTimeout(() => {
+        postElement.classList.remove('highlight-post');
+      }, 3000);
+
+      // Handle comment hash if present
+      const hash = route.hash;
+      if (hash && hash.startsWith('#comment-')) {
+        // Find the comments button - it's the second action button (first is like)
+        const actionButtons = postElement.querySelectorAll('button.action-btn');
+        const commentsButton = actionButtons[1] as HTMLElement; // Comments is the second button
+
+        if (commentsButton) {
+          // Click to open comments
+          commentsButton.click();
+
+          // Wait for comments to load, then scroll to and highlight the comment
+          setTimeout(() => {
+            const commentId = hash.substring(9); // Remove '#comment-'
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement) {
+              commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              commentElement.classList.add('highlight-comment');
+              setTimeout(() => {
+                commentElement.classList.remove('highlight-comment');
+              }, 3000);
+            }
+          }, 1500);
         }
-
-        // For non-community posts or if post not found yet, scroll to it
-        setTimeout(() => {
-          const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
-          if (postElement) {
-            postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            postElement.classList.add('highlight-post');
-            setTimeout(() => {
-              postElement.classList.remove('highlight-post');
-            }, 3000);
-          }
-        }, 1000);
-      } catch (err) {
-        console.error('Error checking community post:', err);
       }
     };
 
-    // Wait a bit for posts to load, then check
-    setTimeout(() => {
-      checkAndRedirectCommunityPost();
-    }, 1500);
+    // Start checking after a delay to allow posts to load
+    setTimeout(checkAndHandlePost, 1500);
   }
 });
 
@@ -987,6 +996,20 @@ const handleFocusCreatePost = () => {
   50% {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
     transform: scale(1.02);
+  }
+}
+
+.highlight-comment {
+  animation: highlight-comment-pulse 3s ease-in-out;
+}
+
+@keyframes highlight-comment-pulse {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
 }
 </style>

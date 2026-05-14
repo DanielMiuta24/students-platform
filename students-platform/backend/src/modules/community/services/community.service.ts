@@ -1,6 +1,7 @@
 import { CommunityModel, type CommunityDoc, CommunityInvitationModel, CommunityJoinRequestModel, OwnershipTransferModel } from '../models';
 import { categoryService } from '../../category/services';
 import { imageService } from '../../image/services';
+import { notificationService } from '../../notification/services';
 
 import type {
   CreateCommunityDTO,
@@ -287,7 +288,18 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.ALREADY_MEMBER);
     }
 
-    if (community.requiresApproval && !bypassApproval) {
+    const pendingInvitation = await CommunityInvitationModel.findOne({
+      community: communityId,
+      recipientUser: userId,
+      status: 'pending',
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (pendingInvitation) {
+      await CommunityInvitationModel.findByIdAndUpdate(pendingInvitation._id, {
+        status: 'accepted',
+      });
+    } else if (community.requiresApproval && !bypassApproval) {
       throw new Error(COMMUNITY_ERROR.REQUIRES_APPROVAL);
     }
 
@@ -310,6 +322,17 @@ export class CommunityService {
       .populate('coverImage', 'url')
       .populate('members.user', 'name username avatar type')
       .exec();
+
+    const founderId = community.founder?.toString();
+    if (founderId && founderId !== userId) {
+      await notificationService.createNotification({
+        recipientId: founderId,
+        actorId: userId,
+        type: 'community_join',
+        targetModel: 'Community',
+        targetId: communityId,
+      }).catch(err => console.error('Failed to create community join notification:', err));
+    }
 
     return updated!;
   }
@@ -336,6 +359,46 @@ export class CommunityService {
       $pull: { members: { user: userId } },
       $inc: { memberCount: -1 },
     });
+
+    await CommunityJoinRequestModel.deleteMany({
+      user: userId,
+      community: communityId,
+      status: 'pending',
+    });
+
+    await CommunityInvitationModel.deleteMany({
+      recipientUser: userId,
+      community: communityId,
+      status: 'pending',
+    });
+
+    await CommunityInvitationModel.deleteMany({
+      invitedBy: userId,
+      community: communityId,
+      status: 'pending',
+    });
+
+    await OwnershipTransferModel.updateMany(
+      {
+        newOwner: userId,
+        community: communityId,
+        status: 'pending',
+      },
+      {
+        status: 'cancelled',
+      }
+    );
+
+    await OwnershipTransferModel.updateMany(
+      {
+        currentOwner: userId,
+        community: communityId,
+        status: 'pending',
+      },
+      {
+        status: 'cancelled',
+      }
+    );
   }
 
   async getCommunityMembers(communityIdOrSlug: string) {
@@ -418,13 +481,32 @@ export class CommunityService {
 
     if (inviteData.userIds) {
       for (const recipientUserId of inviteData.userIds) {
-        invitations.push({
+        const existingInvitation = await CommunityInvitationModel.findOne({
+          community: communityId,
+          recipientUser: recipientUserId,
+          status: 'pending',
+          expiresAt: { $gt: new Date() },
+        });
+
+        if (existingInvitation) {
+          continue;
+        }
+
+        const invitation = await CommunityInvitationModel.create({
           community: communityId,
           invitedBy: userId,
           recipientUser: recipientUserId,
           status: 'pending',
           expiresAt,
         });
+
+        await notificationService.createNotification({
+          recipientId: recipientUserId,
+          actorId: userId,
+          type: 'community_invite',
+          targetModel: 'CommunityInvitation',
+          targetId: invitation._id.toString(),
+        }).catch(err => console.error('Failed to create community invite notification:', err));
       }
     }
 
@@ -432,7 +514,8 @@ export class CommunityService {
       await CommunityInvitationModel.insertMany(invitations);
     }
 
-    return { invitationsSent: invitations.length };
+    const totalInvitations = invitations.length + (inviteData.userIds?.length || 0);
+    return { invitationsSent: totalInvitations };
   }
 
   async getInvitations(communityId: string, userId: string) {
@@ -488,13 +571,34 @@ export class CommunityService {
       typeof invitation.recipientUser === 'string' ? invitation.recipientUser : invitation.recipientUser?.toString();
 
     const isRecipient = recipientUserId === userId;
+    const isSender = invitation.invitedBy?.toString() === userId;
     const isAdmin = this.isAdmin(community, userId);
 
-    if (!isAdmin && !isRecipient) {
+    if (!isAdmin && !isRecipient && !isSender) {
       throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
     }
 
     await CommunityInvitationModel.findByIdAndDelete(invitationId);
+
+    if (isRecipient) {
+      const invitedById = typeof invitation.invitedBy === 'string'
+        ? invitation.invitedBy
+        : invitation.invitedBy?.toString();
+
+      const communityId = typeof invitation.community === 'string'
+        ? invitation.community
+        : invitation.community?.toString();
+
+      if (invitedById && communityId) {
+        await notificationService.createNotification({
+          recipientId: invitedById,
+          actorId: userId,
+          type: 'community_invite_rejected',
+          targetModel: 'Community',
+          targetId: communityId,
+        }).catch(err => console.error('Failed to create invitation rejection notification:', err));
+      }
+    }
   }
 
   async acceptInvitation(invitationId: string, userId: string) {
@@ -525,7 +629,7 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
     }
 
-    await this.joinCommunity(community._id.toString(), userId);
+    await this.joinCommunity(community._id.toString(), userId, true);
 
     await CommunityInvitationModel.findByIdAndDelete(invitationId);
 
@@ -538,12 +642,26 @@ export class CommunityService {
       status: 'pending',
       expiresAt: { $gt: new Date() },
     })
-      .populate('community', 'name slug')
-      .populate('invitedBy', 'name username')
+      .populate('community', '_id name slug members')
+      .populate('invitedBy', '_id name username avatar')
       .sort({ createdAt: -1 })
       .exec();
 
-    return invitations.map((invitation) => ({
+    const filteredInvitations = invitations.filter((invitation) => {
+      const community = invitation.community as any;
+      if (!community || !community.members) {
+        return true;
+      }
+
+      const isMember = community.members.some((m: any) => {
+        const memberUserId = typeof m.user === 'string' ? m.user : m.user?.toString();
+        return memberUserId === userId;
+      });
+
+      return !isMember;
+    });
+
+    return filteredInvitations.map((invitation) => ({
       id: invitation._id.toString(),
       community: {
         id: (invitation.community as any)._id.toString(),
@@ -554,7 +672,38 @@ export class CommunityService {
         id: (invitation.invitedBy as any)._id.toString(),
         name: (invitation.invitedBy as any).name,
         username: (invitation.invitedBy as any).username,
+        avatar: (invitation.invitedBy as any).avatar,
       },
+      createdAt: invitation.createdAt,
+      expiresAt: invitation.expiresAt,
+    }));
+  }
+
+  async getMySentInvitations(userId: string) {
+    const invitations = await CommunityInvitationModel.find({
+      invitedBy: userId,
+      status: 'pending',
+      expiresAt: { $gt: new Date() },
+    })
+      .populate('community', '_id name slug')
+      .populate('recipientUser', '_id name username avatar')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return invitations.map((invitation) => ({
+      id: invitation._id.toString(),
+      community: {
+        id: (invitation.community as any)._id.toString(),
+        name: (invitation.community as any).name,
+        slug: (invitation.community as any).slug,
+      },
+      recipientUser: invitation.recipientUser ? {
+        id: (invitation.recipientUser as any)._id.toString(),
+        name: (invitation.recipientUser as any).name,
+        username: (invitation.recipientUser as any).username,
+        avatar: (invitation.recipientUser as any).avatar,
+      } : null,
+      recipientEmail: invitation.recipientEmail,
       createdAt: invitation.createdAt,
       expiresAt: invitation.expiresAt,
     }));
@@ -593,6 +742,18 @@ export class CommunityService {
     });
 
     await joinRequest.save();
+
+    const founderId = community.founder?.toString() || (community.founder as any);
+    if (founderId && typeof founderId === 'string') {
+      await notificationService.createNotification({
+        recipientId: founderId as string,
+        actorId: userId,
+        type: 'community_join_request',
+        targetModel: 'CommunityJoinRequest',
+        targetId: joinRequest._id.toString(),
+      }).catch(err => console.error('Failed to create join request notification:', err));
+    }
+
     return { message: 'Join request submitted successfully' };
   }
 
@@ -665,6 +826,14 @@ export class CommunityService {
 
     const requestUserId = typeof request.user === 'string' ? request.user : request.user!.toString();
 
+    await notificationService.createNotification({
+      recipientId: requestUserId,
+      actorId: userId,
+      type: 'community_join_approved',
+      targetModel: 'Community',
+      targetId: request.community!.toString(),
+    }).catch(err => console.error('Failed to create join request approval notification:', err));
+
     return this.joinCommunity(request.community!.toString(), requestUserId, true);
   }
 
@@ -685,7 +854,26 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
     }
 
+    const requestUserId = typeof request.user === 'string'
+      ? request.user
+      : request.user?.toString();
+
+    const communityId = typeof request.community === 'string'
+      ? request.community
+      : request.community?.toString();
+
     await CommunityJoinRequestModel.findByIdAndDelete(requestId);
+
+    if (requestUserId && communityId) {
+      await notificationService.createNotification({
+        recipientId: requestUserId,
+        actorId: userId,
+        type: 'community_join_request_rejected',
+        targetModel: 'Community',
+        targetId: communityId,
+      }).catch(err => console.error('Failed to create join request rejection notification:', err));
+    }
+
     return { message: 'Join request rejected successfully' };
   }
 
@@ -796,6 +984,16 @@ export class CommunityService {
       { _id: community._id, 'members.user': memberId },
       { $set: { 'members.$.role': role } }
     );
+
+    if (role === 'admin') {
+      await notificationService.createNotification({
+        recipientId: memberId,
+        actorId: adminId,
+        type: 'admin_assign',
+        targetModel: 'Community',
+        targetId: community._id.toString(),
+      }).catch(err => console.error('Failed to create admin assignment notification:', err));
+    }
   }
 
   async requestOwnershipTransfer(communityId: string, newOwnerId: string, currentOwnerId: string) {
@@ -836,6 +1034,15 @@ export class CommunityService {
     });
 
     await transfer.save();
+
+    await notificationService.createNotification({
+      recipientId: newOwnerId,
+      actorId: currentOwnerId,
+      type: 'ownership_transfer_request',
+      targetModel: 'Community',
+      targetId: communityId,
+    }).catch(err => console.error('Failed to create ownership transfer notification:', err));
+
     return { message: 'Ownership transfer request sent successfully' };
   }
 
@@ -907,7 +1114,7 @@ export class CommunityService {
       status: 'pending',
     })
       .populate('community', 'name slug')
-      .populate('currentOwner', 'name username')
+      .populate('currentOwner', 'name username avatar')
       .sort({ createdAt: -1 })
       .exec();
 
@@ -922,6 +1129,35 @@ export class CommunityService {
         id: (transfer.currentOwner as any)._id.toString(),
         name: (transfer.currentOwner as any).name,
         username: (transfer.currentOwner as any).username,
+        avatar: (transfer.currentOwner as any).avatar,
+      },
+      expiresAt: transfer.expiresAt,
+      createdAt: transfer.createdAt,
+    }));
+  }
+
+  async getMySentOwnershipTransferRequests(userId: string) {
+    const transfers = await OwnershipTransferModel.find({
+      currentOwner: userId,
+      status: 'pending',
+    })
+      .populate('community', 'name slug')
+      .populate('newOwner', 'name username avatar')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return transfers.map((transfer) => ({
+      id: transfer._id.toString(),
+      community: {
+        id: (transfer.community as any)._id.toString(),
+        name: (transfer.community as any).name,
+        slug: (transfer.community as any).slug,
+      },
+      newOwner: {
+        id: (transfer.newOwner as any)._id.toString(),
+        name: (transfer.newOwner as any).name,
+        username: (transfer.newOwner as any).username,
+        avatar: (transfer.newOwner as any).avatar,
       },
       expiresAt: transfer.expiresAt,
       createdAt: transfer.createdAt,
@@ -944,6 +1180,33 @@ export class CommunityService {
     }
 
     await OwnershipTransferModel.findByIdAndUpdate(transferId, { status: 'cancelled' });
+  }
+
+  async cancelOwnershipTransferByCommunity(communityId: string, userId: string) {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      throw new Error(COMMUNITY_ERROR.NOT_FOUND);
+    }
+
+    const founderId = typeof community.founder === 'string'
+      ? community.founder
+      : community.founder!.toString();
+
+    if (founderId !== userId) {
+      throw new Error(COMMUNITY_ERROR.UNAUTHORIZED);
+    }
+
+    const transfer = await OwnershipTransferModel.findOne({
+      community: communityId,
+      status: 'pending',
+    });
+
+    if (!transfer) {
+      throw new Error(COMMUNITY_ERROR.OWNERSHIP_TRANSFER_NOT_FOUND);
+    }
+
+    await OwnershipTransferModel.findByIdAndUpdate(transfer._id, { status: 'cancelled' });
   }
 
   async acceptOwnershipTransfer(transferId: string, userId: string) {
@@ -977,7 +1240,7 @@ export class CommunityService {
       ? transfer.community
       : transfer.community?.toString();
 
-    if (!communityId) {
+    if (!currentOwnerId || !communityId) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
     }
 
@@ -1004,7 +1267,14 @@ export class CommunityService {
       { $set: { founder: newOwnerId } }
     );
 
-    // Get updated community data
+    await notificationService.createNotification({
+      recipientId: currentOwnerId,
+      actorId: newOwnerId,
+      type: 'ownership_transfer',
+      targetModel: 'Community',
+      targetId: communityId,
+    }).catch(err => console.error('Failed to create ownership transfer acceptance notification:', err));
+
     const updatedCommunity = await this.getCommunityById(communityId, userId);
 
     // Check for pending join request
@@ -1039,7 +1309,27 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.UNAUTHORIZED);
     }
 
+    const currentOwnerId = typeof transfer.currentOwner === 'string'
+      ? transfer.currentOwner
+      : transfer.currentOwner?.toString();
+
+    const communityId = typeof transfer.community === 'string'
+      ? transfer.community
+      : transfer.community?.toString();
+
     await OwnershipTransferModel.findByIdAndUpdate(transferId, { status: 'rejected' });
+
+    if (currentOwnerId && communityId) {
+      await notificationService.createNotification({
+        recipientId: currentOwnerId,
+        actorId: newOwnerId,
+        type: 'ownership_transfer_rejected',
+        targetModel: 'Community',
+        targetId: communityId,
+      }).catch(err => console.error('Failed to create ownership transfer rejection notification:', err));
+    }
+
+    return { message: 'Ownership transfer rejected successfully' };
   }
 
   private checkMembership(community: CommunityDoc, userId: string): boolean {

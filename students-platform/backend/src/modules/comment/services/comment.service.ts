@@ -2,6 +2,9 @@ import { CommentModel, type CommentDoc } from '../models';
 import { PostModel } from '../../post/models';
 import { LikeModel } from '../../like/models';
 import { realtimeService } from '../../realtime/services';
+import { notificationService } from '../../notification/services';
+import { CommunityModel } from '../../community/models';
+import { User } from '../../user/models';
 
 export interface CreateCommentDTO {
   postId: string;
@@ -62,18 +65,56 @@ export class CommentService {
 
     await comment.save();
 
-    // Increment the post's comment count
     await PostModel.findByIdAndUpdate(data.postId, { $inc: { commentCount: 1 } });
 
-    // Populate author data before returning
     await comment.populate('author', 'name username avatar');
 
-    // Emit realtime event
     realtimeService.publishToRoom('post', data.postId, 'comment:created', {
       id: comment._id.toString(),
       timestamp: new Date(),
       data: this.toSafeComment(comment),
     });
+
+    if (data.parentCommentId) {
+      const parentComment = await CommentModel.findById(data.parentCommentId).select('author post');
+      if (parentComment && parentComment.author.toString() !== data.authorId) {
+        // Check if notification should be sent based on post visibility
+        const post = await PostModel.findById(parentComment.post).select('visibility community').populate('author', 'followers following');
+        if (post) {
+          const shouldNotify = await this.shouldNotifyForPost(post, data.authorId, parentComment.author.toString());
+          if (shouldNotify) {
+            await notificationService.createNotification({
+              recipientId: parentComment.author.toString(),
+              actorId: data.authorId,
+              type: 'reply',
+              targetModel: 'Comment',
+              targetId: comment._id.toString(),
+            }).catch(err => console.error('Failed to create reply notification:', err));
+          }
+        }
+      }
+    } else {
+      const post = await PostModel.findById(data.postId).select('author visibility community').populate('author', 'followers following');
+      if (post && post.author) {
+        // Extract post author ID consistently
+        const postAuthorId = typeof post.author === 'string' ? post.author : post.author._id.toString();
+
+        // Check if notification should be sent (not self-action and passes visibility check)
+        if (postAuthorId !== data.authorId) {
+          const shouldNotify = await this.shouldNotifyForPost(post, data.authorId, postAuthorId);
+
+          if (shouldNotify) {
+            await notificationService.createNotification({
+              recipientId: postAuthorId,
+              actorId: data.authorId,
+              type: 'comment',
+              targetModel: 'Comment',
+              targetId: comment._id.toString(),
+            }).catch(err => console.error('Failed to create comment notification:', err));
+          }
+        }
+      }
+    }
 
     return comment;
   }
@@ -271,6 +312,59 @@ export class CommentService {
     });
 
     await CommentModel.deleteMany({ post: postId });
+  }
+
+  private async shouldNotifyForPost(post: any, actorId: string, recipientId: string): Promise<boolean> {
+    // Private posts: never notify
+    if (post.visibility === 'private') {
+      return false;
+    }
+
+    // Public posts: always notify (anyone can access public posts)
+    if (post.visibility === 'public') {
+      return true;
+    }
+
+    // Community posts: only notify if recipient is still a member
+    if (post.visibility === 'community' && post.community) {
+      const communityId = typeof post.community === 'string' ? post.community : post.community.toString();
+      return await this.isUserMemberOfCommunity(recipientId, communityId);
+    }
+
+    // Friends posts: only notify if recipient and post author are mutual followers
+    if (post.visibility === 'friends') {
+      return await this.areMutualFollowers(recipientId, post.author._id?.toString() || post.author.toString());
+    }
+
+    return false;
+  }
+
+  private async isUserMemberOfCommunity(userId: string, communityId: string): Promise<boolean> {
+    const community = await CommunityModel.findById(communityId).select('members').lean();
+
+    if (!community) {
+      return false;
+    }
+
+    return community.members?.some((m: any) => {
+      const memberUserId = typeof m.user === 'string' ? m.user : m.user?.toString();
+      return memberUserId === userId;
+    }) || false;
+  }
+
+  private async areMutualFollowers(userId1: string, userId2: string): Promise<boolean> {
+    const user1 = await User.findById(userId1).select('followers following').lean();
+    const user2 = await User.findById(userId2).select('followers following').lean();
+
+    if (!user1 || !user2) {
+      return false;
+    }
+
+    const user1Followers = (user1.followers || []).map((id: any) => id.toString());
+    const user1Following = (user1.following || []).map((id: any) => id.toString());
+
+    // Check if they follow each other
+    return user1Followers.includes(userId2) && user1Following.includes(userId2);
   }
 }
 

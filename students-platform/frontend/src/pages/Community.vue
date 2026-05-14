@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 py-16">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 flex items-center justify-center px-4 py-16">
     <div class="max-w-6xl w-full">
       <!-- Header -->
       <div class="text-center mb-12">
@@ -85,9 +85,9 @@
         <!-- Create Community Card -->
         <div
           @click="navigateToCreate"
-          class="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border-2 border-transparent hover:border-indigo-500 transform hover:-translate-y-2"
+          class="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border-2 border-transparent hover:border-blue-500 transform hover:-translate-y-2"
         >
-          <div class="relative h-48 bg-gradient-to-br from-indigo-500 to-purple-600 overflow-hidden">
+          <div class="relative h-48 overflow-hidden" style="background-color: #0f2a5f;">
             <div class="absolute inset-0 opacity-20">
               <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                 <defs>
@@ -100,7 +100,7 @@
             </div>
             <div class="relative h-full flex items-center justify-center">
               <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-12 h-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-12 h-12" style="color: #0f2a5f;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
               </div>
@@ -135,10 +135,10 @@
             </ul>
 
             <div class="flex items-center justify-between">
-              <span class="text-indigo-600 font-semibold group-hover:text-indigo-700">
+              <span class="font-semibold" style="color: #0f2a5f;">
                 Get Started
               </span>
-              <svg class="w-6 h-6 text-indigo-600 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" style="color: #0f2a5f;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </div>
@@ -153,11 +153,11 @@
           <div class="text-gray-600 font-medium">Active Communities</div>
         </div>
         <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center">
-          <div class="text-3xl font-bold text-indigo-600 mb-2">10K+</div>
+          <div class="text-3xl font-bold mb-2" style="color: #0f2a5f;">10K+</div>
           <div class="text-gray-600 font-medium">Student Members</div>
         </div>
         <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center">
-          <div class="text-3xl font-bold text-purple-600 mb-2">50+</div>
+          <div class="text-3xl font-bold mb-2" style="color: #0f2a5f;">50+</div>
           <div class="text-gray-600 font-medium">Countries</div>
         </div>
       </div>

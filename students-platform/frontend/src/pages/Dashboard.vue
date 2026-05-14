@@ -1,22 +1,29 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
     <div class="px-6 py-8">
       <div class="flex gap-6">
         <aside class="w-72 flex-shrink-0">
           <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden sticky top-20">
             <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600">
-              <h2 class="text-2xl font-bold text-white">Dashboard</h2>
-              <p class="text-blue-100 text-sm mt-1">Manage your account</p>
+              <div class="flex items-center gap-3">
+                <svg class="w-7 h-7 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
+                </svg>
+                <div>
+                  <h2 class="text-2xl font-bold text-white">Dashboard</h2>
+                  <p class="text-blue-100 text-sm mt-1">Manage your account</p>
+                </div>
+              </div>
             </div>
 
             <nav class="p-4">
               <button
                 v-for="tab in tabs"
                 :key="tab.id"
-                @click="activeTab = tab.id"
+                @click="navigateToTab(tab.id)"
                 :class="[
                   'w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium transition-all mb-2',
-                  activeTab === tab.id
+                  currentTab === tab.id
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 transform scale-[1.02]'
                     : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                 ]"
@@ -30,33 +37,33 @@
 
         <main class="flex-1 min-w-0">
           <DashboardGeneral
-            v-if="activeTab === 'general'"
+            v-if="currentTab === 'general'"
             :user="user"
             :saved-universities-count="savedUniversities.length"
             :communities-count="communitiesCount"
             :posts-count="postsCount"
           />
 
-          <DashboardChangePassword v-else-if="activeTab === 'change-password'" />
+          <DashboardChangePassword v-else-if="currentTab === 'change-password'" />
 
-          <DashboardStudentStatus v-else-if="activeTab === 'student-status'" />
+          <DashboardStudentStatus v-else-if="currentTab === 'student-status'" />
 
-          <DashboardSavedUniversities v-else-if="activeTab === 'saved-universities'" />
+          <DashboardSavedUniversities v-else-if="currentTab === 'saved-universities'" />
 
-          <DashboardSavedScholarships v-else-if="activeTab === 'saved-scholarships'" />
+          <DashboardSavedScholarships v-else-if="currentTab === 'saved-scholarships'" />
 
           <DashboardDrafts
-            v-else-if="activeTab === 'drafts'"
+            v-else-if="currentTab === 'drafts'"
             ref="draftsRef"
             :success-message="deleteSuccessMessage"
             @edit="editDraft"
             @delete="deleteDraft"
           />
 
-          <DashboardNotifications v-else-if="activeTab === 'notifications'" />
+          <DashboardNotifications v-else-if="currentTab === 'notifications'" />
 
           <DashboardRequests
-            v-else-if="activeTab === 'requests'"
+            v-else-if="currentTab === 'requests'"
             ref="requestsRef"
             :success-message="requestSuccessMessage"
             @approve-join="approveJoinRequest"
@@ -64,8 +71,10 @@
             @cancel-join="cancelMyJoinRequest"
             @accept-invitation="acceptInvitation"
             @decline-invitation="declineInvitation"
+            @cancel-sent-invitation="cancelSentInvitation"
             @accept-transfer="acceptOwnershipTransfer"
             @reject-transfer="rejectOwnershipTransfer"
+            @cancel-sent-transfer="cancelSentOwnershipTransfer"
           />
         </main>
       </div>
@@ -93,10 +102,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, h } from 'vue';
+import { ref, onMounted, h, computed, watch } from 'vue';
 import { api } from '../services/api';
 import { deletePost } from '../api/post';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import DashboardGeneral from '../components/dashboard/DashboardGeneral.vue';
 import DashboardChangePassword from '../components/dashboard/DashboardChangePassword.vue';
 import DashboardStudentStatus from '../components/dashboard/DashboardStudentStatus.vue';
@@ -109,7 +118,7 @@ import EditPostModal from '../components/EditPostModal.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 
 const router = useRouter();
-const activeTab = ref('general');
+const route = useRoute();
 const user = ref<any>(null);
 const savedUniversities = ref<any[]>([]);
 const communitiesCount = ref(0);
@@ -122,6 +131,16 @@ const deleteSuccessMessage = ref('');
 const requestSuccessMessage = ref('');
 const draftsRef = ref<InstanceType<typeof DashboardDrafts> | null>(null);
 const requestsRef = ref<InstanceType<typeof DashboardRequests> | null>(null);
+
+const currentTab = computed(() => {
+  const pathParts = route.path.split('/').filter(p => p);
+  // If we're in a requests subtab, return 'requests'
+  if (pathParts.length >= 3 && pathParts[1] === 'requests') {
+    return 'requests';
+  }
+  const lastPart = pathParts[pathParts.length - 1];
+  return lastPart === 'dashboard' ? 'general' : lastPart;
+});
 
 const tabs = [
   {
@@ -188,6 +207,10 @@ onMounted(async () => {
   fetchCommunitiesCount();
   fetchPostsCount();
 });
+
+const navigateToTab = (tabId: string) => {
+  router.push(`/dashboard/${tabId}`);
+};
 
 const fetchUserProfile = async () => {
   try {
@@ -403,6 +426,40 @@ const declineInvitation = async (invitation: any) => {
     }
   } catch (error: any) {
     alert(error.message || 'Failed to decline invitation');
+  }
+};
+
+const cancelSentInvitation = async (invitation: any) => {
+  try {
+    const { cancelInvitation } = await import('../api/community');
+    await cancelInvitation(invitation.communityId, invitation.id);
+    requestSuccessMessage.value = `Cancelled invitation to ${invitation.recipientName}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to cancel invitation');
+  }
+};
+
+const cancelSentOwnershipTransfer = async (transfer: any) => {
+  try {
+    const { cancelOwnershipTransferById } = await import('../api/community');
+    await cancelOwnershipTransferById(transfer.id);
+    requestSuccessMessage.value = `Cancelled ownership transfer request for ${transfer.community?.name}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to cancel ownership transfer');
   }
 };
 </script>

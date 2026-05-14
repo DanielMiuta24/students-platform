@@ -219,8 +219,7 @@ const handleCommentUpdated = (updatedComment: SafeComment) => {
 };
 
 const handleCommentDeleted = (commentId: string, childCommentIds: string[]) => {
-  console.log('[CommentSection] handleCommentDeleted:', commentId, 'with', childCommentIds.length, 'child comments');
-  latestCommentDeleted.value = { commentId, childCommentIds }; // Notify watchers
+  latestCommentDeleted.value = { commentId, childCommentIds };
 
   comments.value = comments.value.filter(c => c.id !== commentId);
   comments.value = comments.value.filter(c => !childCommentIds.includes(c.id));

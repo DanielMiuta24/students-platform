@@ -20,6 +20,8 @@ import { imageService, type UploadedFile } from '../../image/services';
 import { commentService } from '../../comment/services';
 import { likeService } from '../../like/services';
 import { followService } from '../../follow/services';
+import { notificationService } from '../../notification/services';
+import { User } from '../../user/models';
 
 export class PostService {
   private readonly DEFAULT_LIMIT = POST_VALIDATION.DEFAULT_PAGINATION_LIMIT;
@@ -56,9 +58,76 @@ export class PostService {
 
     if (data.communityId && savedPost.status === 'published') {
       await communityService.incrementPostCount(data.communityId);
+
+      // Community posts should only use 'community' visibility
+      // Only send notifications for community visibility
+      if (savedPost.visibility === 'community') {
+        const community = await communityService.getCommunityById(data.communityId, data.authorId);
+
+        // Extract member IDs, handling both populated and unpopulated user fields
+        const communityMemberIds = community.members
+          ?.filter((m: any) => {
+            const userId = typeof m.user === 'string' ? m.user : m.user?._id?.toString();
+            return userId && userId !== data.authorId;
+          })
+          .map((m: any) => {
+            // Extract user ID properly - handle both ObjectId and populated User
+            if (typeof m.user === 'string') {
+              return m.user;
+            } else if (m.user?._id) {
+              return m.user._id.toString();
+            }
+            return null;
+          })
+          .filter((id: any) => id !== null) || [];
+
+        if (communityMemberIds.length > 0) {
+          console.log(`[PostService] Creating ${communityMemberIds.length} community post notifications`);
+          for (const memberId of communityMemberIds) {
+            await notificationService.createNotification({
+              recipientId: memberId,
+              actorId: data.authorId,
+              type: 'community_post',
+              targetModel: 'Post',
+              targetId: savedPost._id.toString(),
+            }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
+          }
+        }
+      }
+    } else if (!data.communityId && savedPost.status === 'published' && savedPost.visibility !== 'private') {
+      const author = await User.findById(data.authorId).select('followers following');
+
+      let recipientIds: string[] = [];
+
+      if (savedPost.visibility === 'friends') {
+        // For friends visibility, notify only mutual followers (followers who author is also following)
+        if (author && author.followers && author.followers.length > 0 && author.following && author.following.length > 0) {
+          const followingIds = new Set(author.following.map(id => id.toString()));
+          recipientIds = author.followers
+            .map(id => id.toString())
+            .filter(id => followingIds.has(id));
+        }
+      } else if (savedPost.visibility === 'public') {
+        // For public visibility, notify all followers
+        if (author && author.followers && author.followers.length > 0) {
+          recipientIds = author.followers.map(id => id.toString());
+        }
+      }
+      // For 'community' visibility on profile posts, don't send notifications (it's meant for community posts only)
+
+      if (recipientIds.length > 0) {
+        for (const recipientId of recipientIds) {
+          await notificationService.createNotification({
+            recipientId: recipientId,
+            actorId: data.authorId,
+            type: 'new_post',
+            targetModel: 'Post',
+            targetId: savedPost._id.toString(),
+          }).catch(err => console.error('Failed to create new post notification:', err));
+        }
+      }
     }
 
-    // Populate author, category, community, and images before returning
     await savedPost.populate('author', 'name username avatar email type');
     await savedPost.populate('category', 'name slug');
     await savedPost.populate({

@@ -14,8 +14,19 @@ export const NOTIFICATION_TYPES = [
 'view',
 'message',
 'new_post',
+'community_join',
+'community_post',
+'community_invite',
+'community_join_request',
+'community_join_approved',
+'community_join_request_rejected',
+'community_invite_rejected',
+'admin_assign',
+'ownership_transfer_request',
+'ownership_transfer',
+'ownership_transfer_rejected',
 ] as const;
 
 export type NotificationType = typeof NOTIFICATION_TYPES[number];
-export const TARGET_MODELS = ['Post', 'Comment', 'User', 'Message'] as const;
+export const TARGET_MODELS = ['Post', 'Comment', 'User', 'Message', 'Community', 'CommunityInvitation', 'CommunityJoinRequest'] as const;
 export type TargetModel = typeof TARGET_MODELS[number];

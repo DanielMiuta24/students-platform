@@ -92,6 +92,12 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
         community.value.memberCount -= 1;
         community.value.role = undefined;
         console.log('Successfully left community');
+      } else if (community.value.hasPendingInvitation) {
+        // User has a pending invitation - join directly (bypass approval)
+        console.log('User has pending invitation, joining directly...');
+        const result = await joinCommunity(community.value.id);
+        community.value = result.community;
+        console.log('Successfully joined community via invitation');
       } else if (community.value.requiresApproval) {
         // Community requires approval - create a join request
         console.log('Creating join request (requires approval)...');

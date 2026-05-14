@@ -5,7 +5,7 @@
     @click.self="handleClose"
   >
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all border-2 border-blue-200">
-      <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 px-6 py-4">
+      <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-800 px-6 py-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
@@ -159,11 +159,8 @@
               @click="toggleSelection(person.id)"
             >
               <div class="flex items-center gap-4">
-                <div v-if="person.avatar" class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                  <img :src="person.avatar" :alt="person.name" class="w-full h-full object-cover" />
-                </div>
-                <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                  {{ person.name.charAt(0).toUpperCase() }}
+                <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                  <img :src="getAvatarUrl(person.name, person.avatar)" :alt="person.name" class="w-full h-full object-cover" />
                 </div>
 
                 <div class="flex-1 min-w-0">
@@ -174,6 +171,7 @@
                         'inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold',
                         getTypeBadgeClass(person.type)
                       ]"
+                      :style="person.type === 'following' ? { backgroundColor: '#0f2a5f' } : {}"
                     >
                       {{ getTypeLabel(person.type) }}
                     </span>
@@ -249,6 +247,7 @@
 import { ref, computed, watch } from 'vue';
 import { useSessionStore } from '../store/session';
 import { getFriends, getFollowers, getFollowing } from '../api/follow';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface Person {
   id: string;
@@ -262,10 +261,12 @@ interface Person {
 interface Props {
   isOpen: boolean;
   subtitle?: string;
+  excludeUserIds?: string[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   subtitle: 'Invite people by email or select from friends and followers',
+  excludeUserIds: () => [],
 });
 
 const emit = defineEmits<{
@@ -286,10 +287,6 @@ const error = ref<string | null>(null);
 
 // Fetch friends, followers, and following when modal opens
 const fetchPeople = async () => {
-  console.log('[InvitePeopleModal] fetchPeople called');
-  console.log('[InvitePeopleModal] isAuthenticated:', session.isAuthenticated);
-  console.log('[InvitePeopleModal] user:', session.user);
-
   if (!session.isAuthenticated || !session.user?.id) {
     console.error('User not authenticated or user ID not available');
     return;
@@ -299,23 +296,14 @@ const fetchPeople = async () => {
     loading.value = true;
     error.value = null;
 
-    console.log('[InvitePeopleModal] Fetching data from APIs...');
     const [friendsRes, followersRes, followingRes] = await Promise.all([
       getFriends(session.user.id, 1, 100),
       getFollowers(session.user.id, 1, 100),
       getFollowing(session.user.id, 1, 100)
     ]);
 
-    console.log('[InvitePeopleModal] API responses:', {
-      friends: friendsRes.users?.length || 0,
-      followers: followersRes.users?.length || 0,
-      following: followingRes.users?.length || 0
-    });
-
-    // Combine and deduplicate by user ID
     const peopleMap = new Map<string, Person>();
 
-    // Add friends
     (friendsRes.users || []).forEach((user: any) => {
       peopleMap.set(user.id, {
         id: user.id,
@@ -327,7 +315,6 @@ const fetchPeople = async () => {
       });
     });
 
-    // Add followers (if not already added as friend)
     (followersRes.users || []).forEach((user: any) => {
       if (!peopleMap.has(user.id)) {
         peopleMap.set(user.id, {
@@ -341,7 +328,6 @@ const fetchPeople = async () => {
       }
     });
 
-    // Add following (if not already added as friend or follower)
     (followingRes.users || []).forEach((user: any) => {
       if (!peopleMap.has(user.id)) {
         peopleMap.set(user.id, {
@@ -356,8 +342,6 @@ const fetchPeople = async () => {
     });
 
     people.value = Array.from(peopleMap.values());
-    console.log('[InvitePeopleModal] Fetched people:', people.value.length);
-    console.log('[InvitePeopleModal] People data:', people.value);
   } catch (err: any) {
     console.error('[InvitePeopleModal] Error fetching people:', err);
     error.value = err.message || 'Failed to load people';
@@ -366,19 +350,19 @@ const fetchPeople = async () => {
   }
 };
 
-// Fetch people when modal opens
 watch(() => props.isOpen, (isOpen) => {
-  console.log('[InvitePeopleModal] isOpen changed to:', isOpen);
   if (isOpen) {
     fetchPeople();
   }
 });
 
 const filteredPeople = computed(() => {
-  if (!searchQuery.value) return people.value;
+  let filtered = people.value.filter(person => !props.excludeUserIds.includes(person.id));
+
+  if (!searchQuery.value) return filtered;
 
   const query = searchQuery.value.toLowerCase();
-  return people.value.filter(person =>
+  return filtered.filter(person =>
     person.name.toLowerCase().includes(query) ||
     person.username.toLowerCase().includes(query)
   );
@@ -413,7 +397,7 @@ const getTypeBadgeClass = (type: string) => {
     case 'friend':
       return 'bg-blue-100 text-blue-700';
     case 'following':
-      return 'bg-purple-100 text-purple-700';
+      return 'text-white';
     case 'follower':
       return 'bg-green-100 text-green-700';
     default:
