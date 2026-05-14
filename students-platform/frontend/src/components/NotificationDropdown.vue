@@ -431,7 +431,7 @@ const getNotificationMessage = (notification: Notification): {
       return {
         text: 'requested you to take over the ownership of',
         targetName: notification.target.name || 'a community',
-        targetLink: '/dashboard/requests/incoming'
+        targetLink: `/community/${notification.target.slug}`
       };
     case 'ownership_transfer':
       return {
