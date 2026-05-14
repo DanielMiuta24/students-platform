@@ -43,13 +43,35 @@ export class LikeService {
     }
 
     if (entityOwnerId && entityOwnerId !== data.userId) {
-      await notificationService.createNotification({
-        recipientId: entityOwnerId,
-        actorId: data.userId,
-        type: 'like',
-        targetModel: data.likeableType === 'Post' ? 'Post' : 'Comment',
-        targetId: data.likeableId,
-      }).catch(err => console.error('Failed to create like notification:', err));
+      // Check if notification should be sent based on post visibility
+      let shouldNotify = false;
+
+      if (data.likeableType === 'Post') {
+        // For post likes, check post visibility
+        const post = await PostModel.findById(data.likeableId).select('visibility community').populate('author', 'followers following');
+        if (post) {
+          shouldNotify = await this.shouldNotifyForPost(post, data.userId, entityOwnerId);
+        }
+      } else if (data.likeableType === 'Comment') {
+        // For comment likes, get the parent post and check its visibility
+        const comment = await CommentModel.findById(data.likeableId).select('post');
+        if (comment) {
+          const post = await PostModel.findById(comment.post).select('visibility community').populate('author', 'followers following');
+          if (post) {
+            shouldNotify = await this.shouldNotifyForPost(post, data.userId, entityOwnerId);
+          }
+        }
+      }
+
+      if (shouldNotify) {
+        await notificationService.createNotification({
+          recipientId: entityOwnerId,
+          actorId: data.userId,
+          type: 'like',
+          targetModel: data.likeableType === 'Post' ? 'Post' : 'Comment',
+          targetId: data.likeableId,
+        }).catch(err => console.error('Failed to create like notification:', err));
+      }
     }
 
     return like;
@@ -135,6 +157,38 @@ export class LikeService {
 
   async deleteLikesByPost(postId: string): Promise<void> {
     await LikeModel.deleteMany({ likeable: postId, likeableType: 'Post' });
+  }
+
+  private async shouldNotifyForPost(post: any, actorId: string, recipientId: string): Promise<boolean> {
+    // Private posts: never notify
+    if (post.visibility === 'private') {
+      return false;
+    }
+
+    // Public posts: always notify
+    if (post.visibility === 'public') {
+      return true;
+    }
+
+    // Community posts: notify (actor already has access if they can like)
+    if (post.visibility === 'community') {
+      return true;
+    }
+
+    // Friends posts: only notify if actor and post author are mutual followers
+    if (post.visibility === 'friends') {
+      const postAuthor = post.author;
+      if (postAuthor && postAuthor.followers && postAuthor.following) {
+        const authorFollowers = postAuthor.followers.map((id: any) => id.toString());
+        const authorFollowing = postAuthor.following.map((id: any) => id.toString());
+
+        // Check if actor is a mutual follower
+        return authorFollowers.includes(actorId) && authorFollowing.includes(actorId);
+      }
+      return false;
+    }
+
+    return false;
   }
 }
 

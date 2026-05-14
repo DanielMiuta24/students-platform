@@ -85,15 +85,21 @@ export class CommentService {
         }).catch(err => console.error('Failed to create reply notification:', err));
       }
     } else {
-      const post = await PostModel.findById(data.postId).select('author');
+      const post = await PostModel.findById(data.postId).select('author visibility community').populate('author', 'followers following');
       if (post && post.author && post.author.toString() !== data.authorId) {
-        await notificationService.createNotification({
-          recipientId: post.author.toString(),
-          actorId: data.authorId,
-          type: 'comment',
-          targetModel: 'Comment',
-          targetId: comment._id.toString(),
-        }).catch(err => console.error('Failed to create comment notification:', err));
+        // Check if notification should be sent based on post visibility
+        const postAuthorId = typeof post.author === 'string' ? post.author : post.author._id.toString();
+        const shouldNotify = await this.shouldNotifyForPost(post, data.authorId, postAuthorId);
+
+        if (shouldNotify) {
+          await notificationService.createNotification({
+            recipientId: postAuthorId,
+            actorId: data.authorId,
+            type: 'comment',
+            targetModel: 'Comment',
+            targetId: comment._id.toString(),
+          }).catch(err => console.error('Failed to create comment notification:', err));
+        }
       }
     }
 
@@ -293,6 +299,38 @@ export class CommentService {
     });
 
     await CommentModel.deleteMany({ post: postId });
+  }
+
+  private async shouldNotifyForPost(post: any, actorId: string, recipientId: string): Promise<boolean> {
+    // Private posts: never notify
+    if (post.visibility === 'private') {
+      return false;
+    }
+
+    // Public posts: always notify
+    if (post.visibility === 'public') {
+      return true;
+    }
+
+    // Community posts: notify (actor already has access if they can comment)
+    if (post.visibility === 'community') {
+      return true;
+    }
+
+    // Friends posts: only notify if actor and post author are mutual followers
+    if (post.visibility === 'friends') {
+      const postAuthor = post.author;
+      if (postAuthor && postAuthor.followers && postAuthor.following) {
+        const authorFollowers = postAuthor.followers.map((id: any) => id.toString());
+        const authorFollowing = postAuthor.following.map((id: any) => id.toString());
+
+        // Check if actor is a mutual follower
+        return authorFollowers.includes(actorId) && authorFollowing.includes(actorId);
+      }
+      return false;
+    }
+
+    return false;
   }
 }
 
