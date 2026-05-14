@@ -1236,6 +1236,10 @@ export class CommunityService {
       ? transfer.currentOwner
       : transfer.currentOwner?.toString();
 
+    const communityId = typeof transfer.community === 'string'
+      ? transfer.community
+      : transfer.community?.toString();
+
     if (!currentOwnerId || !communityId) {
       throw new Error(COMMUNITY_ERROR.NOT_FOUND);
     }
