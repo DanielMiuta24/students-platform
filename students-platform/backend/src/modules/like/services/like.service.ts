@@ -5,6 +5,8 @@ import { PostModel } from '../../post/models';
 import { CommentModel } from '../../comment/models';
 import { LikeBuilder } from '../builders';
 import { notificationService } from '../../notification/services';
+import { CommunityModel } from '../../community/models';
+import { User } from '../../user/models';
 
 export class LikeService {
   async like(data: CreateLikeDTO): Promise<LikeDoc> {
@@ -185,7 +187,6 @@ export class LikeService {
   }
 
   private async isUserMemberOfCommunity(userId: string, communityId: string): Promise<boolean> {
-    const { CommunityModel } = await import('../../community/models');
     const community = await CommunityModel.findById(communityId).select('members').lean();
 
     if (!community) {
@@ -199,8 +200,6 @@ export class LikeService {
   }
 
   private async areMutualFollowers(userId1: string, userId2: string): Promise<boolean> {
-    const { default: User } = await import('../../user/models');
-
     const user1 = await User.findById(userId1).select('followers following').lean();
     const user2 = await User.findById(userId2).select('followers following').lean();
 
