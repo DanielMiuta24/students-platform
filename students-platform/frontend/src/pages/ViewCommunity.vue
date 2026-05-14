@@ -2351,7 +2351,7 @@ import { getScoredFeed, getCommunityScoredFeed } from '../api/post';
 import type { SafePost } from '../types/post';
 import { useCommunity } from '../composables/useCommunity';
 import { useCommunityMembers } from '../composables/useCommunityMembers';
-import { sendInvitations, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, canViewCommunityPosts } from '../api/community';
+import { sendInvitations, getInvitations, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, canViewCommunityPosts } from '../api/community';
 import type { InviteUsersPayload, SafeJoinRequest, CommunityMember } from '../types/community';
 import { COMMUNITY_ROLE } from '../types/community';
 
