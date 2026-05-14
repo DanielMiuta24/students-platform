@@ -121,6 +121,12 @@ router.get(
   communityController.getMyInvitations
 );
 
+router.get(
+  '/invitations/sent',
+  authMiddleware,
+  communityController.getMySentInvitations
+);
+
 router.post(
   '/:id/join-requests',
   authMiddleware,

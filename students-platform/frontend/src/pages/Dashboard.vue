@@ -64,6 +64,7 @@
             @cancel-join="cancelMyJoinRequest"
             @accept-invitation="acceptInvitation"
             @decline-invitation="declineInvitation"
+            @cancel-sent-invitation="cancelSentInvitation"
             @accept-transfer="acceptOwnershipTransfer"
             @reject-transfer="rejectOwnershipTransfer"
           />
@@ -417,6 +418,23 @@ const declineInvitation = async (invitation: any) => {
     }
   } catch (error: any) {
     alert(error.message || 'Failed to decline invitation');
+  }
+};
+
+const cancelSentInvitation = async (invitation: any) => {
+  try {
+    const { cancelInvitation } = await import('../api/community');
+    await cancelInvitation(invitation.communityId, invitation.id);
+    requestSuccessMessage.value = `Cancelled invitation to ${invitation.recipientName}`;
+    setTimeout(() => {
+      requestSuccessMessage.value = '';
+    }, 5000);
+
+    if (requestsRef.value) {
+      requestsRef.value.fetchRequests();
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to cancel invitation');
   }
 };
 </script>

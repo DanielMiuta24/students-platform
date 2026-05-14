@@ -430,6 +430,17 @@ export class CommunityService {
 
     if (inviteData.userIds) {
       for (const recipientUserId of inviteData.userIds) {
+        const existingInvitation = await CommunityInvitationModel.findOne({
+          community: communityId,
+          recipientUser: recipientUserId,
+          status: 'pending',
+          expiresAt: { $gt: new Date() },
+        });
+
+        if (existingInvitation) {
+          continue;
+        }
+
         const invitation = await CommunityInvitationModel.create({
           community: communityId,
           invitedBy: userId,
@@ -509,9 +520,10 @@ export class CommunityService {
       typeof invitation.recipientUser === 'string' ? invitation.recipientUser : invitation.recipientUser?.toString();
 
     const isRecipient = recipientUserId === userId;
+    const isSender = invitation.invitedBy.toString() === userId;
     const isAdmin = this.isAdmin(community, userId);
 
-    if (!isAdmin && !isRecipient) {
+    if (!isAdmin && !isRecipient && !isSender) {
       throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
     }
 
@@ -559,16 +571,22 @@ export class CommunityService {
       status: 'pending',
       expiresAt: { $gt: new Date() },
     })
-      .populate('community', 'name slug members')
-      .populate('invitedBy', 'name username')
+      .populate('community', '_id name slug members')
+      .populate('invitedBy', '_id name username')
       .sort({ createdAt: -1 })
       .exec();
 
     const filteredInvitations = invitations.filter((invitation) => {
       const community = invitation.community as any;
-      if (!community || !community.members) return true;
+      if (!community || !community.members) {
+        return true;
+      }
 
-      const isMember = community.members.some((m: any) => m.user.toString() === userId);
+      const isMember = community.members.some((m: any) => {
+        const memberUserId = typeof m.user === 'string' ? m.user : m.user?.toString();
+        return memberUserId === userId;
+      });
+
       return !isMember;
     });
 
@@ -584,6 +602,36 @@ export class CommunityService {
         name: (invitation.invitedBy as any).name,
         username: (invitation.invitedBy as any).username,
       },
+      createdAt: invitation.createdAt,
+      expiresAt: invitation.expiresAt,
+    }));
+  }
+
+  async getMySentInvitations(userId: string) {
+    const invitations = await CommunityInvitationModel.find({
+      invitedBy: userId,
+      status: 'pending',
+      expiresAt: { $gt: new Date() },
+    })
+      .populate('community', '_id name slug')
+      .populate('recipientUser', '_id name username avatar')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return invitations.map((invitation) => ({
+      id: invitation._id.toString(),
+      community: {
+        id: (invitation.community as any)._id.toString(),
+        name: (invitation.community as any).name,
+        slug: (invitation.community as any).slug,
+      },
+      recipientUser: invitation.recipientUser ? {
+        id: (invitation.recipientUser as any)._id.toString(),
+        name: (invitation.recipientUser as any).name,
+        username: (invitation.recipientUser as any).username,
+        avatar: (invitation.recipientUser as any).avatar,
+      } : null,
+      recipientEmail: invitation.recipientEmail,
       createdAt: invitation.createdAt,
       expiresAt: invitation.expiresAt,
     }));

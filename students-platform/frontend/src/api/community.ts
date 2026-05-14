@@ -320,6 +320,22 @@ export const getMyInvitations = async (): Promise<any[]> => {
 };
 
 /**
+ * Get my sent invitations
+ */
+export const getMySentInvitations = async (): Promise<any[]> => {
+  try {
+    const response = await secureApi.get<any[]>('/communities/invitations/sent');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      throw new Error('You must be logged in to view sent invitations');
+    }
+
+    throw new Error(error.response?.data?.message || 'Failed to fetch sent invitations');
+  }
+};
+
+/**
  * Create a join request for a community that requires approval
  */
 export const createJoinRequest = async (
