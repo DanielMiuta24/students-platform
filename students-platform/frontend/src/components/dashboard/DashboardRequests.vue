@@ -126,11 +126,11 @@
       <!-- Invitations & Transfers -->
       <div v-if="activeSubTab === 'invitations'">
         <div class="space-y-8">
-          <!-- Community Invitations -->
+          <!-- Received Invitations -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Community Invitations</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Received Invitations</h3>
             <div v-if="myInvitations.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending invitations</p>
+              <p class="text-gray-600">No pending received invitations</p>
             </div>
             <div v-else class="space-y-3">
               <div
@@ -163,6 +163,55 @@
                       Decline
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sent Invitations -->
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Sent Invitations</h3>
+            <div v-if="mySentInvitations.length === 0" class="empty-state-small">
+              <p class="text-gray-600">No pending sent invitations</p>
+            </div>
+            <div v-else class="space-y-3">
+              <div
+                v-for="invitation in mySentInvitations"
+                :key="invitation.id"
+                class="bg-white border border-gray-200 rounded-lg p-4"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <img
+                      :src="getAvatarUrl(invitation.recipientName || 'User', invitation.recipientAvatar)"
+                      :alt="invitation.recipientName"
+                      class="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <p class="font-semibold text-gray-900">
+                        {{ invitation.recipientName }}
+                        <span v-if="invitation.recipientUsername" class="text-sm text-gray-500">
+                          @{{ invitation.recipientUsername }}
+                        </span>
+                      </p>
+                      <p class="text-sm text-gray-600">
+                        Invited to
+                        <router-link
+                          :to="`/community/${invitation.communitySlug}`"
+                          class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                        >
+                          {{ invitation.communityName }}
+                        </router-link>
+                      </p>
+                      <p class="text-xs text-gray-500 mt-1">{{ new Date(invitation.createdAt).toLocaleDateString() }}</p>
+                    </div>
+                  </div>
+                  <button
+                    @click="$emit('cancel-sent-invitation', invitation)"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             </div>
@@ -213,55 +262,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Sent Invitations -->
-      <div v-if="activeSubTab === 'sent'">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">Sent Invitations</h3>
-        <div v-if="mySentInvitations.length === 0" class="empty-state-small">
-          <p class="text-gray-600">No pending sent invitations</p>
-        </div>
-        <div v-else class="space-y-3">
-          <div
-            v-for="invitation in mySentInvitations"
-            :key="invitation.id"
-            class="bg-white border border-gray-200 rounded-lg p-4"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <img
-                  :src="getAvatarUrl(invitation.recipientName || 'User', invitation.recipientAvatar)"
-                  :alt="invitation.recipientName"
-                  class="w-10 h-10 rounded-full object-cover"
-                />
-                <div>
-                  <p class="font-semibold text-gray-900">
-                    {{ invitation.recipientName }}
-                    <span v-if="invitation.recipientUsername" class="text-sm text-gray-500">
-                      @{{ invitation.recipientUsername }}
-                    </span>
-                  </p>
-                  <p class="text-sm text-gray-600">
-                    Invited to
-                    <router-link
-                      :to="`/community/${invitation.communitySlug}`"
-                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                    >
-                      {{ invitation.communityName }}
-                    </router-link>
-                  </p>
-                  <p class="text-xs text-gray-500 mt-1">{{ new Date(invitation.createdAt).toLocaleDateString() }}</p>
-                </div>
-              </div>
-              <button
-                @click="$emit('cancel-sent-invitation', invitation)"
-                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -301,7 +301,7 @@ const isLoading = ref(false);
 
 const activeSubTab = computed(() => {
   const path = route.path.split('/').pop();
-  if (path === 'requests' || !['incoming', 'outgoing', 'invitations', 'sent'].includes(path || '')) {
+  if (path === 'requests' || !['incoming', 'outgoing', 'invitations'].includes(path || '')) {
     return 'incoming';
   }
   return path;
@@ -321,12 +321,7 @@ const requestTabs = computed(() => [
   {
     id: 'invitations',
     label: 'Invitations',
-    count: myInvitations.value.length + ownershipTransferRequests.value.length
-  },
-  {
-    id: 'sent',
-    label: 'Sent',
-    count: mySentInvitations.value.length
+    count: myInvitations.value.length + mySentInvitations.value.length + ownershipTransferRequests.value.length
   }
 ]);
 

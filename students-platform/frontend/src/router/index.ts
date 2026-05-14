@@ -42,7 +42,6 @@ const routes = [
       { path: 'requests/incoming', name: 'DashboardRequestsIncoming' },
       { path: 'requests/outgoing', name: 'DashboardRequestsOutgoing' },
       { path: 'requests/invitations', name: 'DashboardRequestsInvitations' },
-      { path: 'requests/sent', name: 'DashboardRequestsSent' },
     ]
   },
   { path: '/community', component: Community, meta: { requiresAuth: true }},
