@@ -48,7 +48,8 @@
         <!-- Fallback Gradient when no cover image -->
         <div
           v-else
-          class="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700"
+          class="absolute inset-0"
+          style="background: linear-gradient(to right, #2563eb, #4f46e5, #0f2a5f);"
         >
           <div class="absolute inset-0 opacity-20">
             <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -1290,15 +1291,15 @@
           </div>
 
           <!-- Pending Invitations Section (Admin/Founder only) -->
-          <div v-if="isAdmin" class="border border-purple-200 bg-purple-50 rounded-lg p-6">
+          <div v-if="isAdmin" class="border border-blue-200 bg-blue-50 rounded-lg p-6">
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
                 Pending Invitations
               </h3>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-200 text-purple-800">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-200 text-blue-800">
                 {{ pendingInvitations.length }} {{ pendingInvitations.length === 1 ? 'Invitation' : 'Invitations' }}
               </span>
             </div>
@@ -1484,15 +1485,15 @@
           </div>
 
           <!-- Pending Ownership Transfer Section (Founder who sent the request) -->
-          <div v-if="isFounder && pendingOwnershipTransfer" class="border border-purple-200 bg-purple-50 rounded-lg p-6">
+          <div v-if="isFounder && pendingOwnershipTransfer" class="border border-blue-200 bg-blue-50 rounded-lg p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Pending Transfer Ownership Request
             </h3>
 
-            <div class="bg-white border border-purple-200 rounded-lg p-4 mb-4">
+            <div class="bg-white border border-blue-200 rounded-lg p-4 mb-4">
               <p class="text-sm text-gray-700">
                 You have sent an ownership transfer request to <span class="font-semibold">{{ pendingOwnershipTransfer.newOwner?.name || 'an admin' }}</span>
               </p>
@@ -1510,15 +1511,15 @@
           </div>
 
           <!-- Pending Ownership Transfer Section (Admin only - NOT Founder) -->
-          <div v-if="isAdmin && !isFounder && pendingOwnershipTransfer" class="border border-purple-200 bg-purple-50 rounded-lg p-6">
+          <div v-if="isAdmin && !isFounder && pendingOwnershipTransfer" class="border border-blue-200 bg-blue-50 rounded-lg p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
               Pending Ownership Transfer
             </h3>
 
-            <div class="bg-white border border-purple-200 rounded-lg p-4 mb-4">
+            <div class="bg-white border border-blue-200 rounded-lg p-4 mb-4">
               <p class="text-sm text-gray-700 mb-3">
                 <span class="font-semibold">{{ pendingOwnershipTransfer.fromUser?.name || 'Community Founder' }}</span> wants to transfer ownership of this community to you.
               </p>
@@ -1557,7 +1558,8 @@
                 </button>
                 <button
                   @click="handleAcceptOwnership"
-                  class="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-lg"
+                  class="flex-1 px-4 py-2.5 text-white font-semibold rounded-lg transition-colors shadow-lg"
+                  style="background-color: #0f2a5f;"
                 >
                   Accept Ownership
                 </button>
