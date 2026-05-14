@@ -39,7 +39,6 @@ export class NotificationService {
       throw new Error(NOTIFICATION_ERRORS.CREATION_FAILED);
     }
 
-    // Manually populate nested community field for CommunityInvitation targets
     if (populatedNotification.targetModel === 'CommunityInvitation' && populatedNotification.target) {
       const target = populatedNotification.target as any;
       if (target.community) {
@@ -86,7 +85,6 @@ export class NotificationService {
       NotificationModel.countDocuments({ recipient: query.userId, read: false }),
     ]);
 
-    // Manually populate nested community field for CommunityInvitation targets
     for (const notification of notifications) {
       if (notification.targetModel === 'CommunityInvitation' && notification.target) {
         const target = notification.target as any;
@@ -101,7 +99,6 @@ export class NotificationService {
 
     const notificationDTOs = notifications
       .filter((notification) => {
-        // Filter out notifications where target no longer exists
         if (!notification.target) {
           console.warn(`Notification ${notification._id} has missing target, skipping`);
           return false;
@@ -110,7 +107,6 @@ export class NotificationService {
       })
       .map((notification) => {
         try {
-          // notification is already a plain object from .lean()
           return NotificationMapper.toDTO(notification as any);
         } catch (error) {
           console.error('Error mapping notification:', error);
@@ -153,7 +149,6 @@ export class NotificationService {
         .lean()
         .exec();
 
-      // Manually populate nested community field for CommunityInvitation targets
       if (populatedNotification?.targetModel === 'CommunityInvitation' && populatedNotification.target) {
         const target = populatedNotification.target as any;
         if (target.community) {
@@ -181,7 +176,6 @@ export class NotificationService {
       throw new Error(NOTIFICATION_ERRORS.UPDATE_FAILED);
     }
 
-    // Manually populate nested community field for CommunityInvitation targets
     if (populatedNotification.targetModel === 'CommunityInvitation' && populatedNotification.target) {
       const target = populatedNotification.target as any;
       if (target.community) {

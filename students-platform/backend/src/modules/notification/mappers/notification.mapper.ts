@@ -11,7 +11,6 @@ export class NotificationMapper {
       throw new Error('Invalid notification: missing type or targetModel');
     }
 
-    // Check if the fields are actually populated (not just ObjectIds)
     const isRecipientPopulated = recipient && typeof recipient === 'object' && recipient.name;
     const isActorPopulated = actor && typeof actor === 'object' && actor.name;
     const isTargetPopulated = target && typeof target === 'object' && target._id;

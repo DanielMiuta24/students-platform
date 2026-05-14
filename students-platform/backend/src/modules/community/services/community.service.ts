@@ -564,7 +564,6 @@ export class CommunityService {
       .sort({ createdAt: -1 })
       .exec();
 
-    // Filter out invitations where user is already a member
     const filteredInvitations = invitations.filter((invitation) => {
       const community = invitation.community as any;
       if (!community || !community.members) return true;
