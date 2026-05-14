@@ -2250,11 +2250,9 @@
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
         <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </div>
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
             <div>
               <h3 class="text-xl font-bold text-white">Transfer Ownership</h3>
               <p class="text-amber-100 text-sm">Select the new community owner</p>
