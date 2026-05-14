@@ -219,7 +219,7 @@ const getNotificationRoute = (notification: Notification): string | null => {
     case 'community_post':
       return `/community/${notification.target.slug || notification.target._id}`;
     case 'community_invite':
-      return '/dashboard/requests/invitations';
+      return '/dashboard/requests/incoming';
     case 'new_post':
       return `/post/${notification.target._id}`;
     default:

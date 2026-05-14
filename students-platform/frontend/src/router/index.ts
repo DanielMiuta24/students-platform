@@ -41,7 +41,6 @@ const routes = [
       { path: 'requests', redirect: '/dashboard/requests/incoming' },
       { path: 'requests/incoming', name: 'DashboardRequestsIncoming' },
       { path: 'requests/outgoing', name: 'DashboardRequestsOutgoing' },
-      { path: 'requests/invitations', name: 'DashboardRequestsInvitations' },
     ]
   },
   { path: '/community', component: Community, meta: { requiresAuth: true }},

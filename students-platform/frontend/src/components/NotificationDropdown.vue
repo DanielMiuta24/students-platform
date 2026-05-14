@@ -184,8 +184,7 @@ const getNotificationRoute = (notification: Notification): string | null => {
       }
       return null;
     case 'community_invite':
-      // Always go to invitations tab for community invites
-      return '/dashboard/requests/invitations';
+      return '/dashboard/requests/incoming';
     case 'new_post':
       return `/post/${notification.target._id}`;
     default:

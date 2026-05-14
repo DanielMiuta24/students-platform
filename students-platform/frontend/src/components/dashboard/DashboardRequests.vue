@@ -53,84 +53,51 @@
     </div>
 
     <div v-else class="space-y-6">
-      <!-- Join Requests to My Communities -->
+      <!-- Incoming Requests -->
       <div v-if="activeSubTab === 'incoming'">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">Community Join Requests</h3>
-        <div v-if="joinRequestsToMyCommunities.length === 0" class="empty-state-small">
-          <p class="text-gray-600">No pending join requests</p>
-        </div>
-        <div v-else class="space-y-3">
-          <div
-            v-for="request in joinRequestsToMyCommunities"
-            :key="request.id"
-            class="bg-white border border-gray-200 rounded-lg p-4"
-          >
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-semibold text-gray-900">{{ request.user?.name || 'Unknown User' }}</p>
-                <p class="text-sm text-gray-600">wants to join {{ request.communityName }}</p>
-                <p class="text-xs text-gray-500 mt-1">{{ new Date(request.createdAt).toLocaleDateString() }}</p>
-              </div>
-              <div class="flex gap-2">
-                <button
-                  @click="$emit('approve-join', request)"
-                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                >
-                  Approve
-                </button>
-                <button
-                  @click="$emit('reject-join', request)"
-                  class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- My Outgoing Requests -->
-      <div v-if="activeSubTab === 'outgoing'">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">My Join Requests</h3>
-        <div v-if="myJoinRequests.length === 0" class="empty-state-small">
-          <p class="text-gray-600">No pending requests to join communities</p>
-        </div>
-        <div v-else class="space-y-3">
-          <div
-            v-for="community in myJoinRequests"
-            :key="community.id"
-            class="bg-white border border-gray-200 rounded-lg p-4"
-          >
-            <div class="flex items-center justify-between">
-              <div>
-                <router-link
-                  :to="`/community/${community.communitySlug}`"
-                  class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                >
-                  {{ community.name }}
-                </router-link>
-                <p class="text-sm text-gray-600">Request pending approval</p>
-              </div>
-              <button
-                @click="$emit('cancel-join', community)"
-                class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Invitations & Transfers -->
-      <div v-if="activeSubTab === 'invitations'">
         <div class="space-y-8">
+          <!-- Join Requests to My Communities -->
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Community Join Requests</h3>
+            <div v-if="joinRequestsToMyCommunities.length === 0" class="empty-state-small">
+              <p class="text-gray-600">No pending join requests</p>
+            </div>
+            <div v-else class="space-y-3">
+              <div
+                v-for="request in joinRequestsToMyCommunities"
+                :key="request.id"
+                class="bg-white border border-gray-200 rounded-lg p-4"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold text-gray-900">{{ request.user?.name || 'Unknown User' }}</p>
+                    <p class="text-sm text-gray-600">wants to join {{ request.communityName }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ new Date(request.createdAt).toLocaleDateString() }}</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      @click="$emit('approve-join', request)"
+                      class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      @click="$emit('reject-join', request)"
+                      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Received Invitations -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Received Invitations</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Community Invitations Received</h3>
             <div v-if="myInvitations.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending received invitations</p>
+              <p class="text-gray-600">No pending invitations</p>
             </div>
             <div v-else class="space-y-3">
               <div
@@ -168,9 +135,91 @@
             </div>
           </div>
 
+          <!-- Received Ownership Transfer Requests -->
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfer Requests Received</h3>
+            <div v-if="ownershipTransferRequests.length === 0" class="empty-state-small">
+              <p class="text-gray-600">No pending ownership transfers</p>
+            </div>
+            <div v-else class="space-y-3">
+              <div
+                v-for="transfer in ownershipTransferRequests"
+                :key="transfer.id"
+                class="bg-white border border-gray-200 rounded-lg p-4"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <router-link
+                      v-if="transfer.community?.slug"
+                      :to="`/community/${transfer.community.slug}`"
+                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                    >
+                      {{ transfer.community?.name || 'Unknown Community' }}
+                    </router-link>
+                    <p v-else class="font-semibold text-gray-900">{{ transfer.community?.name || 'Unknown Community' }}</p>
+                    <p class="text-sm text-gray-600">from {{ transfer.currentOwner?.name || 'Unknown' }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ new Date(transfer.createdAt).toLocaleDateString() }}</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      @click="$emit('accept-transfer', transfer)"
+                      class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      @click="$emit('reject-transfer', transfer)"
+                      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outgoing Requests -->
+      <div v-if="activeSubTab === 'outgoing'">
+        <div class="space-y-8">
+          <!-- My Join Requests -->
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">My Join Requests</h3>
+            <div v-if="myJoinRequests.length === 0" class="empty-state-small">
+              <p class="text-gray-600">No pending join requests</p>
+            </div>
+            <div v-else class="space-y-3">
+              <div
+                v-for="community in myJoinRequests"
+                :key="community.id"
+                class="bg-white border border-gray-200 rounded-lg p-4"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <router-link
+                      :to="`/community/${community.communitySlug}`"
+                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                    >
+                      {{ community.name }}
+                    </router-link>
+                    <p class="text-sm text-gray-600">Request pending approval</p>
+                  </div>
+                  <button
+                    @click="$emit('cancel-join', community)"
+                    class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Sent Invitations -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Sent Invitations</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Invitations Sent</h3>
             <div v-if="mySentInvitations.length === 0" class="empty-state-small">
               <p class="text-gray-600">No pending sent invitations</p>
             </div>
@@ -217,55 +266,11 @@
             </div>
           </div>
 
-          <!-- Ownership Transfer Requests -->
-          <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Received Ownership Transfer Requests</h3>
-            <div v-if="ownershipTransferRequests.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No received ownership transfer requests</p>
-            </div>
-            <div v-else class="space-y-3">
-              <div
-                v-for="transfer in ownershipTransferRequests"
-                :key="transfer.id"
-                class="bg-white border border-gray-200 rounded-lg p-4"
-              >
-                <div class="flex items-center justify-between">
-                  <div>
-                    <router-link
-                      v-if="transfer.community?.slug"
-                      :to="`/community/${transfer.community.slug}`"
-                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                    >
-                      {{ transfer.community?.name || 'Unknown Community' }}
-                    </router-link>
-                    <p v-else class="font-semibold text-gray-900">{{ transfer.community?.name || 'Unknown Community' }}</p>
-                    <p class="text-sm text-gray-600">from {{ transfer.currentOwner?.name || 'Unknown' }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ new Date(transfer.createdAt).toLocaleDateString() }}</p>
-                  </div>
-                  <div class="flex gap-2">
-                    <button
-                      @click="$emit('accept-transfer', transfer)"
-                      class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                    >
-                      Accept
-                    </button>
-                    <button
-                      @click="$emit('reject-transfer', transfer)"
-                      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- Sent Ownership Transfer Requests -->
           <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Sent Ownership Transfer Requests</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Ownership Transfers Sent</h3>
             <div v-if="sentOwnershipTransferRequests.length === 0" class="empty-state-small">
-              <p class="text-gray-600">No pending sent ownership transfers</p>
+              <p class="text-gray-600">No pending ownership transfers</p>
             </div>
             <div v-else class="space-y-3">
               <div
@@ -354,7 +359,7 @@ const isLoading = ref(false);
 
 const activeSubTab = computed(() => {
   const path = route.path.split('/').pop();
-  if (path === 'requests' || !['incoming', 'outgoing', 'invitations'].includes(path || '')) {
+  if (path === 'requests' || !['incoming', 'outgoing'].includes(path || '')) {
     return 'incoming';
   }
   return path;
@@ -364,17 +369,12 @@ const requestTabs = computed(() => [
   {
     id: 'incoming',
     label: 'Incoming',
-    count: joinRequestsToMyCommunities.value.length
+    count: joinRequestsToMyCommunities.value.length + myInvitations.value.length + ownershipTransferRequests.value.length
   },
   {
     id: 'outgoing',
     label: 'Outgoing',
-    count: myJoinRequests.value.length
-  },
-  {
-    id: 'invitations',
-    label: 'Invitations',
-    count: myInvitations.value.length + mySentInvitations.value.length + ownershipTransferRequests.value.length + sentOwnershipTransferRequests.value.length
+    count: myJoinRequests.value.length + mySentInvitations.value.length + sentOwnershipTransferRequests.value.length
   }
 ]);
 
