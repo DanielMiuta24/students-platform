@@ -1088,4 +1088,63 @@ const handleSelect = () => {
   width: auto;
   object-fit: contain;
 }
+
+/* Enhanced Dropdown Styles */
+:deep(.el-dropdown-menu) {
+  padding: 8px 0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  min-width: 220px;
+}
+
+:deep(.el-dropdown-menu__item) {
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  margin: 4px 8px;
+}
+
+:deep(.el-dropdown-menu__item:hover) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: translateX(4px);
+}
+
+:deep(.el-dropdown-menu__item:last-child:hover) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+:deep(.el-dropdown-menu__item:not(:last-child)) {
+  position: relative;
+}
+
+.user-name {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  color: #2c3e50;
+  padding: 8px 12px;
+  border-radius: 24px;
+  transition: all 0.3s ease;
+}
+
+.user-name:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.user-name img {
+  border: 2px solid #667eea;
+  transition: all 0.3s ease;
+}
+
+.user-name:hover img {
+  border-color: #764ba2;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
 </style>
