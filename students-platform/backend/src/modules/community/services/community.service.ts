@@ -359,6 +359,46 @@ export class CommunityService {
       $pull: { members: { user: userId } },
       $inc: { memberCount: -1 },
     });
+
+    await CommunityJoinRequestModel.deleteMany({
+      user: userId,
+      community: communityId,
+      status: 'pending',
+    });
+
+    await CommunityInvitationModel.deleteMany({
+      recipientUser: userId,
+      community: communityId,
+      status: 'pending',
+    });
+
+    await CommunityInvitationModel.deleteMany({
+      invitedBy: userId,
+      community: communityId,
+      status: 'pending',
+    });
+
+    await OwnershipTransferModel.updateMany(
+      {
+        newOwner: userId,
+        community: communityId,
+        status: 'pending',
+      },
+      {
+        status: 'cancelled',
+      }
+    );
+
+    await OwnershipTransferModel.updateMany(
+      {
+        currentOwner: userId,
+        community: communityId,
+        status: 'pending',
+      },
+      {
+        status: 'cancelled',
+      }
+    );
   }
 
   async getCommunityMembers(communityIdOrSlug: string) {
@@ -583,7 +623,7 @@ export class CommunityService {
       expiresAt: { $gt: new Date() },
     })
       .populate('community', '_id name slug members')
-      .populate('invitedBy', '_id name username')
+      .populate('invitedBy', '_id name username avatar')
       .sort({ createdAt: -1 })
       .exec();
 
@@ -612,6 +652,7 @@ export class CommunityService {
         id: (invitation.invitedBy as any)._id.toString(),
         name: (invitation.invitedBy as any).name,
         username: (invitation.invitedBy as any).username,
+        avatar: (invitation.invitedBy as any).avatar,
       },
       createdAt: invitation.createdAt,
       expiresAt: invitation.expiresAt,
@@ -1060,6 +1101,33 @@ export class CommunityService {
     }
 
     await OwnershipTransferModel.findByIdAndUpdate(transferId, { status: 'cancelled' });
+  }
+
+  async cancelOwnershipTransferByCommunity(communityId: string, userId: string) {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      throw new Error(COMMUNITY_ERROR.NOT_FOUND);
+    }
+
+    const founderId = typeof community.founder === 'string'
+      ? community.founder
+      : community.founder!.toString();
+
+    if (founderId !== userId) {
+      throw new Error(COMMUNITY_ERROR.UNAUTHORIZED);
+    }
+
+    const transfer = await OwnershipTransferModel.findOne({
+      community: communityId,
+      status: 'pending',
+    });
+
+    if (!transfer) {
+      throw new Error(COMMUNITY_ERROR.OWNERSHIP_TRANSFER_NOT_FOUND);
+    }
+
+    await OwnershipTransferModel.findByIdAndUpdate(transfer._id, { status: 'cancelled' });
   }
 
   async acceptOwnershipTransfer(transferId: string, userId: string) {

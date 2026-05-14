@@ -700,11 +700,8 @@
               </h3>
               <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border-2 border-blue-200">
                 <div class="flex items-center gap-3">
-                  <div v-if="community.founder.avatar" class="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white shadow-md">
-                    <img :src="community.founder.avatar" :alt="community.founder.name" class="w-full h-full object-cover" />
-                  </div>
-                  <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg ring-2 ring-white shadow-md">
-                    {{ community.founder.name.charAt(0).toUpperCase() }}
+                  <div class="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white shadow-md">
+                    <img :src="getAvatarUrl(community.founder.name, community.founder.avatar)" :alt="community.founder.name" class="w-full h-full object-cover" />
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="text-base font-semibold text-gray-900 truncate">{{ community.founder.name }}</p>
@@ -838,11 +835,8 @@
                   class="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0 relative"
                 >
                   <div class="flex items-center gap-4">
-                    <div v-if="member.avatar" class="w-12 h-12 rounded-full overflow-hidden">
-                      <img :src="member.avatar" :alt="member.name" class="w-full h-full object-cover" />
-                    </div>
-                    <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {{ member.name.charAt(0).toUpperCase() }}
+                    <div class="w-12 h-12 rounded-full overflow-hidden">
+                      <img :src="getAvatarUrl(member.name, member.avatar)" :alt="member.name" class="w-full h-full object-cover" />
                     </div>
                     <div class="flex-1">
                       <div class="flex items-center gap-1.5 sm:gap-2">
@@ -914,11 +908,8 @@
                   class="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0 relative"
                 >
                   <div class="flex items-center gap-4">
-                    <div v-if="member.avatar" class="w-12 h-12 rounded-full overflow-hidden">
-                      <img :src="member.avatar" :alt="member.name" class="w-full h-full object-cover" />
-                    </div>
-                    <div v-else class="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {{ member.name.charAt(0).toUpperCase() }}
+                    <div class="w-12 h-12 rounded-full overflow-hidden">
+                      <img :src="getAvatarUrl(member.name, member.avatar)" :alt="member.name" class="w-full h-full object-cover" />
                     </div>
                     <div class="flex-1">
                       <h4 class="font-semibold text-gray-900">{{ member.name }}</h4>
@@ -1242,17 +1233,13 @@
                   <!-- User Avatar -->
                   <router-link v-if="typeof request.user === 'object'" :to="`/profile/${request.user.username}`" class="flex-shrink-0">
                     <img
-                      v-if="request.user.avatar"
-                      :src="request.user.avatar"
+                      :src="getAvatarUrl(request.user.name, request.user.avatar)"
                       :alt="request.user.name"
                       class="w-12 h-12 rounded-full object-cover"
                     />
-                    <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {{ request.user.name.charAt(0).toUpperCase() }}
-                    </div>
                   </router-link>
-                  <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                    ?
+                  <div v-else class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                    <img :src="getAvatarUrl('Unknown User')" alt="Unknown User" class="w-12 h-12 rounded-full object-cover" />
                   </div>
 
                   <!-- User Info -->
@@ -1335,14 +1322,10 @@
                   <!-- User Avatar or Email Icon -->
                   <router-link v-if="invitation.recipientUser" :to="`/profile/${invitation.recipientUser.username}`" class="flex-shrink-0">
                     <img
-                      v-if="invitation.recipientUser.avatar"
-                      :src="invitation.recipientUser.avatar"
+                      :src="getAvatarUrl(invitation.recipientUser.name, invitation.recipientUser.avatar)"
                       :alt="invitation.recipientUser.name"
                       class="w-12 h-12 rounded-full object-cover"
                     />
-                    <div v-else class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
-                      {{ invitation.recipientUser.name.charAt(0).toUpperCase() }}
-                    </div>
                   </router-link>
                   <div v-else class="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -1452,17 +1435,10 @@
               >
                 <div class="flex items-center gap-3 flex-1 min-w-0">
                   <img
-                    v-if="user.avatar"
-                    :src="user.avatar"
+                    :src="getAvatarUrl(user.name, user.avatar)"
                     :alt="user.name"
                     class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                   />
-                  <div
-                    v-else
-                    class="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center flex-shrink-0"
-                  >
-                    <span class="text-white font-bold text-sm">{{ user.name.charAt(0).toUpperCase() }}</span>
-                  </div>
                   <div class="flex-1 min-w-0">
                     <p class="font-semibold text-gray-900 truncate">{{ user.name }}</p>
                     <p class="text-sm text-gray-600 truncate">@{{ user.username }}</p>
@@ -2453,6 +2429,7 @@ import { useCommunityMembers } from '../composables/useCommunityMembers';
 import { sendInvitations, getInvitations, cancelInvitation, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, canViewCommunityPosts } from '../api/community';
 import type { InviteUsersPayload, SafeJoinRequest, CommunityMember } from '../types/community';
 import { COMMUNITY_ROLE } from '../types/community';
+import { getAvatarUrl } from '../utils/avatar';
 
 const route = useRoute();
 const router = useRouter();

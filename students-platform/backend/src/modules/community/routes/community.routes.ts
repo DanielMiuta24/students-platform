@@ -205,6 +205,13 @@ router.get(
   communityController.getPendingOwnershipTransfer
 );
 
+router.delete(
+  '/:id/ownership-transfer',
+  authMiddleware,
+  validateCommunityId,
+  communityController.cancelOwnershipTransferByCommunity
+);
+
 router.get(
   '/ownership-transfers/me',
   authMiddleware,

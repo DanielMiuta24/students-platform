@@ -2,9 +2,11 @@
   <div class="space-y-6">
     <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
       <div class="flex items-start gap-6">
-        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg flex-shrink-0">
-          {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
-        </div>
+        <img
+          :src="getAvatarUrl(user?.name || 'User', user?.avatar)"
+          :alt="user?.name || 'User'"
+          class="w-24 h-24 rounded-full object-cover shadow-lg flex-shrink-0"
+        />
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-2">
             <h1 class="text-3xl font-bold text-blue-900">
@@ -154,6 +156,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { getAvatarUrl } from '../../utils/avatar';
 
 const props = defineProps<{
   user: any;

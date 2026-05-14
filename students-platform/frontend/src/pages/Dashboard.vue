@@ -441,8 +441,8 @@ const cancelSentInvitation = async (invitation: any) => {
 
 const cancelSentOwnershipTransfer = async (transfer: any) => {
   try {
-    const { cancelOwnershipTransfer } = await import('../api/community');
-    await cancelOwnershipTransfer(transfer.id);
+    const { cancelOwnershipTransferById } = await import('../api/community');
+    await cancelOwnershipTransferById(transfer.id);
     requestSuccessMessage.value = `Cancelled ownership transfer request for ${transfer.community?.name}`;
     setTimeout(() => {
       requestSuccessMessage.value = '';

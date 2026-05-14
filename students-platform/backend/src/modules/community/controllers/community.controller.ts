@@ -691,6 +691,25 @@ class CommunityController {
     }
   };
 
+  cancelOwnershipTransferByCommunity = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await communityService.cancelOwnershipTransferByCommunity(
+        req.params.id,
+        req.user!.id
+      );
+
+      return res.status(CommunityController.HTTP_STATUS.OK).json({
+        message: 'Ownership transfer request cancelled successfully',
+      });
+    } catch (err: unknown) {
+      return this.handleError(err, res, next);
+    }
+  };
+
   acceptOwnershipTransfer = async (
     req: AuthenticatedRequest,
     res: Response,

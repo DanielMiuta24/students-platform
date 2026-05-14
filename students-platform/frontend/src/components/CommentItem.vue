@@ -21,7 +21,7 @@
             <!-- Tagged user display for replies -->
             <span v-if="taggedUser" class="tagged-user-inline">
               <img
-                :src="taggedUser.avatar"
+                :src="getAvatarUrl(taggedUser.name, taggedUser.avatar)"
                 :alt="taggedUser.name"
                 @click="navigateToTaggedProfile"
                 class="tagged-avatar"

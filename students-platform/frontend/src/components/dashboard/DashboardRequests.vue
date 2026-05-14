@@ -77,16 +77,43 @@
                 :key="request.id"
                 class="bg-white border border-gray-200 rounded-lg p-4"
               >
-                <div class="flex items-center justify-between">
-                  <div>
-                    <router-link v-if="request.user?.username" :to="`/profile/${request.user.username}`" class="font-semibold text-gray-900 hover:text-blue-600">
-                      {{ request.user.name }}
-                    </router-link>
-                    <p v-else class="font-semibold text-gray-900">{{ request.user?.name || 'Unknown User' }}</p>
-                    <p class="text-sm text-gray-600">wants to join {{ request.communityName }}</p>
+                <div class="flex items-center gap-4">
+                  <!-- User Avatar -->
+                  <router-link v-if="request.user?.username" :to="`/profile/${request.user.username}`" class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(request.user.name, request.user.avatar)"
+                      :alt="request.user.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </router-link>
+                  <div v-else class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl('User')"
+                      alt="User"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </div>
+
+                  <!-- Request Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-700">
+                      <router-link v-if="request.user?.username" :to="`/profile/${request.user.username}`" class="font-semibold text-gray-900 hover:text-blue-600">
+                        {{ request.user.name }}
+                      </router-link>
+                      <span v-else class="font-semibold text-gray-900">{{ request.user?.name || 'Unknown User' }}</span>
+                      <span> requested to join </span>
+                      <router-link
+                        :to="`/community/${request.communitySlug}`"
+                        class="font-semibold text-gray-900 hover:text-blue-600"
+                      >
+                        {{ request.communityName }}
+                      </router-link>
+                    </p>
                     <p class="text-xs text-gray-500 mt-1">{{ new Date(request.createdAt).toLocaleDateString() }}</p>
                   </div>
-                  <div class="flex gap-2">
+
+                  <!-- Action Buttons -->
+                  <div class="flex gap-2 flex-shrink-0">
                     <button
                       @click="$emit('approve-join', request)"
                       class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -114,18 +141,43 @@
                 :key="invitation.id"
                 class="bg-white border border-gray-200 rounded-lg p-4"
               >
-                <div class="flex items-center justify-between">
-                  <div>
-                    <router-link
-                      :to="`/community/${invitation.communitySlug}`"
-                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                    >
-                      {{ invitation.communityName }}
-                    </router-link>
-                    <p class="text-sm text-gray-600">Invited to join this community</p>
+                <div class="flex items-center gap-4">
+                  <!-- Inviter Avatar -->
+                  <router-link v-if="invitation.invitedByUsername" :to="`/profile/${invitation.invitedByUsername}`" class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(invitation.invitedByName, invitation.invitedByAvatar)"
+                      :alt="invitation.invitedByName"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </router-link>
+                  <div v-else class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(invitation.invitedByName || 'User')"
+                      :alt="invitation.invitedByName"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </div>
+
+                  <!-- Invitation Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-700">
+                      <router-link v-if="invitation.invitedByUsername" :to="`/profile/${invitation.invitedByUsername}`" class="font-semibold text-gray-900 hover:text-blue-600">
+                        {{ invitation.invitedByName }}
+                      </router-link>
+                      <span v-else class="font-semibold text-gray-900">{{ invitation.invitedByName || 'Someone' }}</span>
+                      <span> invited you to join </span>
+                      <router-link
+                        :to="`/community/${invitation.communitySlug}`"
+                        class="font-semibold text-gray-900 hover:text-blue-600"
+                      >
+                        {{ invitation.communityName }}
+                      </router-link>
+                    </p>
                     <p class="text-xs text-gray-500 mt-1">{{ new Date(invitation.createdAt).toLocaleDateString() }}</p>
                   </div>
-                  <div class="flex gap-2">
+
+                  <!-- Action Buttons -->
+                  <div class="flex gap-2 flex-shrink-0">
                     <button
                       @click="$emit('accept-invitation', invitation)"
                       class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -153,26 +205,45 @@
                 :key="transfer.id"
                 class="bg-white border border-gray-200 rounded-lg p-4"
               >
-                <div class="flex items-center justify-between">
-                  <div>
-                    <router-link
-                      v-if="transfer.community?.slug"
-                      :to="`/community/${transfer.community.slug}`"
-                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                    >
-                      {{ transfer.community?.name || 'Unknown Community' }}
-                    </router-link>
-                    <p v-else class="font-semibold text-gray-900">{{ transfer.community?.name || 'Unknown Community' }}</p>
-                    <p class="text-sm text-gray-600">
-                      from
-                      <router-link v-if="transfer.currentOwner?.username" :to="`/profile/${transfer.currentOwner.username}`" class="hover:text-blue-600">
+                <div class="flex items-center gap-4">
+                  <!-- Current Owner Avatar -->
+                  <router-link v-if="transfer.currentOwner?.username" :to="`/profile/${transfer.currentOwner.username}`" class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(transfer.currentOwner.name, transfer.currentOwner.avatar)"
+                      :alt="transfer.currentOwner.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </router-link>
+                  <div v-else class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(transfer.currentOwner?.name || 'User')"
+                      :alt="transfer.currentOwner?.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </div>
+
+                  <!-- Transfer Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-700">
+                      <router-link v-if="transfer.currentOwner?.username" :to="`/profile/${transfer.currentOwner.username}`" class="font-semibold text-gray-900 hover:text-blue-600">
                         {{ transfer.currentOwner.name }}
                       </router-link>
-                      <span v-else>{{ transfer.currentOwner?.name || 'Unknown' }}</span>
+                      <span v-else class="font-semibold text-gray-900">{{ transfer.currentOwner?.name || 'Someone' }}</span>
+                      <span> invited you to take over ownership of </span>
+                      <router-link
+                        v-if="transfer.community?.slug"
+                        :to="`/community/${transfer.community.slug}`"
+                        class="font-semibold text-gray-900 hover:text-blue-600"
+                      >
+                        {{ transfer.community?.name }}
+                      </router-link>
+                      <span v-else class="font-semibold text-gray-900">{{ transfer.community?.name }}</span>
                     </p>
                     <p class="text-xs text-gray-500 mt-1">{{ new Date(transfer.createdAt).toLocaleDateString() }}</p>
                   </div>
-                  <div class="flex gap-2">
+
+                  <!-- Action Buttons -->
+                  <div class="flex gap-2 flex-shrink-0">
                     <button
                       @click="$emit('accept-transfer', transfer)"
                       class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -217,19 +288,41 @@
                 :key="community.id"
                 class="bg-white border border-gray-200 rounded-lg p-4"
               >
-                <div class="flex items-center justify-between">
-                  <div>
-                    <router-link
-                      :to="`/community/${community.communitySlug}`"
-                      class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                    >
-                      {{ community.name }}
-                    </router-link>
-                    <p class="text-sm text-gray-600">Request pending approval</p>
+                <div class="flex items-center gap-4">
+                  <!-- User's Own Avatar -->
+                  <router-link v-if="session.user?.username" :to="`/profile/${session.user.username}`" class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(session.user.name, session.user.avatar)"
+                      :alt="session.user.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </router-link>
+                  <div v-else class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl('User')"
+                      alt="User"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
                   </div>
+
+                  <!-- Request Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-700">
+                      <span>You requested to join </span>
+                      <router-link
+                        :to="`/community/${community.communitySlug}`"
+                        class="font-semibold text-gray-900 hover:text-blue-600"
+                      >
+                        {{ community.name }}
+                      </router-link>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">Request pending approval</p>
+                  </div>
+
+                  <!-- Action Button -->
                   <button
                     @click="$emit('cancel-join', community)"
-                    class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                    class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex-shrink-0"
                   >
                     Cancel
                   </button>
@@ -247,38 +340,46 @@
                 :key="invitation.id"
                 class="bg-white border border-gray-200 rounded-lg p-4"
               >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
+                <div class="flex items-center gap-4">
+                  <!-- Recipient Avatar -->
+                  <router-link v-if="invitation.recipientUsername" :to="`/profile/${invitation.recipientUsername}`" class="flex-shrink-0">
                     <img
                       :src="getAvatarUrl(invitation.recipientName || 'User', invitation.recipientAvatar)"
                       :alt="invitation.recipientName"
-                      class="w-10 h-10 rounded-full object-cover"
+                      class="w-12 h-12 rounded-full object-cover"
                     />
-                    <div>
+                  </router-link>
+                  <div v-else class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(invitation.recipientName || 'User', invitation.recipientAvatar)"
+                      :alt="invitation.recipientName"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </div>
+
+                  <!-- Invitation Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-700">
+                      <span>You invited </span>
                       <router-link v-if="invitation.recipientUsername" :to="`/profile/${invitation.recipientUsername}`" class="font-semibold text-gray-900 hover:text-blue-600">
                         {{ invitation.recipientName }}
-                        <span class="text-sm text-gray-500">
-                          @{{ invitation.recipientUsername }}
-                        </span>
                       </router-link>
-                      <p v-else class="font-semibold text-gray-900">
-                        {{ invitation.recipientName }}
-                      </p>
-                      <p class="text-sm text-gray-600">
-                        Invited to
-                        <router-link
-                          :to="`/community/${invitation.communitySlug}`"
-                          class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                        >
-                          {{ invitation.communityName }}
-                        </router-link>
-                      </p>
-                      <p class="text-xs text-gray-500 mt-1">{{ new Date(invitation.createdAt).toLocaleDateString() }}</p>
-                    </div>
+                      <span v-else class="font-semibold text-gray-900">{{ invitation.recipientName }}</span>
+                      <span> to join </span>
+                      <router-link
+                        :to="`/community/${invitation.communitySlug}`"
+                        class="font-semibold text-gray-900 hover:text-blue-600"
+                      >
+                        {{ invitation.communityName }}
+                      </router-link>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">{{ new Date(invitation.createdAt).toLocaleDateString() }}</p>
                   </div>
+
+                  <!-- Action Button -->
                   <button
                     @click="$emit('cancel-sent-invitation', invitation)"
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex-shrink-0"
                   >
                     Cancel
                   </button>
@@ -296,40 +397,48 @@
                 :key="transfer.id"
                 class="bg-white border border-gray-200 rounded-lg p-4"
               >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
+                <div class="flex items-center gap-4">
+                  <!-- New Owner Avatar -->
+                  <router-link v-if="transfer.newOwner?.username" :to="`/profile/${transfer.newOwner.username}`" class="flex-shrink-0">
                     <img
                       :src="getAvatarUrl(transfer.newOwner?.name || 'User', transfer.newOwner?.avatar)"
                       :alt="transfer.newOwner?.name"
-                      class="w-10 h-10 rounded-full object-cover"
+                      class="w-12 h-12 rounded-full object-cover"
                     />
-                    <div>
+                  </router-link>
+                  <div v-else class="flex-shrink-0">
+                    <img
+                      :src="getAvatarUrl(transfer.newOwner?.name || 'User', transfer.newOwner?.avatar)"
+                      :alt="transfer.newOwner?.name"
+                      class="w-12 h-12 rounded-full object-cover"
+                    />
+                  </div>
+
+                  <!-- Transfer Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-700">
+                      <span>You invited </span>
                       <router-link v-if="transfer.newOwner?.username" :to="`/profile/${transfer.newOwner.username}`" class="font-semibold text-gray-900 hover:text-blue-600">
                         {{ transfer.newOwner?.name }}
-                        <span class="text-sm text-gray-500">
-                          @{{ transfer.newOwner.username }}
-                        </span>
                       </router-link>
-                      <p v-else class="font-semibold text-gray-900">
-                        {{ transfer.newOwner?.name }}
-                      </p>
-                      <p class="text-sm text-gray-600">
-                        Transfer ownership of
-                        <router-link
-                          v-if="transfer.community?.slug"
-                          :to="`/community/${transfer.community.slug}`"
-                          class="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                        >
-                          {{ transfer.community?.name }}
-                        </router-link>
-                        <span v-else class="font-semibold text-gray-900">{{ transfer.community?.name }}</span>
-                      </p>
-                      <p class="text-xs text-gray-500 mt-1">{{ new Date(transfer.createdAt).toLocaleDateString() }}</p>
-                    </div>
+                      <span v-else class="font-semibold text-gray-900">{{ transfer.newOwner?.name }}</span>
+                      <span> to take over ownership of </span>
+                      <router-link
+                        v-if="transfer.community?.slug"
+                        :to="`/community/${transfer.community.slug}`"
+                        class="font-semibold text-gray-900 hover:text-blue-600"
+                      >
+                        {{ transfer.community?.name }}
+                      </router-link>
+                      <span v-else class="font-semibold text-gray-900">{{ transfer.community?.name }}</span>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">{{ new Date(transfer.createdAt).toLocaleDateString() }}</p>
                   </div>
+
+                  <!-- Action Button -->
                   <button
                     @click="$emit('cancel-sent-transfer', transfer)"
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex-shrink-0"
                   >
                     Cancel
                   </button>
@@ -348,6 +457,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { api } from '../../services/api';
 import { getAvatarUrl } from '../../utils/avatar';
+import { useSessionStore } from '../../store/session';
 
 interface Props {
   successMessage?: string;
@@ -357,6 +467,7 @@ defineProps<Props>();
 
 const router = useRouter();
 const route = useRoute();
+const session = useSessionStore();
 
 const emit = defineEmits<{
   (e: 'approve-join', request: any): void;
@@ -439,7 +550,10 @@ const fetchRequests = async () => {
         ...inv,
         communityName: inv.community?.name,
         communitySlug: inv.community?.slug,
-        communityId: inv.community?.id
+        communityId: inv.community?.id,
+        invitedByName: inv.invitedBy?.name,
+        invitedByUsername: inv.invitedBy?.username,
+        invitedByAvatar: inv.invitedBy?.avatar
       }));
     } catch (err) {
       console.error('Failed to fetch invitations:', err);

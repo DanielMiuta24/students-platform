@@ -159,11 +159,8 @@
               @click="toggleSelection(person.id)"
             >
               <div class="flex items-center gap-4">
-                <div v-if="person.avatar" class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                  <img :src="person.avatar" :alt="person.name" class="w-full h-full object-cover" />
-                </div>
-                <div v-else class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                  {{ person.name.charAt(0).toUpperCase() }}
+                <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                  <img :src="getAvatarUrl(person.name, person.avatar)" :alt="person.name" class="w-full h-full object-cover" />
                 </div>
 
                 <div class="flex-1 min-w-0">
@@ -249,6 +246,7 @@
 import { ref, computed, watch } from 'vue';
 import { useSessionStore } from '../store/session';
 import { getFriends, getFollowers, getFollowing } from '../api/follow';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface Person {
   id: string;

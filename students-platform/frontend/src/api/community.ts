@@ -647,6 +647,28 @@ export const cancelOwnershipTransfer = async (communityId: string): Promise<{ me
 };
 
 /**
+ * Cancel ownership transfer request by transfer ID (from outgoing requests)
+ */
+export const cancelOwnershipTransferById = async (transferId: string): Promise<{ message: string }> => {
+  try {
+    const response = await secureApi.delete<{ message: string }>(
+      `/communities/ownership-transfers/${transferId}`
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      throw new Error('You must be logged in to cancel ownership transfer');
+    } else if (error.response?.status === 403) {
+      throw new Error('Only the founder can cancel ownership transfer');
+    } else if (error.response?.status === 404) {
+      throw new Error('No pending transfer request found');
+    }
+
+    throw new Error(error.response?.data?.message || 'Failed to cancel ownership transfer');
+  }
+};
+
+/**
  * Accept ownership transfer request (target admin only)
  */
 export const acceptOwnershipTransfer = async (transferId: string): Promise<{ message: string; community: SafeCommunity }> => {
