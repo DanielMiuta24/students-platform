@@ -5,8 +5,15 @@
         <aside class="w-72 flex-shrink-0">
           <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden sticky top-20">
             <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600">
-              <h2 class="text-2xl font-bold text-white">Dashboard</h2>
-              <p class="text-blue-100 text-sm mt-1">Manage your account</p>
+              <div class="flex items-center gap-3">
+                <svg class="w-7 h-7 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
+                </svg>
+                <div>
+                  <h2 class="text-2xl font-bold text-white">Dashboard</h2>
+                  <p class="text-blue-100 text-sm mt-1">Manage your account</p>
+                </div>
+              </div>
             </div>
 
             <nav class="p-4">
