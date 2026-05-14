@@ -70,6 +70,7 @@ export interface SafeCommunity {
   hasPendingRequest?: boolean;
   hasPendingInvitation?: boolean;
   isBanned?: boolean;
+  bannedUsers?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

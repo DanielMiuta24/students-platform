@@ -52,6 +52,9 @@ export class CommunityMapper {
       hasPendingRequest,
       hasPendingInvitation,
       isBanned,
+      bannedUsers: community.bannedUsers?.map((bannedUserId: any) =>
+        typeof bannedUserId === 'string' ? bannedUserId : bannedUserId._id?.toString() || bannedUserId.toString()
+      ) || [],
       createdAt: community.createdAt,
       updatedAt: community.updatedAt,
     };
