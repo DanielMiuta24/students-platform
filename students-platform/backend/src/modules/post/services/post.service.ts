@@ -60,18 +60,35 @@ export class PostService {
       await communityService.incrementPostCount(data.communityId);
 
       const community = await communityService.getCommunityById(data.communityId, data.authorId);
-      const communityMemberIds = community.members
-        ?.filter((m: any) => m.user.toString() !== data.authorId)
-        .map((m: any) => m.user.toString()) || [];
 
-      for (const memberId of communityMemberIds) {
-        await notificationService.createNotification({
-          recipientId: memberId,
-          actorId: data.authorId,
-          type: 'community_post',
-          targetModel: 'Post',
-          targetId: savedPost._id.toString(),
-        }).catch(err => console.error('Failed to create community post notification:', err));
+      // Extract member IDs, handling both populated and unpopulated user fields
+      const communityMemberIds = community.members
+        ?.filter((m: any) => {
+          const userId = typeof m.user === 'string' ? m.user : m.user?._id?.toString();
+          return userId && userId !== data.authorId;
+        })
+        .map((m: any) => {
+          // Extract user ID properly - handle both ObjectId and populated User
+          if (typeof m.user === 'string') {
+            return m.user;
+          } else if (m.user?._id) {
+            return m.user._id.toString();
+          }
+          return null;
+        })
+        .filter((id: any) => id !== null) || [];
+
+      if (communityMemberIds.length > 0) {
+        console.log(`[PostService] Creating ${communityMemberIds.length} community post notifications`);
+        for (const memberId of communityMemberIds) {
+          await notificationService.createNotification({
+            recipientId: memberId,
+            actorId: data.authorId,
+            type: 'community_post',
+            targetModel: 'Post',
+            targetId: savedPost._id.toString(),
+          }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
+        }
       }
     } else if (!data.communityId && savedPost.status === 'published') {
       const author = await User.findById(data.authorId).select('followers');

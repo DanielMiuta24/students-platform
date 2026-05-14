@@ -170,11 +170,41 @@ const getNotificationRoute = (notification: Notification): string | null => {
   switch (notification.type) {
     case 'comment':
     case 'reply':
+      if (notification.targetModel === 'Comment') {
+        const target = notification.target as any;
+        const postSlug = target.postSlug;
+        const commentId = notification.target._id;
+        if (!postSlug) return null;
+
+        if (target.postCommunity) {
+          return `/community/${target.postCommunity}/posts/${postSlug}#comment-${commentId}`;
+        } else if (target.postAuthor) {
+          return `/profile/${target.postAuthor}/posts/${postSlug}#comment-${commentId}`;
+        }
+        return null;
+      }
+      return null;
     case 'like':
       if (notification.targetModel === 'Post') {
-        return `/post/${notification.target._id}`;
+        const post = notification.target as any;
+        if (post.community) {
+          return `/community/${post.community}/posts/${post.slug}`;
+        } else if (post.author) {
+          return `/profile/${post.author}/posts/${post.slug}`;
+        }
+        return null;
       } else if (notification.targetModel === 'Comment') {
-        return `/post/${notification.target._id}`;
+        const target = notification.target as any;
+        const postSlug = target.postSlug;
+        const commentId = notification.target._id;
+        if (!postSlug) return null;
+
+        if (target.postCommunity) {
+          return `/community/${target.postCommunity}/posts/${postSlug}#comment-${commentId}`;
+        } else if (target.postAuthor) {
+          return `/profile/${target.postAuthor}/posts/${postSlug}#comment-${commentId}`;
+        }
+        return null;
       }
       return null;
     case 'follow':
@@ -182,17 +212,38 @@ const getNotificationRoute = (notification: Notification): string | null => {
     case 'community_join':
     case 'community_post':
       if (notification.targetModel === 'Community') {
-        return `/community/${notification.target.slug || notification.target._id}`;
+        return `/community/${notification.target.slug}`;
+      } else if (notification.targetModel === 'Post') {
+        const post = notification.target as any;
+        if (post.community) {
+          return `/community/${post.community}/posts/${post.slug}`;
+        } else if (post.author) {
+          return `/profile/${post.author}/posts/${post.slug}`;
+        }
+        return null;
       }
       return null;
     case 'community_invite':
       return '/dashboard/requests/incoming';
+    case 'community_join_request':
+      return '/dashboard/requests/outgoing';
+    case 'community_join_approved':
+      if (notification.targetModel === 'Community') {
+        return `/community/${notification.target.slug}`;
+      }
+      return null;
     case 'new_post':
-      return `/post/${notification.target._id}`;
+      const post = notification.target as any;
+      if (post.community) {
+        return `/community/${post.community}/posts/${post.slug}`;
+      } else if (post.author) {
+        return `/profile/${post.author}/posts/${post.slug}`;
+      }
+      return null;
     case 'admin_assign':
     case 'ownership_transfer':
       if (notification.targetModel === 'Community') {
-        return `/community/${notification.target.slug || notification.target._id}`;
+        return `/community/${notification.target.slug}`;
       }
       return null;
     default:
@@ -212,16 +263,78 @@ const getNotificationMessage = (notification: Notification): {
 
   switch (notification.type) {
     case 'comment':
+      if (notification.targetModel === 'Comment') {
+        const target = notification.target as any;
+        const postSlug = target.postSlug;
+        const commentId = notification.target._id;
+        if (!postSlug) {
+          return {
+            text: 'commented on your',
+            targetName: 'post',
+          };
+        }
+
+        let targetLink;
+        if (target.postCommunity) {
+          targetLink = `/community/${target.postCommunity}/posts/${postSlug}#comment-${commentId}`;
+        } else if (target.postAuthor) {
+          targetLink = `/profile/${target.postAuthor}/posts/${postSlug}#comment-${commentId}`;
+        }
+
+        return {
+          text: 'commented on your',
+          targetName: 'post',
+          targetLink
+        };
+      }
+      const post = notification.target as any;
+      let postLink;
+      if (post.community) {
+        postLink = `/community/${post.community}/posts/${post.slug}`;
+      } else if (post.author) {
+        postLink = `/profile/${post.author}/posts/${post.slug}`;
+      }
       return {
         text: 'commented on your',
         targetName: 'post',
-        targetLink: `/post/${notification.target._id}`
+        targetLink: postLink
       };
     case 'reply':
+      if (notification.targetModel === 'Comment') {
+        const target = notification.target as any;
+        const postSlug = target.postSlug;
+        const commentId = notification.target._id;
+        if (!postSlug) {
+          return {
+            text: 'replied to your',
+            targetName: 'comment',
+          };
+        }
+
+        let targetLink;
+        if (target.postCommunity) {
+          targetLink = `/community/${target.postCommunity}/posts/${postSlug}#comment-${commentId}`;
+        } else if (target.postAuthor) {
+          targetLink = `/profile/${target.postAuthor}/posts/${postSlug}#comment-${commentId}`;
+        }
+
+        return {
+          text: 'replied to your',
+          targetName: 'comment',
+          targetLink
+        };
+      }
+      const replyPost = notification.target as any;
+      let replyPostLink;
+      if (replyPost.community) {
+        replyPostLink = `/community/${replyPost.community}/posts/${replyPost.slug}`;
+      } else if (replyPost.author) {
+        replyPostLink = `/profile/${replyPost.author}/posts/${replyPost.slug}`;
+      }
       return {
         text: 'replied to your',
         targetName: 'comment',
-        targetLink: `/post/${notification.target._id}`
+        targetLink: replyPostLink
       };
     case 'like':
       return {
@@ -240,47 +353,80 @@ const getNotificationMessage = (notification: Notification): {
         text: 'sent you a message',
       };
     case 'new_post':
+      const newPost = notification.target as any;
+      let newPostLink;
+      if (newPost.community) {
+        newPostLink = `/community/${newPost.community}/posts/${newPost.slug}`;
+      } else if (newPost.author) {
+        newPostLink = `/profile/${newPost.author}/posts/${newPost.slug}`;
+      }
       return {
         text: 'created a new',
         targetName: 'post',
-        targetLink: `/post/${notification.target._id}`
+        targetLink: newPostLink
       };
     case 'community_join':
       return {
         text: 'joined',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target.slug || notification.target._id}`
+        targetLink: `/community/${notification.target.slug}`
       };
     case 'community_post':
+      if (notification.targetModel === 'Post') {
+        const communityPost = notification.target as any;
+        let communityPostLink;
+        if (communityPost.community) {
+          communityPostLink = `/community/${communityPost.community}/posts/${communityPost.slug}`;
+        } else if (communityPost.author) {
+          communityPostLink = `/profile/${communityPost.author}/posts/${communityPost.slug}`;
+        }
+        return {
+          text: 'posted in your community',
+          targetName: notification.target.title || 'a post',
+          targetLink: communityPostLink
+        };
+      }
       return {
         text: 'posted in',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target.slug || notification.target._id}`
+        targetLink: `/community/${notification.target.slug}`
       };
     case 'community_invite':
       if (notification.targetModel === 'CommunityInvitation' && notification.target.community) {
         return {
           text: 'invited you to join',
           targetName: notification.target.community.name || 'a community',
-          targetLink: `/community/${notification.target.community.slug || notification.target.community._id}`
+          targetLink: `/community/${notification.target.community.slug}`
         };
       }
       return {
         text: 'invited you to',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target.slug || notification.target._id}`
+        targetLink: `/community/${notification.target.slug}`
+      };
+    case 'community_join_request':
+      return {
+        text: 'requested to join',
+        targetName: notification.target.community?.name || 'your community',
+        targetLink: '/dashboard/requests/outgoing'
+      };
+    case 'community_join_approved':
+      return {
+        text: 'approved your request to join',
+        targetName: notification.target.name || 'the community',
+        targetLink: `/community/${notification.target.slug}`
       };
     case 'admin_assign':
       return {
         text: 'assigned you as an admin in',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target.slug || notification.target._id}`
+        targetLink: `/community/${notification.target.slug}`
       };
     case 'ownership_transfer':
       return {
         text: 'transferred ownership of',
         targetName: notification.target.name || 'a community',
-        targetLink: `/community/${notification.target.slug || notification.target._id}`,
+        targetLink: `/community/${notification.target.slug}`,
         extraText: 'to you'
       };
     default:

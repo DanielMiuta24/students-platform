@@ -17,10 +17,12 @@ export const NOTIFICATION_TYPES = [
 'community_join',
 'community_post',
 'community_invite',
+'community_join_request',
+'community_join_approved',
 'admin_assign',
 'ownership_transfer',
 ] as const;
 
 export type NotificationType = typeof NOTIFICATION_TYPES[number];
-export const TARGET_MODELS = ['Post', 'Comment', 'User', 'Message', 'Community', 'CommunityInvitation'] as const;
+export const TARGET_MODELS = ['Post', 'Comment', 'User', 'Message', 'Community', 'CommunityInvitation', 'CommunityJoinRequest'] as const;
 export type TargetModel = typeof TARGET_MODELS[number];

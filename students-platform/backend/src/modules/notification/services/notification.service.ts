@@ -15,6 +15,7 @@ import { CommentModel } from '../../comment/models/comment.model';
 import { CommunityModel } from '../../community/models/community.model';
 import { MessageModel } from '../../message/models/message.model';
 import { CommunityInvitationModel } from '../../community/models/community-invitation.model';
+import { CommunityJoinRequestModel } from '../../community/models/community-join-request.model';
 
 export class NotificationService {
   async createNotification(dto: CreateNotificationDTO): Promise<NotificationResponseDTO> {
@@ -29,8 +30,8 @@ export class NotificationService {
     const notification = await NotificationModel.create(notificationData);
 
     const populatedNotification = await NotificationModel.findById(notification._id)
-      .populate({ path: 'recipient', select: 'name username avatar', strictPopulate: false })
-      .populate({ path: 'actor', select: 'name username avatar', strictPopulate: false })
+      .populate({ path: 'recipient', select: 'name username avatar profilePicture', strictPopulate: false })
+      .populate({ path: 'actor', select: 'name username avatar profilePicture', strictPopulate: false })
       .populate({ path: 'target', strictPopulate: false })
       .lean()
       .exec();
@@ -42,19 +43,100 @@ export class NotificationService {
     if (populatedNotification.targetModel === 'CommunityInvitation' && populatedNotification.target) {
       const target = populatedNotification.target as any;
       if (target.community) {
-        const community = await CommunityModel.findById(target.community)
-          .select('name slug')
-          .lean();
-        target.community = community;
+        let communityId: string | undefined;
+        if (typeof target.community === 'string') {
+          communityId = target.community;
+        } else if (target.community._id) {
+          communityId = target.community._id.toString();
+        }
+
+        if (communityId) {
+          const community = await CommunityModel.findById(communityId)
+            .select('name slug')
+            .lean();
+          target.community = community;
+        }
       }
     } else if (populatedNotification.targetModel === 'Community' && populatedNotification.target) {
       const target = populatedNotification.target as any;
       if (!target.name || !target.slug) {
-        const community = await CommunityModel.findById(target._id || target)
+        let communityId: string | undefined;
+        if (typeof target === 'string') {
+          communityId = target;
+        } else if (target._id) {
+          communityId = target._id.toString();
+        }
+
+        if (communityId) {
+          const community = await CommunityModel.findById(communityId)
+            .select('name slug')
+            .lean();
+          if (community) {
+            (populatedNotification as any).target = community;
+          }
+        }
+      }
+    } else if (populatedNotification.targetModel === 'Post' && populatedNotification.target) {
+      const target = populatedNotification.target as any;
+      // Always fetch slug for posts to ensure it's populated
+      // Extract the actual ObjectId string, handling both populated objects and plain IDs
+      let postId: string;
+      if (typeof target === 'string') {
+        postId = target;
+      } else if (target._id) {
+        postId = target._id.toString();
+      } else {
+        console.error('[NotificationService] Invalid post target, skipping slug fetch:', target);
+        // Continue without fetching - will use whatever is already there
+      }
+
+      if (postId!) {
+        const post = await PostModel.findById(postId)
+          .select('title slug community author')
+          .populate('community', 'slug')
+          .populate('author', 'username')
+          .lean();
+        if (post) {
+          (populatedNotification as any).target = {
+            _id: post._id,
+            title: post.title,
+            slug: post.slug,
+            community: (post.community as any)?.slug || null,
+            author: (post.author as any)?.username || null,
+          };
+        }
+      }
+    } else if (populatedNotification.targetModel === 'Comment' && populatedNotification.target) {
+      const target = populatedNotification.target as any;
+      if (target.post) {
+        const post = await PostModel.findById(target.post)
+          .select('slug community author')
+          .populate('community', 'slug')
+          .populate('author', 'username')
+          .lean();
+        if (post) {
+          target.postSlug = post.slug;
+          target.postCommunity = (post.community as any)?.slug || null;
+          target.postAuthor = (post.author as any)?.username || null;
+        }
+      }
+    } else if (populatedNotification.targetModel === 'CommunityJoinRequest' && populatedNotification.target) {
+      const target = populatedNotification.target as any;
+      if (target.community) {
+        let communityId: string;
+        if (typeof target.community === 'string') {
+          communityId = target.community;
+        } else if (target.community._id) {
+          communityId = target.community._id.toString();
+        } else {
+          communityId = target.community.toString();
+        }
+
+        const community = await CommunityModel.findById(communityId)
           .select('name slug')
           .lean();
         if (community) {
-          (populatedNotification as any).target = community;
+          target.community = community;
         }
       }
     }
@@ -99,19 +181,99 @@ export class NotificationService {
       if (notification.targetModel === 'CommunityInvitation' && notification.target) {
         const target = notification.target as any;
         if (target.community) {
-          const community = await CommunityModel.findById(target.community)
-            .select('name slug')
-            .lean();
-          target.community = community;
+          let communityId: string | undefined;
+          if (typeof target.community === 'string') {
+            communityId = target.community;
+          } else if (target.community._id) {
+            communityId = target.community._id.toString();
+          }
+
+          if (communityId) {
+            const community = await CommunityModel.findById(communityId)
+              .select('name slug')
+              .lean();
+            target.community = community;
+          }
         }
       } else if (notification.targetModel === 'Community' && notification.target) {
         const target = notification.target as any;
         if (!target.name || !target.slug) {
-          const community = await CommunityModel.findById(target._id || target)
+          let communityId: string | undefined;
+          if (typeof target === 'string') {
+            communityId = target;
+          } else if (target._id) {
+            communityId = target._id.toString();
+          }
+
+          if (communityId) {
+            const community = await CommunityModel.findById(communityId)
+              .select('name slug')
+              .lean();
+            if (community) {
+              (notification as any).target = community;
+            }
+          }
+        }
+      } else if (notification.targetModel === 'Post' && notification.target) {
+        const target = notification.target as any;
+        // Always fetch slug for posts to ensure it's populated
+        // Extract the actual ObjectId string, handling both populated objects and plain IDs
+        let postId: string | undefined;
+        if (typeof target === 'string') {
+          postId = target;
+        } else if (target._id) {
+          postId = target._id.toString();
+        } else {
+          console.error('[NotificationService] Invalid post target, skipping slug fetch:', target);
+        }
+
+        if (postId) {
+          const post = await PostModel.findById(postId)
+            .select('title slug community author')
+            .populate('community', 'slug')
+            .populate('author', 'username')
+            .lean();
+          if (post) {
+            (notification as any).target = {
+              _id: post._id,
+              title: post.title,
+              slug: post.slug,
+              community: (post.community as any)?.slug || null,
+              author: (post.author as any)?.username || null,
+            };
+          }
+        }
+      } else if (notification.targetModel === 'Comment' && notification.target) {
+        const target = notification.target as any;
+        if (target.post) {
+          const post = await PostModel.findById(target.post)
+            .select('slug community author')
+            .populate('community', 'slug')
+            .populate('author', 'username')
+            .lean();
+          if (post) {
+            target.postSlug = post.slug;
+            target.postCommunity = (post.community as any)?.slug || null;
+            target.postAuthor = (post.author as any)?.username || null;
+          }
+        }
+      } else if (notification.targetModel === 'CommunityJoinRequest' && notification.target) {
+        const target = notification.target as any;
+        if (target.community) {
+          let communityId: string;
+          if (typeof target.community === 'string') {
+            communityId = target.community;
+          } else if (target.community._id) {
+            communityId = target.community._id.toString();
+          } else {
+            communityId = target.community.toString();
+          }
+
+          const community = await CommunityModel.findById(communityId)
             .select('name slug')
             .lean();
           if (community) {
-            (notification as any).target = community;
+            target.community = community;
           }
         }
       }
@@ -186,8 +348,8 @@ export class NotificationService {
     await notification.save();
 
     const populatedNotification = await NotificationModel.findById(notification._id)
-      .populate({ path: 'recipient', select: 'name username avatar', strictPopulate: false })
-      .populate({ path: 'actor', select: 'name username avatar', strictPopulate: false })
+      .populate({ path: 'recipient', select: 'name username avatar profilePicture', strictPopulate: false })
+      .populate({ path: 'actor', select: 'name username avatar profilePicture', strictPopulate: false })
       .populate({ path: 'target', strictPopulate: false })
       .lean()
       .exec();
@@ -251,6 +413,24 @@ export class NotificationService {
   }
 
   private async validateReferences(dto: CreateNotificationDTO): Promise<void> {
+    // Validate that IDs are strings in valid ObjectId format
+    const isValidObjectId = (id: string): boolean => {
+      return /^[0-9a-fA-F]{24}$/.test(id);
+    };
+
+    if (typeof dto.recipientId !== 'string' || !isValidObjectId(dto.recipientId)) {
+      console.error('[NotificationService] Invalid recipientId:', dto.recipientId);
+      throw new Error('recipientId must be a valid ObjectId string');
+    }
+    if (typeof dto.actorId !== 'string' || !isValidObjectId(dto.actorId)) {
+      console.error('[NotificationService] Invalid actorId:', dto.actorId);
+      throw new Error('actorId must be a valid ObjectId string');
+    }
+    if (typeof dto.targetId !== 'string' || !isValidObjectId(dto.targetId)) {
+      console.error('[NotificationService] Invalid targetId:', dto.targetId);
+      throw new Error('targetId must be a valid ObjectId string');
+    }
+
     const recipientExists = await User.exists({ _id: dto.recipientId });
     if (!recipientExists) {
       throw new Error(NOTIFICATION_ERRORS.INVALID_RECIPIENT);
@@ -275,6 +455,9 @@ export class NotificationService {
         break;
       case 'CommunityInvitation':
         targetExists = !!(await CommunityInvitationModel.exists({ _id: dto.targetId }));
+        break;
+      case 'CommunityJoinRequest':
+        targetExists = !!(await CommunityJoinRequestModel.exists({ _id: dto.targetId }));
         break;
       case 'User':
         targetExists = !!(await User.exists({ _id: dto.targetId }));

@@ -3657,16 +3657,51 @@ onMounted(async () => {
   // Check if there's a post slug in the URL to scroll to
   const postSlug = route.params.postSlug as string | undefined;
   if (postSlug && isJoined.value) {
-    setTimeout(() => {
+    const checkAndHandlePost = () => {
       const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
-      if (postElement) {
-        postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        postElement.classList.add('highlight-post');
-        setTimeout(() => {
-          postElement.classList.remove('highlight-post');
-        }, 3000);
+
+      if (!postElement) {
+        // Post not loaded yet, try again
+        setTimeout(checkAndHandlePost, 500);
+        return;
       }
-    }, 1500);
+
+      // Scroll to post
+      postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      postElement.classList.add('highlight-post');
+      setTimeout(() => {
+        postElement.classList.remove('highlight-post');
+      }, 3000);
+
+      // Handle comment hash if present
+      const hash = route.hash;
+      if (hash && hash.startsWith('#comment-')) {
+        // Find the comments button - it's the second action button (first is like)
+        const actionButtons = postElement.querySelectorAll('button.action-btn');
+        const commentsButton = actionButtons[1] as HTMLElement; // Comments is the second button
+
+        if (commentsButton) {
+          // Click to open comments
+          commentsButton.click();
+
+          // Wait for comments to load, then scroll to and highlight the comment
+          setTimeout(() => {
+            const commentId = hash.substring(9); // Remove '#comment-'
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement) {
+              commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              commentElement.classList.add('highlight-comment');
+              setTimeout(() => {
+                commentElement.classList.remove('highlight-comment');
+              }, 3000);
+            }
+          }, 1500);
+        }
+      }
+    };
+
+    // Start checking after a delay to allow posts to load
+    setTimeout(checkAndHandlePost, 1500);
   }
 
   document.addEventListener('click', (e) => {
@@ -3794,6 +3829,20 @@ watch(() => community.value?.requiresApproval, (newValue) => {
   50% {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
     transform: scale(1.02);
+  }
+}
+
+.highlight-comment {
+  animation: highlight-comment-pulse 3s ease-in-out;
+}
+
+@keyframes highlight-comment-pulse {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
 }
 

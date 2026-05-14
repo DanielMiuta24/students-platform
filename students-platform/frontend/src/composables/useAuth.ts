@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import type { LoginForm, RegisterForm, AuthResponse, SafeUser } from '../types/auth';
 import { loginUser, registerUser, logoutUser, getProfile } from '../api/auth';
 import { useSessionStore } from '../store/session';
+import { socketService } from '../services/socket';
 
 export const useAuth = () => {
     const loading = ref(false);
@@ -34,6 +35,7 @@ export const useAuth = () => {
             await loginUser(form);
             const user: SafeUser = await getProfile();
             session.setUser(user);
+            socketService.connect();
             success.value = 'Logged in successfully';
             return user;
         } catch (err: any) {
@@ -48,6 +50,7 @@ export const useAuth = () => {
         try {
             await logoutUser();
             session.clearUser();
+            socketService.disconnect();
             success.value = 'Logged out successfully';
             router.push('/login');
         } catch (err: any) {

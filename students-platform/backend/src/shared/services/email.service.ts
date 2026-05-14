@@ -79,6 +79,8 @@ export class EmailService {
       community_join: 'joined your community',
       community_post: 'posted in',
       community_invite: 'invited you to',
+      community_join_request: 'requested to join',
+      community_join_approved: 'approved your request to join',
       admin_assign: 'assigned you as an admin in',
       ownership_transfer: 'transferred ownership to you for',
     };
@@ -97,6 +99,8 @@ export class EmailService {
       community_join: 'Your community is growing!',
       community_post: 'New content in your community.',
       community_invite: 'You have been invited to join a community.',
+      community_join_request: 'Review their request to join your community.',
+      community_join_approved: 'You can now access the community and participate.',
       admin_assign: 'You now have admin privileges in this community.',
       ownership_transfer: 'You are now the owner of this community.',
     };

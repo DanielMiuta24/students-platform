@@ -1,5 +1,5 @@
 <template>
-  <div class="comment-item">
+  <div class="comment-item" :data-comment-id="comment.id">
     <div class="comment-wrapper">
       <img
         :src="authorAvatar"

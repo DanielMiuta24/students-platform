@@ -158,6 +158,12 @@ export const useNotificationStore = defineStore('notification', {
     },
 
     setupRealtimeListeners() {
+      const socket = socketService.getSocket();
+      if (!socket) {
+        console.error('[NotificationStore] Socket is null, cannot set up listeners');
+        return;
+      }
+
       socketService.on('notification:new', (payload: any) => {
         this.addNotification(payload.data);
       });

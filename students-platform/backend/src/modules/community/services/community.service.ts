@@ -722,6 +722,18 @@ export class CommunityService {
     });
 
     await joinRequest.save();
+
+    const founderId = community.founder?.toString() || (community.founder as any);
+    if (founderId && typeof founderId === 'string') {
+      await notificationService.createNotification({
+        recipientId: founderId as string,
+        actorId: userId,
+        type: 'community_join_request',
+        targetModel: 'CommunityJoinRequest',
+        targetId: joinRequest._id.toString(),
+      }).catch(err => console.error('Failed to create join request notification:', err));
+    }
+
     return { message: 'Join request submitted successfully' };
   }
 
@@ -793,6 +805,14 @@ export class CommunityService {
     await CommunityJoinRequestModel.findByIdAndDelete(requestId);
 
     const requestUserId = typeof request.user === 'string' ? request.user : request.user!.toString();
+
+    await notificationService.createNotification({
+      recipientId: requestUserId,
+      actorId: userId,
+      type: 'community_join_approved',
+      targetModel: 'Community',
+      targetId: request.community!.toString(),
+    }).catch(err => console.error('Failed to create join request approval notification:', err));
 
     return this.joinCommunity(request.community!.toString(), requestUserId, true);
   }

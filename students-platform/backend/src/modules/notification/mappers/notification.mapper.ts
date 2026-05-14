@@ -51,10 +51,17 @@ export class NotificationMapper {
         return {
           title: target.title,
           content: target.content,
+          slug: target.slug,
+          community: target.community,
+          author: target.author,
         };
       case 'Comment':
         return {
           content: target.content,
+          post: target.post,
+          postSlug: target.postSlug,
+          postCommunity: target.postCommunity,
+          postAuthor: target.postAuthor,
         };
       case 'Community':
         return {
@@ -62,6 +69,15 @@ export class NotificationMapper {
           slug: target.slug,
         };
       case 'CommunityInvitation':
+        return {
+          community: target.community ? {
+            _id: target.community._id?.toString() || target.community,
+            name: target.community.name,
+            slug: target.community.slug,
+          } : null,
+          status: target.status,
+        };
+      case 'CommunityJoinRequest':
         return {
           community: target.community ? {
             _id: target.community._id?.toString() || target.community,

@@ -555,42 +555,51 @@ onMounted(() => {
 
   const postSlug = route.params.slug as string | undefined;
   if (postSlug) {
-    const checkAndRedirectCommunityPost = async () => {
-      try {
-        const allPosts = posts.value;
-        const targetPost = allPosts.find(p => p.slug === postSlug);
+    const checkAndHandlePost = () => {
+      const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
 
-        if (targetPost?.community) {
-          const communitySlug = typeof targetPost.community === 'string'
-            ? targetPost.community
-            : targetPost.community.slug;
+      if (!postElement) {
+        // Post not loaded yet, try again
+        setTimeout(checkAndHandlePost, 500);
+        return;
+      }
 
-          if (communitySlug) {
-            router.push(`/community/${communitySlug}`);
-            return;
-          }
+      // Scroll to post
+      postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      postElement.classList.add('highlight-post');
+      setTimeout(() => {
+        postElement.classList.remove('highlight-post');
+      }, 3000);
+
+      // Handle comment hash if present
+      const hash = route.hash;
+      if (hash && hash.startsWith('#comment-')) {
+        // Find the comments button - it's the second action button (first is like)
+        const actionButtons = postElement.querySelectorAll('button.action-btn');
+        const commentsButton = actionButtons[1] as HTMLElement; // Comments is the second button
+
+        if (commentsButton) {
+          // Click to open comments
+          commentsButton.click();
+
+          // Wait for comments to load, then scroll to and highlight the comment
+          setTimeout(() => {
+            const commentId = hash.substring(9); // Remove '#comment-'
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement) {
+              commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              commentElement.classList.add('highlight-comment');
+              setTimeout(() => {
+                commentElement.classList.remove('highlight-comment');
+              }, 3000);
+            }
+          }, 1500);
         }
-
-        // For non-community posts or if post not found yet, scroll to it
-        setTimeout(() => {
-          const postElement = document.querySelector(`[data-post-slug="${postSlug}"]`);
-          if (postElement) {
-            postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            postElement.classList.add('highlight-post');
-            setTimeout(() => {
-              postElement.classList.remove('highlight-post');
-            }, 3000);
-          }
-        }, 1000);
-      } catch (err) {
-        console.error('Error checking community post:', err);
       }
     };
 
-    // Wait a bit for posts to load, then check
-    setTimeout(() => {
-      checkAndRedirectCommunityPost();
-    }, 1500);
+    // Start checking after a delay to allow posts to load
+    setTimeout(checkAndHandlePost, 1500);
   }
 });
 
@@ -987,6 +996,20 @@ const handleFocusCreatePost = () => {
   50% {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
     transform: scale(1.02);
+  }
+}
+
+.highlight-comment {
+  animation: highlight-comment-pulse 3s ease-in-out;
+}
+
+@keyframes highlight-comment-pulse {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
 }
 </style>

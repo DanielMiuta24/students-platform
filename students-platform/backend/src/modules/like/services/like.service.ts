@@ -32,7 +32,16 @@ export class LikeService {
 
     await this.incrementLikeCount(data);
 
-    const entityOwnerId = entity.author?.toString();
+    // Extract entity owner ID, handling both populated and unpopulated author
+    let entityOwnerId: string | undefined;
+    if (entity.author) {
+      if (typeof entity.author === 'string') {
+        entityOwnerId = entity.author;
+      } else if (entity.author._id) {
+        entityOwnerId = entity.author._id.toString();
+      }
+    }
+
     if (entityOwnerId && entityOwnerId !== data.userId) {
       await notificationService.createNotification({
         recipientId: entityOwnerId,
