@@ -22,7 +22,7 @@
                 {{ authorName }}
               </h3>
 
-              <span v-if="authorType" :class="authorTypeClass">
+              <span v-if="authorType" :class="authorTypeClass" :style="(authorType || '').toLowerCase().includes('studyseeker') ? { backgroundColor: '#0f2a5f' } : {}">
                 <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" preserveAspectRatio="xMidYMid meet">
                   <path v-if="authorTypeIcon === 'student'" d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
                   <path v-else-if="authorTypeIcon === 'seeker'" d="M9 9a2 2 0 114 0 2 2 0 01-4 0z M9 9a2 2 0 114 0 2 2 0 01-4 0zM9 9a2 2 0 114 0 2 2 0 01-4 0z M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -48,7 +48,8 @@
                 </svg>
                 <span
                   @click="navigateToCommunity"
-                  class="inline-flex items-center px-2 py-0.5 rounded-md text-sm font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all cursor-pointer shadow-sm"
+                  class="inline-flex items-center px-2 py-0.5 rounded-md text-sm font-semibold text-blue-700 border border-blue-200 hover:border-blue-300 transition-all cursor-pointer shadow-sm"
+                  style="background: linear-gradient(to right, #eff6ff, rgba(15, 42, 95, 0.05));"
                 >
                   <svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -74,7 +75,8 @@
 
               <span
                 v-if="post.isPinned && isCommunityPost"
-                class="text-xs font-semibold px-2 py-1 rounded-md bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200 flex items-center gap-1"
+                class="text-xs font-semibold px-2 py-1 rounded-md text-blue-700 border border-blue-200 flex items-center gap-1"
+                style="background: linear-gradient(to right, #eff6ff, rgba(15, 42, 95, 0.05));"
               >
                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v2h3a1 1 0 011 1v1a1 1 0 01-1 1h-1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9H2a1 1 0 01-1-1V7a1 1 0 011-1h3V5zm2 0v2h6V5H7zm-1 4h8v6H6V9z" />
@@ -111,14 +113,14 @@
                   <span class="absolute right-full top-1/2 transform -translate-y-1/2 mr-0 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-green-50"></span>
                 </span>
               </span>
-              <span v-if="!isCommunityPost && displayVisibility === 'friends'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-medium border border-purple-200 cursor-help">
+              <span v-if="!isCommunityPost && displayVisibility === 'friends'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md font-medium border cursor-help text-white" style="background-color: #0f2a5f; border-color: rgba(15, 42, 95, 0.3);">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 Friends
-                <span class="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-purple-50 text-purple-700 text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 shadow-lg border border-purple-200">
+                <span class="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 shadow-lg border text-white" style="background-color: rgba(15, 42, 95, 0.9); border-color: rgba(15, 42, 95, 0.3);">
                   Only your friends can see this post
-                  <span class="absolute right-full top-1/2 transform -translate-y-1/2 mr-0 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-purple-50"></span>
+                  <span class="absolute right-full top-1/2 transform -translate-y-1/2 mr-0 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent" style="border-right-color: rgba(15, 42, 95, 0.9);"></span>
                 </span>
               </span>
               <span v-if="!isCommunityPost && displayVisibility === 'private'" class="relative group inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 text-gray-700 font-medium border border-gray-200 cursor-help">
@@ -578,7 +580,7 @@ const authorTypeClass = computed(() => {
   if (type.includes('student')) {
     return `${baseClass} bg-blue-50 text-blue-700 border-blue-200`;
   } else if (type.includes('studyseeker')) {
-    return `${baseClass} bg-purple-50 text-purple-700 border-purple-200`;
+    return `${baseClass} text-white border border-blue-900`;
   } else if (type.includes('admin')) {
     return `${baseClass} bg-red-50 text-red-700 border-red-200`;
   }

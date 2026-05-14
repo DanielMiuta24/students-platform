@@ -5,8 +5,8 @@
       :class="[
         'px-4 py-2 rounded-full font-semibold transition flex items-center gap-2',
         selectedRole === null
-          ? 'bg-indigo-600 text-white'
-          : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+          ? 'bg-blue-600 text-white'
+          : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
       ]"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,8 +35,8 @@
       :class="[
         'px-4 py-2 rounded-full font-semibold transition flex items-center gap-2',
         selectedRole === 'member'
-          ? 'bg-emerald-600 text-white'
-          : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+          ? 'bg-green-600 text-white'
+          : 'bg-green-50 text-green-700 hover:bg-green-100'
       ]"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

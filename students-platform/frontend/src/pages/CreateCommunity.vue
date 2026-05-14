@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 py-12 px-4">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 py-12 px-4">
     <div class="max-w-3xl mx-auto">
       <div class="text-center mb-10">
         <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-          <div class="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 font-semibold px-4 py-2 rounded-full">
+          <div class="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-full text-white transition-colors" style="background-color: rgba(15, 42, 95, 0.1); color: #0f2a5f;">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -37,7 +37,7 @@
               currentStep > index
                 ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
                 : currentStep === index
-                ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300'
+                ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300'
                 : 'bg-gray-50 border-gray-200'
             ]"
           >
@@ -47,7 +47,7 @@
                 currentStep > index
                   ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
                   : currentStep === index
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg'
                   : 'bg-gray-200 text-gray-500'
               ]"
             >
@@ -77,7 +77,7 @@
                     currentStep > index
                       ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
                       : currentStep === index
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg'
                       : 'bg-gray-200 text-gray-500'
                   ]"
                 >
@@ -111,7 +111,7 @@
         <div v-if="currentStep === 0" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -178,7 +178,7 @@
         <div v-if="currentStep === 1" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
                 </svg>
@@ -226,7 +226,7 @@
         <div v-if="currentStep === 2" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -259,7 +259,7 @@
               </div>
 
               <div v-else class="border-2 border-dashed border-gray-300 rounded-2xl p-8 sm:p-12 text-center hover:border-blue-400 transition-all bg-gradient-to-br from-gray-50 to-blue-50">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <svg class="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -276,7 +276,7 @@
                 <button
                   @click="triggerFileInput"
                   type="button"
-                  class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md"
+                  class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-900 transition-all shadow-md"
                 >
                   Choose Image
                 </button>
@@ -306,7 +306,7 @@
         <div v-if="currentStep === 3" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
@@ -322,7 +322,7 @@
               <button
                 @click="showInviteModal = true"
                 type="button"
-                class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md flex items-center justify-center gap-3"
+                class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-900 transition-all shadow-md flex items-center justify-center gap-3"
               >
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -331,7 +331,7 @@
               </button>
 
               <!-- Invited Users List -->
-              <div v-if="allInvitedUsers.length > 0" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border-2 border-blue-200">
+              <div v-if="allInvitedUsers.length > 0" class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border-2 border-blue-200">
                 <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
@@ -345,7 +345,7 @@
                     class="flex items-center justify-between bg-white rounded-lg px-4 py-2.5 border border-blue-200"
                   >
                     <div class="flex items-center gap-2 flex-1 min-w-0">
-                      <div v-if="invite.type === 'user'" class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                      <div v-if="invite.type === 'user'" class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                         {{ invite.name.charAt(0).toUpperCase() }}
                       </div>
                       <svg v-else class="w-5 h-5 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -392,7 +392,7 @@
         <div v-if="currentStep === 4" class="space-y-6">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 mb-6">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl flex items-center justify-center mx-auto sm:mx-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -403,7 +403,7 @@
               </div>
             </div>
 
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-200">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-200">
               <div v-if="coverImagePreview" class="mb-4 -mt-4 -mx-4 sm:-mt-6 sm:-mx-6">
                 <img
                   :src="coverImagePreview"
@@ -413,13 +413,13 @@
               </div>
 
               <div :class="['flex flex-col sm:flex-row items-start sm:items-start gap-3 sm:gap-4 mb-4', coverImagePreview ? 'mt-4' : '']">
-                <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-lg flex-shrink-0 mx-auto sm:mx-0">
+                <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-lg flex-shrink-0 mx-auto sm:mx-0">
                   {{ formData.name.charAt(0).toUpperCase() || '?' }}
                 </div>
                 <div class="flex-1 text-center sm:text-left">
                   <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{{ formData.name }}</h3>
                   <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <span class="inline-block bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-300">
+                    <span class="inline-block bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-300">
                       {{ formData.category }}
                     </span>
                     <span :class="[
@@ -458,7 +458,7 @@
               </div>
             </div>
 
-            <div v-if="invitedUsersList.length > 0" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border-2 border-blue-200 mt-4">
+            <div v-if="invitedUsersList.length > 0" class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border-2 border-blue-200 mt-4">
               <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
@@ -471,7 +471,7 @@
                   :key="index"
                   class="bg-white rounded-lg px-3 py-2 text-sm font-medium border border-blue-200 flex items-center gap-2"
                 >
-                  <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                  <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                     {{ invite.name.charAt(0).toUpperCase() }}
                   </div>
                   <span class="text-gray-700 flex-1 truncate">{{ invite.display }}</span>
@@ -537,7 +537,7 @@
             :class="[
               'w-full sm:flex-1 px-6 py-3 font-bold rounded-xl transition-all shadow-lg order-1 sm:order-2',
               canProceed
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             ]"
           >
