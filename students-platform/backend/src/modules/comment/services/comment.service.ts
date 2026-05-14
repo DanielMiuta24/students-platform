@@ -74,15 +74,22 @@ export class CommentService {
     });
 
     if (data.parentCommentId) {
-      const parentComment = await CommentModel.findById(data.parentCommentId).select('author');
+      const parentComment = await CommentModel.findById(data.parentCommentId).select('author post');
       if (parentComment && parentComment.author.toString() !== data.authorId) {
-        await notificationService.createNotification({
-          recipientId: parentComment.author.toString(),
-          actorId: data.authorId,
-          type: 'reply',
-          targetModel: 'Comment',
-          targetId: comment._id.toString(),
-        }).catch(err => console.error('Failed to create reply notification:', err));
+        // Check if notification should be sent based on post visibility
+        const post = await PostModel.findById(parentComment.post).select('visibility community').populate('author', 'followers following');
+        if (post) {
+          const shouldNotify = await this.shouldNotifyForPost(post, data.authorId, parentComment.author.toString());
+          if (shouldNotify) {
+            await notificationService.createNotification({
+              recipientId: parentComment.author.toString(),
+              actorId: data.authorId,
+              type: 'reply',
+              targetModel: 'Comment',
+              targetId: comment._id.toString(),
+            }).catch(err => console.error('Failed to create reply notification:', err));
+          }
+        }
       }
     } else {
       const post = await PostModel.findById(data.postId).select('author visibility community').populate('author', 'followers following');
@@ -307,30 +314,54 @@ export class CommentService {
       return false;
     }
 
-    // Public posts: always notify
+    // Public posts: always notify (anyone can access public posts)
     if (post.visibility === 'public') {
       return true;
     }
 
-    // Community posts: notify (actor already has access if they can comment)
-    if (post.visibility === 'community') {
-      return true;
+    // Community posts: only notify if recipient is still a member
+    if (post.visibility === 'community' && post.community) {
+      const communityId = typeof post.community === 'string' ? post.community : post.community.toString();
+      return await this.isUserMemberOfCommunity(recipientId, communityId);
     }
 
-    // Friends posts: only notify if actor and post author are mutual followers
+    // Friends posts: only notify if recipient and post author are mutual followers
     if (post.visibility === 'friends') {
-      const postAuthor = post.author;
-      if (postAuthor && postAuthor.followers && postAuthor.following) {
-        const authorFollowers = postAuthor.followers.map((id: any) => id.toString());
-        const authorFollowing = postAuthor.following.map((id: any) => id.toString());
-
-        // Check if actor is a mutual follower
-        return authorFollowers.includes(actorId) && authorFollowing.includes(actorId);
-      }
-      return false;
+      return await this.areMutualFollowers(recipientId, post.author._id?.toString() || post.author.toString());
     }
 
     return false;
+  }
+
+  private async isUserMemberOfCommunity(userId: string, communityId: string): Promise<boolean> {
+    const { CommunityModel } = await import('../../community/models');
+    const community = await CommunityModel.findById(communityId).select('members').lean();
+
+    if (!community) {
+      return false;
+    }
+
+    return community.members?.some((m: any) => {
+      const memberUserId = typeof m.user === 'string' ? m.user : m.user?.toString();
+      return memberUserId === userId;
+    }) || false;
+  }
+
+  private async areMutualFollowers(userId1: string, userId2: string): Promise<boolean> {
+    const { default: User } = await import('../../user/models');
+
+    const user1 = await User.findById(userId1).select('followers following').lean();
+    const user2 = await User.findById(userId2).select('followers following').lean();
+
+    if (!user1 || !user2) {
+      return false;
+    }
+
+    const user1Followers = (user1.followers || []).map((id: any) => id.toString());
+    const user1Following = (user1.following || []).map((id: any) => id.toString());
+
+    // Check if they follow each other
+    return user1Followers.includes(userId2) && user1Following.includes(userId2);
   }
 }
 
