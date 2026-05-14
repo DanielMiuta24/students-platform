@@ -995,8 +995,7 @@ const handleSelect = () => {
   position: relative;
 }
 
-.messenger-button,
-.notifications-button {
+.messenger-button {
   position: relative;
   width: 40px;
   height: 40px;
@@ -1012,8 +1011,7 @@ const handleSelect = () => {
   font-size: 20px;
 }
 
-.messenger-button:hover,
-.notifications-button:hover {
+.messenger-button:hover {
   background-color: #d8dadf;
 }
 
