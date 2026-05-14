@@ -1116,6 +1116,7 @@ const handleSelect = () => {
 
 :deep(.el-dropdown-menu__item:last-child:hover) {
   background: #ef4444;
+  color: white;
 }
 
 :deep(.el-dropdown-menu__item:not(:last-child)) {
