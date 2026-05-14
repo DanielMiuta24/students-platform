@@ -21,11 +21,13 @@ export interface NotificationResponseDTO {
   recipient: {
     _id: string;
     name: string;
+    username: string;
     profilePicture?: string;
   };
   actor: {
     _id: string;
     name: string;
+    username: string;
     profilePicture?: string;
   };
   type: NotificationType;

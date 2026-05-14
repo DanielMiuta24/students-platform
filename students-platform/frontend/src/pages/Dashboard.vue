@@ -13,10 +13,10 @@
               <button
                 v-for="tab in tabs"
                 :key="tab.id"
-                @click="activeTab = tab.id"
+                @click="navigateToTab(tab.id)"
                 :class="[
                   'w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium transition-all mb-2',
-                  activeTab === tab.id
+                  currentTab === tab.id
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 transform scale-[1.02]'
                     : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                 ]"
@@ -30,33 +30,33 @@
 
         <main class="flex-1 min-w-0">
           <DashboardGeneral
-            v-if="activeTab === 'general'"
+            v-if="currentTab === 'general'"
             :user="user"
             :saved-universities-count="savedUniversities.length"
             :communities-count="communitiesCount"
             :posts-count="postsCount"
           />
 
-          <DashboardChangePassword v-else-if="activeTab === 'change-password'" />
+          <DashboardChangePassword v-else-if="currentTab === 'change-password'" />
 
-          <DashboardStudentStatus v-else-if="activeTab === 'student-status'" />
+          <DashboardStudentStatus v-else-if="currentTab === 'student-status'" />
 
-          <DashboardSavedUniversities v-else-if="activeTab === 'saved-universities'" />
+          <DashboardSavedUniversities v-else-if="currentTab === 'saved-universities'" />
 
-          <DashboardSavedScholarships v-else-if="activeTab === 'saved-scholarships'" />
+          <DashboardSavedScholarships v-else-if="currentTab === 'saved-scholarships'" />
 
           <DashboardDrafts
-            v-else-if="activeTab === 'drafts'"
+            v-else-if="currentTab === 'drafts'"
             ref="draftsRef"
             :success-message="deleteSuccessMessage"
             @edit="editDraft"
             @delete="deleteDraft"
           />
 
-          <DashboardNotifications v-else-if="activeTab === 'notifications'" />
+          <DashboardNotifications v-else-if="currentTab === 'notifications'" />
 
           <DashboardRequests
-            v-else-if="activeTab === 'requests'"
+            v-else-if="currentTab === 'requests'"
             ref="requestsRef"
             :success-message="requestSuccessMessage"
             @approve-join="approveJoinRequest"
@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, h } from 'vue';
+import { ref, onMounted, h, computed, watch } from 'vue';
 import { api } from '../services/api';
 import { deletePost } from '../api/post';
 import { useRouter, useRoute } from 'vue-router';
@@ -110,7 +110,6 @@ import ConfirmModal from '../components/ConfirmModal.vue';
 
 const router = useRouter();
 const route = useRoute();
-const activeTab = ref('general');
 const user = ref<any>(null);
 const savedUniversities = ref<any[]>([]);
 const communitiesCount = ref(0);
@@ -123,6 +122,16 @@ const deleteSuccessMessage = ref('');
 const requestSuccessMessage = ref('');
 const draftsRef = ref<InstanceType<typeof DashboardDrafts> | null>(null);
 const requestsRef = ref<InstanceType<typeof DashboardRequests> | null>(null);
+
+const currentTab = computed(() => {
+  const pathParts = route.path.split('/').filter(p => p);
+  // If we're in a requests subtab, return 'requests'
+  if (pathParts.length >= 3 && pathParts[1] === 'requests') {
+    return 'requests';
+  }
+  const lastPart = pathParts[pathParts.length - 1];
+  return lastPart === 'dashboard' ? 'general' : lastPart;
+});
 
 const tabs = [
   {
@@ -184,18 +193,15 @@ const tabs = [
 ];
 
 onMounted(async () => {
-  if (route.query.tab && typeof route.query.tab === 'string') {
-    const tabExists = tabs.some(tab => tab.id === route.query.tab);
-    if (tabExists) {
-      activeTab.value = route.query.tab;
-    }
-  }
-
   await fetchUserProfile();
   fetchSavedUniversitiesCount();
   fetchCommunitiesCount();
   fetchPostsCount();
 });
+
+const navigateToTab = (tabId: string) => {
+  router.push(`/dashboard/${tabId}`);
+};
 
 const fetchUserProfile = async () => {
   try {

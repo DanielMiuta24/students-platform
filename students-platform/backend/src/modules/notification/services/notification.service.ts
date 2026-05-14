@@ -29,16 +29,28 @@ export class NotificationService {
     const notification = await NotificationModel.create(notificationData);
 
     const populatedNotification = await NotificationModel.findById(notification._id)
-      .populate('recipient', 'name profilePicture')
-      .populate('actor', 'name profilePicture')
-      .populate('target')
+      .populate({ path: 'recipient', select: 'name username avatar', strictPopulate: false })
+      .populate({ path: 'actor', select: 'name username avatar', strictPopulate: false })
+      .populate({ path: 'target', strictPopulate: false })
+      .lean()
       .exec();
 
     if (!populatedNotification) {
       throw new Error(NOTIFICATION_ERRORS.CREATION_FAILED);
     }
 
-    const notificationDTO = NotificationMapper.toDTO(populatedNotification);
+    // Manually populate nested community field for CommunityInvitation targets
+    if (populatedNotification.targetModel === 'CommunityInvitation' && populatedNotification.target) {
+      const target = populatedNotification.target as any;
+      if (target.community) {
+        const community = await CommunityModel.findById(target.community)
+          .select('name slug')
+          .lean();
+        target.community = community;
+      }
+    }
+
+    const notificationDTO = NotificationMapper.toDTO(populatedNotification as any);
 
     realtimeService.publishToRoom('user', dto.recipientId, 'notification:new', {
       id: notificationDTO._id,
@@ -62,20 +74,50 @@ export class NotificationService {
 
     const [notifications, total, unreadCount] = await Promise.all([
       NotificationModel.find(filter)
-        .populate('recipient', 'name profilePicture')
-        .populate('actor', 'name profilePicture')
-        .populate('target')
+        .populate({ path: 'recipient', select: 'name username avatar', strictPopulate: false })
+        .populate({ path: 'actor', select: 'name username avatar', strictPopulate: false })
+        .populate({ path: 'target', strictPopulate: false })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
+        .lean()
         .exec(),
       NotificationModel.countDocuments(filter),
       NotificationModel.countDocuments({ recipient: query.userId, read: false }),
     ]);
 
-    const notificationDTOs = notifications.map((notification) =>
-      NotificationMapper.toDTO(notification)
-    );
+    // Manually populate nested community field for CommunityInvitation targets
+    for (const notification of notifications) {
+      if (notification.targetModel === 'CommunityInvitation' && notification.target) {
+        const target = notification.target as any;
+        if (target.community) {
+          const community = await CommunityModel.findById(target.community)
+            .select('name slug')
+            .lean();
+          target.community = community;
+        }
+      }
+    }
+
+    const notificationDTOs = notifications
+      .filter((notification) => {
+        // Filter out notifications where target no longer exists
+        if (!notification.target) {
+          console.warn(`Notification ${notification._id} has missing target, skipping`);
+          return false;
+        }
+        return true;
+      })
+      .map((notification) => {
+        try {
+          // notification is already a plain object from .lean()
+          return NotificationMapper.toDTO(notification as any);
+        } catch (error) {
+          console.error('Error mapping notification:', error);
+          console.error('Notification ID:', notification._id);
+          throw error;
+        }
+      });
 
     return {
       notifications: notificationDTOs,
@@ -105,28 +147,52 @@ export class NotificationService {
 
     if (notification.read) {
       const populatedNotification = await NotificationModel.findById(notification._id)
-        .populate('recipient', 'name profilePicture')
-        .populate('actor', 'name profilePicture')
-        .populate('target')
+        .populate({ path: 'recipient', select: 'name username avatar', strictPopulate: false })
+        .populate({ path: 'actor', select: 'name username avatar', strictPopulate: false })
+        .populate({ path: 'target', strictPopulate: false })
+        .lean()
         .exec();
 
-      return NotificationMapper.toDTO(populatedNotification!);
+      // Manually populate nested community field for CommunityInvitation targets
+      if (populatedNotification?.targetModel === 'CommunityInvitation' && populatedNotification.target) {
+        const target = populatedNotification.target as any;
+        if (target.community) {
+          const community = await CommunityModel.findById(target.community)
+            .select('name slug')
+            .lean();
+          target.community = community;
+        }
+      }
+
+      return NotificationMapper.toDTO(populatedNotification as any);
     }
 
     notification.read = true;
     await notification.save();
 
     const populatedNotification = await NotificationModel.findById(notification._id)
-      .populate('recipient', 'name profilePicture')
-      .populate('actor', 'name profilePicture')
-      .populate('target')
+      .populate({ path: 'recipient', select: 'name username avatar', strictPopulate: false })
+      .populate({ path: 'actor', select: 'name username avatar', strictPopulate: false })
+      .populate({ path: 'target', strictPopulate: false })
+      .lean()
       .exec();
 
     if (!populatedNotification) {
       throw new Error(NOTIFICATION_ERRORS.UPDATE_FAILED);
     }
 
-    const notificationDTO = NotificationMapper.toDTO(populatedNotification);
+    // Manually populate nested community field for CommunityInvitation targets
+    if (populatedNotification.targetModel === 'CommunityInvitation' && populatedNotification.target) {
+      const target = populatedNotification.target as any;
+      if (target.community) {
+        const community = await CommunityModel.findById(target.community)
+          .select('name slug')
+          .lean();
+        target.community = community;
+      }
+    }
+
+    const notificationDTO = NotificationMapper.toDTO(populatedNotification as any);
 
     realtimeService.publishToRoom('user', userId, 'notification:read', {
       id: notificationDTO._id,

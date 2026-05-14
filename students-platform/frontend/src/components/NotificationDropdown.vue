@@ -36,9 +36,12 @@
               :key="notification._id"
               class="notification-item"
               :class="{ unread: !notification.read }"
-              @click="handleNotificationClick(notification)"
             >
-              <div class="notification-avatar">
+              <div
+                v-if="notification.actor"
+                class="notification-avatar"
+                @click.stop="navigateToProfile(notification.actor.username)"
+              >
                 <img
                   v-if="notification.actor.profilePicture"
                   :src="notification.actor.profilePicture"
@@ -47,10 +50,23 @@
                 <el-icon v-else><User /></el-icon>
               </div>
 
-              <div class="notification-content">
+              <div class="notification-content" @click="handleNotificationClick(notification)">
                 <p class="notification-text">
-                  <strong>{{ notification.actor.name }}</strong>
-                  {{ getNotificationMessage(notification) }}
+                  <button
+                    v-if="notification.actor"
+                    @click.stop="navigateToProfile(notification.actor.username)"
+                    class="actor-name"
+                  >
+                    {{ notification.actor.name }}
+                  </button>
+                  {{ getNotificationMessage(notification).text }}
+                  <button
+                    v-if="getNotificationMessage(notification).targetName"
+                    @click.stop="navigateToTarget(getNotificationMessage(notification).targetLink)"
+                    class="target-link"
+                  >
+                    {{ getNotificationMessage(notification).targetName }}
+                  </button>
                 </p>
                 <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
               </div>
@@ -115,7 +131,17 @@ const deleteNotification = async (notificationId: string) => {
 };
 
 const navigateToNotifications = () => {
-  router.push('/dashboard?tab=notifications');
+  router.push('/dashboard/notifications');
+};
+
+const navigateToProfile = (username: string) => {
+  router.push(`/profile/${username}`);
+};
+
+const navigateToTarget = (targetLink?: string) => {
+  if (targetLink) {
+    router.push(targetLink);
+  }
 };
 
 const handleNotificationClick = async (notification: Notification) => {
@@ -141,13 +167,13 @@ const getNotificationRoute = (notification: Notification): string | null => {
       }
       return null;
     case 'follow':
-      return `/profile/${notification.actor._id}`;
+      return `/profile/${notification.actor.username}`;
     case 'community_join':
     case 'community_post':
       return `/community/${notification.target._id}`;
     case 'community_invite':
       if (notification.targetModel === 'CommunityInvitation') {
-        return '/dashboard?tab=notifications';
+        return '/dashboard/requests/invitations';
       }
       return `/community/${notification.target._id}`;
     case 'new_post':
@@ -157,20 +183,74 @@ const getNotificationRoute = (notification: Notification): string | null => {
   }
 };
 
-const getNotificationMessage = (notification: Notification): string => {
-  const messages: Record<string, string> = {
-    comment: 'commented on your post',
-    reply: 'replied to your comment',
-    like: `liked your ${notification.targetModel.toLowerCase()}`,
-    follow: 'started following you',
-    view: 'viewed your profile',
-    message: 'sent you a message',
-    new_post: 'created a new post',
-    community_join: 'joined your community',
-    community_post: `posted in ${notification.target.name || 'a community'}`,
-    community_invite: `invited you to ${notification.target.name || 'a community'}`,
-  };
-  return messages[notification.type] || 'interacted with you';
+const getNotificationMessage = (notification: Notification): { text: string; targetName?: string; targetLink?: string } => {
+  const actorName = notification.actor.name;
+
+  switch (notification.type) {
+    case 'comment':
+      return {
+        text: 'commented on your',
+        targetName: 'post',
+        targetLink: `/post/${notification.target._id}`
+      };
+    case 'reply':
+      return {
+        text: 'replied to your',
+        targetName: 'comment',
+        targetLink: `/post/${notification.target._id}`
+      };
+    case 'like':
+      return {
+        text: `liked your ${notification.targetModel.toLowerCase()}`,
+      };
+    case 'follow':
+      return {
+        text: 'started following you',
+      };
+    case 'view':
+      return {
+        text: 'viewed your profile',
+      };
+    case 'message':
+      return {
+        text: 'sent you a message',
+      };
+    case 'new_post':
+      return {
+        text: 'created a new',
+        targetName: 'post',
+        targetLink: `/post/${notification.target._id}`
+      };
+    case 'community_join':
+      return {
+        text: 'joined',
+        targetName: notification.target.name || 'a community',
+        targetLink: `/community/${notification.target._id}`
+      };
+    case 'community_post':
+      return {
+        text: 'posted in',
+        targetName: notification.target.name || 'a community',
+        targetLink: `/community/${notification.target._id}`
+      };
+    case 'community_invite':
+      if (notification.targetModel === 'CommunityInvitation') {
+        return {
+          text: 'invited you to join',
+          targetName: notification.target.community?.name || 'a community',
+          targetLink: '/dashboard/requests/invitations'
+        };
+      }
+      return {
+        text: 'invited you to',
+        targetName: notification.target.name || 'a community',
+        targetLink: `/community/${notification.target._id}`
+      };
+    default:
+      return {
+        text: 'interacted with you',
+      };
+  }
 };
 
 const formatTime = (date: Date): string => {
@@ -334,6 +414,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.notification-avatar:hover {
+  opacity: 0.8;
 }
 
 .notification-avatar img {
@@ -359,8 +445,34 @@ onUnmounted(() => {
   color: #111827;
 }
 
-.notification-text strong {
+.notification-text .actor-name {
   font-weight: 600;
+  color: #111827;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.notification-text .actor-name:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.notification-text .target-link {
+  font-weight: 600;
+  color: #3b82f6;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.notification-text .target-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 .notification-time {
