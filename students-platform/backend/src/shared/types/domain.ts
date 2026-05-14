@@ -19,6 +19,8 @@ export const NOTIFICATION_TYPES = [
 'community_invite',
 'community_join_request',
 'community_join_approved',
+'community_join_request_rejected',
+'community_invite_rejected',
 'admin_assign',
 'ownership_transfer_request',
 'ownership_transfer',

@@ -28,6 +28,8 @@ export const NOTIFICATION_EMAIL_SUBJECTS = {
   community_invite: 'You have been invited to a community',
   community_join_request: 'New request to join your community',
   community_join_approved: 'Your request to join a community was approved',
+  community_join_request_rejected: 'Your join request was rejected',
+  community_invite_rejected: 'Community invitation declined',
   admin_assign: 'You have been assigned as an admin',
   ownership_transfer_request: 'Request to transfer community ownership',
   ownership_transfer: 'Community ownership transferred',

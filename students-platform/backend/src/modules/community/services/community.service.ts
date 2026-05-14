@@ -579,6 +579,26 @@ export class CommunityService {
     }
 
     await CommunityInvitationModel.findByIdAndDelete(invitationId);
+
+    if (isRecipient) {
+      const invitedById = typeof invitation.invitedBy === 'string'
+        ? invitation.invitedBy
+        : invitation.invitedBy?.toString();
+
+      const communityId = typeof invitation.community === 'string'
+        ? invitation.community
+        : invitation.community?.toString();
+
+      if (invitedById && communityId) {
+        await notificationService.createNotification({
+          recipientId: invitedById,
+          actorId: userId,
+          type: 'community_invite_rejected',
+          targetModel: 'Community',
+          targetId: communityId,
+        }).catch(err => console.error('Failed to create invitation rejection notification:', err));
+      }
+    }
   }
 
   async acceptInvitation(invitationId: string, userId: string) {
@@ -834,7 +854,26 @@ export class CommunityService {
       throw new Error(COMMUNITY_ERROR.NOT_ADMIN);
     }
 
+    const requestUserId = typeof request.user === 'string'
+      ? request.user
+      : request.user?.toString();
+
+    const communityId = typeof request.community === 'string'
+      ? request.community
+      : request.community?.toString();
+
     await CommunityJoinRequestModel.findByIdAndDelete(requestId);
+
+    if (requestUserId && communityId) {
+      await notificationService.createNotification({
+        recipientId: requestUserId,
+        actorId: userId,
+        type: 'community_join_request_rejected',
+        targetModel: 'Community',
+        targetId: communityId,
+      }).catch(err => console.error('Failed to create join request rejection notification:', err));
+    }
+
     return { message: 'Join request rejected successfully' };
   }
 

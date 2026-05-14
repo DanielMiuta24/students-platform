@@ -228,6 +228,8 @@ const getNotificationRoute = (notification: Notification): string | null => {
     case 'community_join_request':
       return '/dashboard/requests/incoming';
     case 'community_join_approved':
+    case 'community_join_request_rejected':
+    case 'community_invite_rejected':
       if (notification.targetModel === 'Community') {
         return `/community/${notification.target.slug}`;
       }
@@ -419,6 +421,18 @@ const getNotificationMessage = (notification: Notification): {
     case 'community_join_approved':
       return {
         text: 'approved your request to join',
+        targetName: notification.target.name || 'the community',
+        targetLink: `/community/${notification.target.slug}`
+      };
+    case 'community_join_request_rejected':
+      return {
+        text: 'rejected your request to join',
+        targetName: notification.target.name || 'the community',
+        targetLink: `/community/${notification.target.slug}`
+      };
+    case 'community_invite_rejected':
+      return {
+        text: 'declined your invitation to join',
         targetName: notification.target.name || 'the community',
         targetLink: `/community/${notification.target.slug}`
       };
