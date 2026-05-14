@@ -56,41 +56,42 @@ export class PostService {
     const post = new PostModel(postData);
     const savedPost = await post.save();
 
-    if (data.communityId && savedPost.status === 'published' && savedPost.visibility !== 'private') {
+    if (data.communityId && savedPost.status === 'published') {
       await communityService.incrementPostCount(data.communityId);
 
-      // For community posts, visibility only matters for 'private'
-      // All other visibility types (public, community, friends) notify all community members
-      // since membership is the only access control mechanism in communities
-      const community = await communityService.getCommunityById(data.communityId, data.authorId);
+      // Community posts should only use 'community' visibility
+      // Only send notifications for community visibility
+      if (savedPost.visibility === 'community') {
+        const community = await communityService.getCommunityById(data.communityId, data.authorId);
 
-      // Extract member IDs, handling both populated and unpopulated user fields
-      const communityMemberIds = community.members
-        ?.filter((m: any) => {
-          const userId = typeof m.user === 'string' ? m.user : m.user?._id?.toString();
-          return userId && userId !== data.authorId;
-        })
-        .map((m: any) => {
-          // Extract user ID properly - handle both ObjectId and populated User
-          if (typeof m.user === 'string') {
-            return m.user;
-          } else if (m.user?._id) {
-            return m.user._id.toString();
+        // Extract member IDs, handling both populated and unpopulated user fields
+        const communityMemberIds = community.members
+          ?.filter((m: any) => {
+            const userId = typeof m.user === 'string' ? m.user : m.user?._id?.toString();
+            return userId && userId !== data.authorId;
+          })
+          .map((m: any) => {
+            // Extract user ID properly - handle both ObjectId and populated User
+            if (typeof m.user === 'string') {
+              return m.user;
+            } else if (m.user?._id) {
+              return m.user._id.toString();
+            }
+            return null;
+          })
+          .filter((id: any) => id !== null) || [];
+
+        if (communityMemberIds.length > 0) {
+          console.log(`[PostService] Creating ${communityMemberIds.length} community post notifications`);
+          for (const memberId of communityMemberIds) {
+            await notificationService.createNotification({
+              recipientId: memberId,
+              actorId: data.authorId,
+              type: 'community_post',
+              targetModel: 'Post',
+              targetId: savedPost._id.toString(),
+            }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
           }
-          return null;
-        })
-        .filter((id: any) => id !== null) || [];
-
-      if (communityMemberIds.length > 0) {
-        console.log(`[PostService] Creating ${communityMemberIds.length} community post notifications`);
-        for (const memberId of communityMemberIds) {
-          await notificationService.createNotification({
-            recipientId: memberId,
-            actorId: data.authorId,
-            type: 'community_post',
-            targetModel: 'Post',
-            targetId: savedPost._id.toString(),
-          }).catch(err => console.error(`[PostService] Failed to create notification:`, err));
         }
       }
     } else if (!data.communityId && savedPost.status === 'published' && savedPost.visibility !== 'private') {
