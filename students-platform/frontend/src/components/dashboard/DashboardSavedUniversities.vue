@@ -1,8 +1,8 @@
 <template>
-  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-    <div class="flex items-center justify-between mb-8">
-      <h2 class="text-3xl font-bold text-gray-900">Saved Universities</h2>
-      <router-link to="/universities" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/30">
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8">
+      <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Saved Universities</h2>
+      <router-link to="/universities" class="px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/30 text-sm sm:text-base">
         Search more
       </router-link>
     </div>

@@ -48,15 +48,14 @@ const UserSchema = new Schema(
 
 
 export type User = InferSchemaType<typeof UserSchema>;
-export type UserDoc = HydratedDocument<User>;
+export type UserDoc = HydratedDocument<User, UserMethods>;
 
 export interface UserMethods {
   comparePassword(candidate: string): Promise<boolean>;
 }
 
-export interface UserModel extends Model<User> {
+export interface UserModel extends Model<User, {}, UserMethods> {
   findByEmail(email: string): Promise<UserDoc | null>;
-
 }
 
 

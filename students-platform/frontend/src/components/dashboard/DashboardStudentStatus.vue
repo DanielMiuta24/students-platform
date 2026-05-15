@@ -1,21 +1,21 @@
 <template>
-  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
     <div class="max-w-3xl mx-auto">
-      <div class="text-center mb-8">
-        <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
-          <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="text-center mb-6 sm:mb-8">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+          <svg class="w-10 h-10 sm:w-12 sm:h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
           </svg>
         </div>
 
-        <h2 class="text-3xl font-bold text-gray-900 mb-3">Get Verified Student Status</h2>
-        <p class="text-lg text-gray-600 mb-8">
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">Get Verified Student Status</h2>
+        <p class="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
           Verify your account with your university email to unlock exclusive student benefits and features.
         </p>
       </div>
 
-      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 mb-8">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">Benefits of Student Verification:</h3>
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
+        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">Benefits of Student Verification:</h3>
         <ul class="space-y-3">
           <li class="flex items-start gap-3">
             <svg class="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">

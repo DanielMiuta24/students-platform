@@ -1,5 +1,5 @@
 import { User, type UserDoc } from '../models';
-import type { UserType } from '@/shared/types/domain';
+import type { UserType } from '../../../shared/types/domain';
 
 export interface RegisterDTO {
   type: UserType;       // 'Student' | 'StudySeeker' | 'Admin'

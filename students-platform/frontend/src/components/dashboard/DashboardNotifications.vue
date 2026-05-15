@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
     <div class="notifications-header">
-      <h2 class="text-3xl font-bold text-gray-900">Notifications</h2>
+      <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Notifications</h2>
 
       <div class="notifications-actions">
         <el-button
@@ -539,14 +539,30 @@ onMounted(() => {
 <style scoped>
 .notifications-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 16px;
   margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+  .notifications-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
 }
 
 .notifications-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 640px) {
+  .notifications-actions {
+    gap: 12px;
+  }
 }
 
 .notification-tabs {
@@ -579,7 +595,13 @@ onMounted(() => {
 
 .empty-state {
   text-align: center;
-  padding: 64px 32px;
+  padding: 40px 20px;
+}
+
+@media (min-width: 640px) {
+  .empty-state {
+    padding: 64px 32px;
+  }
 }
 
 .notifications-list {
@@ -590,13 +612,20 @@ onMounted(() => {
 
 .notification-card {
   display: flex;
-  gap: 16px;
-  padding: 20px;
+  gap: 12px;
+  padding: 16px;
   background: white;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .notification-card {
+    gap: 16px;
+    padding: 20px;
+  }
 }
 
 .notification-card:hover {
@@ -612,10 +641,17 @@ onMounted(() => {
 
 .notification-avatar {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .notification-avatar {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .notification-avatar img {
@@ -632,7 +668,13 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 24px;
+  font-size: 20px;
+}
+
+@media (min-width: 640px) {
+  .avatar-placeholder {
+    font-size: 24px;
+  }
 }
 
 .notification-body {
@@ -642,9 +684,15 @@ onMounted(() => {
 
 .notification-message {
   margin: 0 0 8px 0;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
   color: #111827;
+}
+
+@media (min-width: 640px) {
+  .notification-message {
+    font-size: 15px;
+  }
 }
 
 .notification-message strong {
@@ -655,21 +703,41 @@ onMounted(() => {
 .notification-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 640px) {
+  .notification-meta {
+    gap: 12px;
+  }
 }
 
 .notification-time {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
 }
 
+@media (min-width: 640px) {
+  .notification-time {
+    font-size: 13px;
+  }
+}
+
 .unread-indicator {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: #4F46E5;
   background: #eff6ff;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 12px;
+}
+
+@media (min-width: 640px) {
+  .unread-indicator {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
 }
 
 .notification-actions {
@@ -681,6 +749,12 @@ onMounted(() => {
 
 .notification-card:hover .notification-actions {
   opacity: 1;
+}
+
+@media (max-width: 639px) {
+  .notification-actions {
+    opacity: 1;
+  }
 }
 
 .actor-name {

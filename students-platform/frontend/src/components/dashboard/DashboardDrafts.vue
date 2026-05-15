@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-    <div class="flex items-center justify-between mb-8">
-      <h2 class="text-3xl font-bold text-gray-900">My Drafts</h2>
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8">
+      <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">My Drafts</h2>
       <div class="text-sm text-gray-600">
         <span class="font-semibold text-gray-900">{{ drafts.length }}</span> draft{{ drafts.length !== 1 ? 's' : '' }}
       </div>

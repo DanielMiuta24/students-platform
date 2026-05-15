@@ -1,8 +1,8 @@
 <template>
-  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
     <div class="max-w-2xl mx-auto">
-      <h2 class="text-3xl font-bold text-blue-900 mb-2">Change Password</h2>
-      <p class="text-gray-500 mb-8">Update your password to keep your account secure.</p>
+      <h2 class="text-2xl sm:text-3xl font-bold text-blue-900 mb-2">Change Password</h2>
+      <p class="text-sm sm:text-base text-gray-500 mb-6 sm:mb-8">Update your password to keep your account secure.</p>
 
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
