@@ -7,11 +7,6 @@ services:
     ports: ["3000:3000"]
     restart: unless-stopped
     env_file: ./backend/.env
-    healthcheck:
-      test: ["CMD","wget","-qO-","http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
 
   web:
     build:
@@ -20,5 +15,4 @@ services:
     ports: ["8080:80"]
     restart: unless-stopped
     depends_on:
-      api:
-        condition: service_healthy
+      - api
