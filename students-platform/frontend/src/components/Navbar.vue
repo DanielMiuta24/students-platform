@@ -197,20 +197,121 @@
     </el-drawer>
 
     <!-- Mobile Account Drawer -->
-    <el-drawer v-model="drawerAccount" title="Account" direction="rtl" size="260px">
+    <el-drawer v-model="drawerAccount" title="Account" direction="rtl" size="280px" class="mobile-account-drawer">
       <template v-if="!session.isAuthenticated">
-        <el-button type="primary" class="w-100 mb-2" @click="navigate('/login')">Login</el-button>
-        <el-button class="w-100 mb-2" @click="navigate('/register')">Register</el-button>
+        <div class="account-drawer-content">
+          <div class="guest-message">
+            <p>Sign in to access your account</p>
+          </div>
+          <el-button type="primary" size="large" class="w-100 mb-3" @click="navigate('/login')">
+            <el-icon style="margin-right: 8px;">
+              <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M521.7 82c-152.5-.4-286.7 78.5-363.4 197.7-3.4 5.3.4 12.3 6.7 12.3h70.3c4.8 0 9.3-2.1 12.3-5.8 7-8.5 14.5-16.7 22.4-24.5 32.6-32.5 70.5-58.1 112.7-75.9 43.6-18.4 90-27.8 137.9-27.8 47.9 0 94.3 9.3 137.9 27.8 42.2 17.8 80.1 43.4 112.7 75.9 32.6 32.5 58.1 70.4 76 112.5C865.7 417.8 875 464.1 875 512c0 47.9-9.4 94.2-27.8 137.8-17.8 42.1-43.4 80-76 112.5s-70.5 58.1-112.7 75.9A352.8 352.8 0 0 1 520.6 866c-47.9 0-94.3-9.4-137.9-27.8A353.84 353.84 0 0 1 270 762.3c-7.9-7.9-15.3-16.1-22.4-24.5-3-3.7-7.6-5.8-12.3-5.8H165c-6.3 0-10.2 7-6.7 12.3C234.9 863.2 368.5 942 520.6 942c236.2 0 428-190.1 430.4-425.6C953.4 277.1 761.3 82.6 521.7 82zM395.02 624v-76h-314c-4.4 0-8-3.6-8-8v-56c0-4.4 3.6-8 8-8h314v-76c0-6.7 7.8-10.5 13-6.3l141.9 112a8 8 0 0 1 0 12.6l-141.9 112c-5.2 4.1-13 .4-13-6.3z"/>
+              </svg>
+            </el-icon>
+            Login
+          </el-button>
+          <el-button size="large" class="w-100 register-btn" @click="navigate('/register')">
+            <el-icon style="margin-right: 8px;">
+              <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M678.3 642.4c24.2-13 51.9-20.4 81.4-20.4h.1c3 0 4.4-3.6 2.2-5.6a371.67 371.67 0 0 0-103.7-65.8c-.4-.2-.8-.3-1.2-.5C719.2 505 759.6 431.7 759.6 349c0-137-110.8-248-247.5-248S264.7 212 264.7 349c0 82.7 40.4 156 102.6 201.1-.4.2-.8.3-1.2.5-44.7 18.9-84.8 46-119.3 80.6a373.42 373.42 0 0 0-80.4 119.5A373.6 373.6 0 0 0 137 888.8a8 8 0 0 0 8 8.2h59.9c4.3 0 7.9-3.5 8-7.8 2-77.2 32.9-149.5 87.6-204.3C356 628.2 431.3 597 512.1 597c56.7 0 111.1 15.7 158 45.1a8.1 8.1 0 0 0 8.2.3zM512.2 521c-45.8 0-88.9-17.9-121.4-50.4A171.2 171.2 0 0 1 340.5 349c0-45.9 17.9-89.1 50.3-121.6S466.3 177 512.2 177s88.9 17.9 121.4 50.4A171.2 171.2 0 0 1 683.9 349c0 45.9-17.9 89.1-50.3 121.6C601.1 503.1 558 521 512.2 521zM880 759h-84v-84c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v84h-84c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h84v84c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-84h84c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8z"/>
+              </svg>
+            </el-icon>
+            Register
+          </el-button>
+        </div>
       </template>
 
       <template v-else>
-        <p>Welcome, <b>{{ session.user?.name }}</b></p>
-        <el-button class="w-100 mb-2" @click="navigate(`/profile/${session.user?.username}`)">View Profile</el-button>
-        <el-button class="w-100 mb-2" @click="navigate('/dashboard')">Dashboard</el-button>
-        <el-button class="w-100 mb-2" @click="navigate('/dashboard/change-password')">Change Password</el-button>
-        <el-button type="danger" class="w-100" @click="logout">Logout</el-button>
+        <div class="account-drawer-content">
+          <!-- User Profile Section -->
+          <div class="user-profile-section">
+            <img
+              :src="userAvatar"
+              alt="Profile Picture"
+              class="profile-avatar"
+            />
+            <div class="user-info">
+              <h3 class="user-name-text">{{ session.user?.name }}</h3>
+              <p class="user-username">@{{ session.user?.username }}</p>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="drawer-divider"></div>
+
+          <!-- Menu Items -->
+          <div class="menu-items">
+            <button class="menu-item" @click="navigate(`/profile/${session.user?.username}`)">
+              <el-icon class="menu-icon">
+                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="currentColor" d="M858.5 763.6a374 374 0 0 0-80.6-119.5 375.63 375.63 0 0 0-119.5-80.6c-.4-.2-.8-.3-1.2-.5C719.5 518 760 444.7 760 362c0-137-111-248-248-248S264 225 264 362c0 82.7 40.5 156 102.8 201.1-.4.2-.8.3-1.2.5-44.8 18.9-85 46-119.5 80.6a375.63 375.63 0 0 0-80.6 119.5A371.7 371.7 0 0 0 136 901.8a8 8 0 0 0 8 8.2h60c4.4 0 7.9-3.5 8-7.8 2-77.2 33-149.5 87.8-204.3 56.7-56.7 132-87.9 212.2-87.9s155.5 31.2 212.2 87.9C779 752.7 810 825 812 902.2c.1 4.4 3.6 7.8 8 7.8h60a8 8 0 0 0 8-8.2c-1-47.8-10.9-94.3-29.5-138.2zM512 534c-45.9 0-89.1-17.9-121.6-50.4S340 407.9 340 362c0-45.9 17.9-89.1 50.4-121.6S466.1 190 512 190s89.1 17.9 121.6 50.4S684 316.1 684 362c0 45.9-17.9 89.1-50.4 121.6S557.9 534 512 534z"/>
+                </svg>
+              </el-icon>
+              <span>View Profile</span>
+            </button>
+
+            <button class="menu-item" @click="navigate('/dashboard')">
+              <el-icon class="menu-icon">
+                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="currentColor" d="M924.8 385.6a446.7 446.7 0 0 0-96-142.4 446.7 446.7 0 0 0-142.4-96C631.1 123.8 572.5 112 512 112s-119.1 11.8-174.4 35.2a446.7 446.7 0 0 0-142.4 96 446.7 446.7 0 0 0-96 142.4C75.8 440.9 64 499.5 64 560c0 132.7 58.3 257.7 159.9 343.1l1.7 1.4c5.8 4.8 13.1 7.5 20.6 7.5h531.7c7.5 0 14.8-2.7 20.6-7.5l1.7-1.4C901.7 817.7 960 692.7 960 560c0-60.5-11.9-119.1-35.2-174.4zM761.4 836H262.6A371.12 371.12 0 0 1 140 560c0-99.4 38.7-192.8 109-263 70.3-70.3 163.7-109 263-109 99.4 0 192.8 38.7 263 109 70.3 70.3 109 163.7 109 263 0 105.6-44.5 205.5-122.6 276zM623.5 421.5a8.03 8.03 0 0 0-11.3 0L527.7 506c-18.7-5-39.4-.2-54.1 14.5a55.95 55.95 0 0 0 0 79.2 55.95 55.95 0 0 0 79.2 0 55.87 55.87 0 0 0 14.5-54.1l84.5-84.5c3.1-3.1 3.1-8.2 0-11.3l-28.3-28.3zM490 320h44c4.4 0 8-3.6 8-8v-80c0-4.4-3.6-8-8-8h-44c-4.4 0-8 3.6-8 8v80c0 4.4 3.6 8 8 8zm260 218v44c0 4.4 3.6 8 8 8h80c4.4 0 8-3.6 8-8v-44c0-4.4-3.6-8-8-8h-80c-4.4 0-8 3.6-8 8zm12.7-197.2l-31.1-31.1a8.03 8.03 0 0 0-11.3 0l-56.6 56.6a8.03 8.03 0 0 0 0 11.3l31.1 31.1c3.1 3.1 8.2 3.1 11.3 0l56.6-56.6c3.1-3.1 3.1-8.2 0-11.3zm-458.6-31.1a8.03 8.03 0 0 0-11.3 0l-31.1 31.1a8.03 8.03 0 0 0 0 11.3l56.6 56.6c3.1 3.1 8.2 3.1 11.3 0l31.1-31.1c3.1-3.1 3.1-8.2 0-11.3l-56.6-56.6zM262 530h-80c-4.4 0-8 3.6-8 8v44c0 4.4 3.6 8 8 8h80c4.4 0 8-3.6 8-8v-44c0-4.4-3.6-8-8-8z"/>
+                </svg>
+              </el-icon>
+              <span>Dashboard</span>
+            </button>
+
+            <button class="menu-item" @click="navigate('/dashboard/change-password')">
+              <el-icon class="menu-icon">
+                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="currentColor" d="M832 464h-68V240c0-70.7-57.3-128-128-128H388c-70.7 0-128 57.3-128 128v224h-68c-17.7 0-32 14.3-32 32v384c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V496c0-17.7-14.3-32-32-32zM540 701v53c0 4.4-3.6 8-8 8h-40c-4.4 0-8-3.6-8-8v-53a48.01 48.01 0 1 1 56 0zm152-237H332V240c0-30.9 25.1-56 56-56h248c30.9 0 56 25.1 56 56v224z"/>
+                </svg>
+              </el-icon>
+              <span>Change Password</span>
+            </button>
+          </div>
+
+          <!-- Divider -->
+          <div class="drawer-divider"></div>
+
+          <!-- Logout Button -->
+          <button class="logout-btn" @click="logout">
+            <el-icon class="logout-icon">
+              <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M868 732h-70.3c-4.8 0-9.3 2.1-12.3 5.8-7 8.5-14.5 16.7-22.4 24.5a353.84 353.84 0 0 1-112.7 75.9A352.8 352.8 0 0 1 512.4 866c-47.9 0-94.3-9.4-137.9-27.8a353.84 353.84 0 0 1-112.7-75.9 353.28 353.28 0 0 1-76-112.5C167.3 606.2 158 559.9 158 512s9.4-94.2 27.8-137.8c17.8-42.1 43.4-80 76-112.5s70.5-58.1 112.7-75.9c43.6-18.4 90-27.8 137.9-27.8 47.9 0 94.3 9.3 137.9 27.8 42.2 17.8 80.1 43.4 112.7 75.9 7.9 7.9 15.3 16.1 22.4 24.5 3 3.7 7.6 5.8 12.3 5.8H868c6.3 0 10.2-7 6.7-12.3C798 160.5 663.8 81.6 511.3 82 271.7 82.6 79.6 277.1 82 516.4 84.4 751.9 276.2 942 512.4 942c152.1 0 285.7-78.8 362.3-197.7 3.4-5.3-.4-12.3-6.7-12.3zm88.9-226.3L815 393.7c-5.3-4.2-13-.4-13 6.3v76H488c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h314v76c0 6.7 7.8 10.5 13 6.3l141.9-112a8 8 0 0 0 0-12.6z"/>
+              </svg>
+            </el-icon>
+            <span>Logout</span>
+          </button>
+        </div>
       </template>
     </el-drawer>
+
+    <!-- Mobile Floating Buttons -->
+    <template v-if="isMobile && session.isAuthenticated">
+      <!-- Notification Floating Button -->
+      <div class="mobile-floating-notification">
+        <button
+          @click="navigate('/dashboard/notifications')"
+          :class="['mobile-notification-button', { 'notification-button-active': unreadCount > 0 }]"
+          title="Notifications"
+        >
+          <el-icon><Bell /></el-icon>
+          <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+        </button>
+      </div>
+
+      <!-- Message Floating Button -->
+      <div v-if="!isOnMessagesPage" class="mobile-floating-message">
+        <button
+          @click="navigate('/messages')"
+          :class="['mobile-messenger-button', { 'messenger-button-active': displayUnreadCount > 0 }]"
+          title="Messages"
+        >
+          <el-icon><ChatDotRound /></el-icon>
+          <span v-if="displayUnreadCount > 0" class="messenger-badge">{{ displayUnreadCount }}</span>
+        </button>
+      </div>
+    </template>
 
     <!-- Floating Chat Boxes -->
     <div v-if="!isOnMessagesPage" class="floating-chat-boxes">
@@ -1104,7 +1205,7 @@ const handleSelect = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 20px;
+  padding: 2px 20px;
   background-color: white;
 }
 
@@ -1210,9 +1311,245 @@ const handleSelect = () => {
 }
 
 .mobile-logo-img {
-  width: 160px;
-  height: auto;
+  width: 250px;
+  max-height: 90px;
   object-fit: contain;
   max-width: 100%;
 }
+
+/* Mobile Account Drawer Styles */
+.account-drawer-content {
+  padding: 0;
+}
+
+.guest-message {
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-radius: 12px;
+}
+
+.guest-message p {
+  color: #1f2937;
+  font-size: 15px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.mb-3 {
+  margin-bottom: 16px !important;
+}
+
+.register-btn {
+  background: white !important;
+  border: 2px solid #2563eb !important;
+  color: #2563eb !important;
+  font-weight: 600 !important;
+}
+
+.register-btn:hover {
+  background: #eff6ff !important;
+  border-color: #1d4ed8 !important;
+  color: #1d4ed8 !important;
+}
+
+.user-profile-section {
+  display: flex;
+  align-items: center;
+  padding: 20px 0;
+  gap: 16px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.user-username {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.drawer-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+  margin: 16px 0;
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #3b82f6;
+  color: #2563eb;
+  transform: translateX(4px);
+}
+
+.menu-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.logout-icon {
+  font-size: 20px;
+}
+
+:deep(.mobile-account-drawer .el-drawer__header) {
+  padding: 20px;
+  margin-bottom: 0;
+  border-bottom: 2px solid #e5e7eb;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+:deep(.mobile-account-drawer .el-drawer__title) {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+:deep(.mobile-account-drawer .el-drawer__body) {
+  padding: 20px;
+}
+
+/* Mobile Floating Buttons */
+.mobile-floating-notification {
+  position: fixed;
+  bottom: 24px;
+  left: 20px;
+  z-index: 999;
+}
+
+.mobile-notification-button {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-size: 24px;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+}
+
+.mobile-notification-button:hover,
+.mobile-notification-button:active,
+.mobile-notification-button.notification-button-active {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.mobile-notification-button .notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+}
+
+.mobile-floating-message {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  z-index: 998;
+}
+
+.mobile-messenger-button {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-size: 24px;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+}
+
+.mobile-messenger-button:hover,
+.mobile-messenger-button:active,
+.mobile-messenger-button.messenger-button-active {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+
 </style>

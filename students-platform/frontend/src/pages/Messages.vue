@@ -1,10 +1,15 @@
 <template>
-  <div class="w-full bg-gradient-to-br from-blue-50 to-blue-100 flex" style="height: calc(100vh - 4rem - 250px); min-height: 500px;">
-    <div class="w-full h-full flex">
-      <div class="bg-white w-full h-full flex">
+  <div class="messages-page">
+    <!-- Mobile Close Button -->
+    <button v-if="isMobile" @click="closeMessages" class="mobile-close-button">
+      <el-icon><Close /></el-icon>
+    </button>
+
+    <div class="messages-container">
+      <div class="messages-content">
 
         <!-- Sidebar using ConversationList component -->
-        <aside class="w-1/3 border-r border-blue-100 bg-white flex flex-col">
+        <aside :class="['conversation-sidebar', { 'mobile-hidden': selectedConversation && isMobile }]">
           <ConversationList
             :conversations="filteredConversations"
             :selected-conversation-id="selectedConversation?.userId"
@@ -25,8 +30,16 @@
         </aside>
 
         <!-- Chat Window -->
-        <main class="flex-1 flex flex-col min-h-0">
+        <main :class="['chat-main', { 'mobile-hidden': !selectedConversation && isMobile }]">
           <template v-if="selectedConversation">
+            <!-- Mobile Back Button -->
+            <div v-if="isMobile" class="mobile-back-header">
+              <button @click="goBackToList" class="back-button">
+                <el-icon><ArrowLeft /></el-icon>
+                <span>Back</span>
+              </button>
+            </div>
+
             <!-- Header -->
             <ChatHeader
               :user="selectedConversation.user"
@@ -39,7 +52,7 @@
             />
 
             <!-- Chat Window Component -->
-            <div class="flex-1 min-h-0">
+            <div class="chat-window-wrapper">
               <ChatWindow
                 ref="chatWindowRef"
                 :messages="messages"
@@ -60,13 +73,13 @@
           </template>
 
           <!-- Empty State -->
-          <div v-else class="flex-1 flex items-center justify-center bg-blue-50/40">
-            <div class="text-center">
-              <div class="text-5xl mb-4">💬</div>
-              <h2 class="text-2xl font-bold text-blue-900 mb-2">
+          <div v-else class="empty-state">
+            <div class="empty-state-content">
+              <div class="empty-icon">💬</div>
+              <h2 class="empty-title">
                 Select a conversation
               </h2>
-              <p class="text-gray-500">
+              <p class="empty-description">
                 Choose a student from the left to start chatting.
               </p>
             </div>
@@ -159,6 +172,7 @@ import { messageService, type Message, type Conversation } from '../services/mes
 import { socketService } from '../services/socket';
 import { getAvatarUrl } from '../utils/avatar';
 import { api } from '../services/api';
+import { ArrowLeft, Close } from '@element-plus/icons-vue';
 import ChatWindow from '../components/ChatWindow.vue';
 import ChatHeader from '../components/ChatHeader.vue';
 import ConversationList from '../components/ConversationList.vue';
@@ -182,6 +196,7 @@ const conversationFilter = ref('all');
 const showNewConversationDialog = ref(false);
 const availableUsers = ref<any[]>([]);
 const isScrolledToBottom = ref(true);
+const isMobile = ref(false);
 
 const currentUserId = computed(() => sessionStore.user?.id || '');
 const canDeleteForEveryone = computed(() =>
@@ -209,6 +224,20 @@ const filteredConversations = computed(() => {
 });
 
 let typingTimeout: number | null = null;
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
+
+const goBackToList = () => {
+  selectedConversation.value = null;
+  messages.value = [];
+  router.push('/messages');
+};
+
+const closeMessages = () => {
+  router.push('/');
+};
 
 const loadConversations = async () => {
   try {
@@ -544,6 +573,9 @@ const handleMessageRead = (payload: any) => {
 };
 
 onMounted(async () => {
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+
   await Promise.all([
     loadConversations(),
     loadAvailableUsers()
@@ -592,6 +624,8 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile);
+
   const socket = socketService.getSocket();
   if (!socket) return;
 
@@ -609,5 +643,205 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Component styles handled by child components */
+.messages-page {
+  width: 100%;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  display: flex;
+  height: calc(100vh - 4rem - 250px);
+  min-height: 500px;
+  position: relative;
+}
+
+.mobile-close-button {
+  display: none;
+}
+
+.messages-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.messages-content {
+  background: white;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.conversation-sidebar {
+  width: 33.333%;
+  border-right: 1px solid #dbeafe;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.mobile-back-header {
+  display: none;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.back-button:hover {
+  background: #eff6ff;
+}
+
+.chat-window-wrapper {
+  flex: 1;
+  min-height: 0;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 246, 255, 0.4);
+}
+
+.empty-state-content {
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 8px;
+}
+
+.empty-description {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* Mobile Responsive - Fullscreen Overlay */
+@media (max-width: 768px) {
+  .messages-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100vh;
+    min-height: 100vh;
+    z-index: 9999;
+    background: white;
+    padding-top: 0;
+  }
+
+  .mobile-close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 10px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    color: white;
+    cursor: pointer;
+    z-index: 10000;
+    transition: all 0.2s ease;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  }
+
+  .mobile-close-button:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
+  }
+
+  .mobile-close-button:active {
+    transform: scale(0.95);
+  }
+
+  .messages-container {
+    height: 100vh;
+  }
+
+  .messages-content {
+    height: 100vh;
+  }
+
+  .conversation-sidebar {
+    width: 100%;
+    border-right: none;
+    height: 100vh;
+  }
+
+  .chat-main {
+    width: 100%;
+    height: 100vh;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  .mobile-back-header {
+    display: block;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+  }
+
+  .empty-title {
+    font-size: 20px;
+  }
+
+  .empty-description {
+    font-size: 14px;
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .empty-title {
+    font-size: 18px;
+  }
+
+  .empty-description {
+    font-size: 13px;
+  }
+}
 </style>

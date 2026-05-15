@@ -1,19 +1,9 @@
 <template>
   <div class="conversation-list-wrapper">
-    <!-- Header with title and + button -->
+    <!-- Header with title -->
     <div v-if="showHeader" class="conversation-list-header">
       <div class="header-title-row">
         <h3 class="header-title">{{ title }}</h3>
-        <button
-          v-if="showNewButton"
-          @click="$emit('new-conversation')"
-          class="new-conversation-button"
-          title="New conversation"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="icon-plus" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-          </svg>
-        </button>
       </div>
 
       <!-- Search bar -->
@@ -78,6 +68,18 @@
         {{ emptyMessage }}
       </div>
     </div>
+
+    <!-- Floating + button at bottom center -->
+    <button
+      v-if="showNewButton"
+      @click="$emit('new-conversation')"
+      class="new-conversation-button-floating"
+      title="New conversation"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon-plus" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+      </svg>
+    </button>
   </div>
 </template>
 
@@ -129,10 +131,42 @@ defineEmits<{
 </script>
 
 <style scoped>
+.new-conversation-button-floating {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
+  z-index: 10;
+}
+
+.new-conversation-button-floating:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6);
+}
+
+.new-conversation-button-floating .icon-plus {
+  width: 60px;
+  height: 60px;
+}
+
 .conversation-list-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
 }
 
 .conversation-list-header {
