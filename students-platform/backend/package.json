@@ -10,7 +10,8 @@
     "test:unit": "jest",
     "test:unit:watch": "jest --watch",
     "test:unit:coverage": "jest --coverage",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "cleanup:notifications": "ts-node src/scripts/cleanup-orphaned-notifications.ts"
   },
   "keywords": [],
   "author": "",

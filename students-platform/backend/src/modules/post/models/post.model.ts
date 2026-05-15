@@ -54,11 +54,23 @@ const PostSchema = new Schema(
 export type Post = InferSchemaType<typeof PostSchema>;
 export type PostDoc = HydratedDocument<Post>;
 
-PostSchema.index({ slug: 1 });
 PostSchema.index({ status: 1, visibility: 1, _id: -1 });
 PostSchema.index({ author: 1, _id: -1 });
 PostSchema.index({ category: 1, status: 1, visibility: 1, _id: -1 });
 PostSchema.index({ community: 1, status: 1, visibility: 1, _id: -1 });
 PostSchema.index({ community: 1, isPinned: -1, _id: -1 });
+
+PostSchema.pre('deleteOne', { document: true, query: false }, async function() {
+  const NotificationModel = model('Notification');
+  await NotificationModel.deleteMany({ target: this._id, targetModel: 'Post' });
+});
+
+PostSchema.pre('findOneAndDelete', async function() {
+  const doc = await this.model.findOne(this.getQuery());
+  if (doc) {
+    const NotificationModel = model('Notification');
+    await NotificationModel.deleteMany({ target: doc._id, targetModel: 'Post' });
+  }
+});
 
 export const PostModel: Model<Post> = model<Post>('Post', PostSchema);

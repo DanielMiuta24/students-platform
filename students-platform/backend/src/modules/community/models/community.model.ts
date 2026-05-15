@@ -49,4 +49,17 @@ CommunitySchema.index({ category: 1, isActive: 1, _id: -1 });
 CommunitySchema.index({ 'members.user': 1 });
 CommunitySchema.index({ isActive: 1, memberCount: -1 });
 
+CommunitySchema.pre('deleteOne', { document: true, query: false }, async function() {
+  const NotificationModel = model('Notification');
+  await NotificationModel.deleteMany({ target: this._id, targetModel: 'Community' });
+});
+
+CommunitySchema.pre('findOneAndDelete', async function() {
+  const doc = await this.model.findOne(this.getQuery());
+  if (doc) {
+    const NotificationModel = model('Notification');
+    await NotificationModel.deleteMany({ target: doc._id, targetModel: 'Community' });
+  }
+});
+
 export const CommunityModel: Model<Community> = model<Community>('Community', CommunitySchema);

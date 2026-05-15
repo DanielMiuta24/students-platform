@@ -36,6 +36,19 @@ CommunityInvitationSchema.index({ recipientUser: 1, status: 1 });
 CommunityInvitationSchema.index({ recipientEmail: 1, status: 1 });
 CommunityInvitationSchema.index({ expiresAt: 1 });
 
+CommunityInvitationSchema.pre('deleteOne', { document: true, query: false }, async function() {
+  const NotificationModel = model('Notification');
+  await NotificationModel.deleteMany({ target: this._id, targetModel: 'CommunityInvitation' });
+});
+
+CommunityInvitationSchema.pre('findOneAndDelete', async function() {
+  const doc = await this.model.findOne(this.getQuery());
+  if (doc) {
+    const NotificationModel = model('Notification');
+    await NotificationModel.deleteMany({ target: doc._id, targetModel: 'CommunityInvitation' });
+  }
+});
+
 export const CommunityInvitationModel: Model<CommunityInvitation> = model<CommunityInvitation>(
   'CommunityInvitation',
   CommunityInvitationSchema
