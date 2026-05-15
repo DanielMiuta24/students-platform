@@ -37,49 +37,12 @@ export const parseApiError = (error: unknown): ParsedError => {
   const message = responseData?.message || 'An error occurred';
   const field = responseData?.field;
 
-  switch (statusCode) {
-    case 400:
-      return {
-        type: 'VALIDATION_ERROR' as AuthErrorType,
-        message,
-        field,
-        statusCode,
-      };
-    case 401:
-      return {
-        type: 'AUTHENTICATION_ERROR' as AuthErrorType,
-        message,
-        statusCode,
-      };
-    case 403:
-      return {
-        type: 'AUTHORIZATION_ERROR' as AuthErrorType,
-        message,
-        statusCode,
-      };
-    case 409:
-      return {
-        type: 'VALIDATION_ERROR' as AuthErrorType,
-        message,
-        field,
-        statusCode,
-      };
-    case 500:
-    case 502:
-    case 503:
-    case 504:
-      return {
-        type: 'SERVER_ERROR' as AuthErrorType,
-        message: 'Server error. Please try again later.',
-        statusCode,
-      };
-    default:
-      return {
-        type: 'UNKNOWN_ERROR' as AuthErrorType,
-        message,
-        statusCode,
-      };
-  }
+  return {
+    type: 'AUTHENTICATION_ERROR' as AuthErrorType,
+    message,
+    statusCode,
+    field,
+  };
 };
 
 export const getFieldError = (error: ParsedError, fieldName: string): string => {

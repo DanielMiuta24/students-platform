@@ -1,5 +1,5 @@
 <template>
-  <AuthFormShell title="Login Page" :error="globalError" :success="success">
+  <AuthFormShell title="Login Page" :error="error" :success="success">
     <div class="mb-4">
       <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email</label>
       <input
@@ -72,7 +72,7 @@ import { useRouter } from 'vue-router';
 import AuthFormShell from './AuthFormShell.vue';
 
 const auth = useAuth();
-const { loading, success, isAuthenticated, user, clearMessages } = auth;
+const { loading, error, success, isAuthenticated, user, clearMessages } = auth;
 const {
   globalError,
   fieldErrors: apiFieldErrors,
