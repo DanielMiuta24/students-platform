@@ -1012,5 +1012,233 @@ const handleFocusCreatePost = () => {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
   }
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .min-h-screen {
+    padding-top: 1rem;
+    padding-bottom: 5rem;
+  }
+
+  .max-w-6xl {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Profile Header */
+  .sticky {
+    position: relative !important;
+    top: auto !important;
+  }
+
+  /* Center profile header content on mobile */
+  .sticky .flex.flex-col {
+    align-items: center;
+    text-align: center;
+  }
+
+  .sticky .flex.items-center.gap-6 {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  /* Center name and badge */
+  .sticky .flex.items-center.gap-3 {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Center bio text */
+  .sticky p.text-gray-600 {
+    text-align: center;
+  }
+
+  /* Center stats */
+  .sticky .flex.gap-5 {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Adjust grid to single column on mobile */
+  .grid-cols-1 {
+    gap: 1.5rem;
+  }
+
+  /* Make sections more compact on mobile */
+  .rounded-2xl {
+    border-radius: 1rem;
+  }
+
+  .p-8 {
+    padding: 1.25rem !important;
+  }
+
+  .p-6 {
+    padding: 1rem !important;
+  }
+
+  /* Adjust profile image size on mobile */
+  .w-24 {
+    width: 5rem !important;
+    height: 5rem !important;
+  }
+
+  .h-24 {
+    height: 5rem !important;
+  }
+
+  /* Adjust text sizes on mobile */
+  .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+
+  .text-xl {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  /* Make buttons stack on mobile */
+  .flex.gap-3 {
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .flex.gap-3 button {
+    flex: 1;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.875rem;
+    max-width: 150px;
+  }
+
+  /* Adjust community list on mobile */
+  .w-12 {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+  }
+
+  .h-12 {
+    height: 2.75rem !important;
+  }
+
+  /* Community cards more compact */
+  aside .flex.items-center.gap-3 {
+    gap: 0.75rem;
+  }
+
+  aside .p-2 {
+    padding: 0.625rem;
+  }
+
+  aside button.px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Make aside full width on mobile */
+  aside {
+    width: 100% !important;
+  }
+
+  aside .lg\:sticky {
+    position: relative !important;
+    top: auto !important;
+  }
+
+  /* Adjust spacing */
+  .space-y-8 > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .gap-6 {
+    gap: 1rem;
+  }
+
+  /* Left-align text in sidebar sections */
+  aside section p {
+    text-align: left !important;
+  }
+
+  /* Don't center section titles in sidebar - be very specific */
+  aside section h2,
+  aside h2.text-xl,
+  aside section h2.text-xl.font-bold,
+  aside .bg-white h2 {
+    text-align: left !important;
+  }
+
+  /* Also ensure community section text is left-aligned */
+  aside .text-gray-500,
+  aside .text-sm {
+    text-align: left !important;
+  }
+
+  /* Center only main content section titles */
+  main section h2 {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Even smaller adjustments for very small screens */
+  .max-w-6xl {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  /* Ensure sidebar titles stay left-aligned on very small screens too */
+  aside section h2,
+  aside h2.text-xl,
+  aside section h2.text-xl.font-bold,
+  aside .bg-white h2 {
+    text-align: left !important;
+  }
+
+  .p-8 {
+    padding: 1rem !important;
+  }
+
+  .p-6 {
+    padding: 0.875rem !important;
+  }
+
+  .w-24 {
+    width: 4rem !important;
+    height: 4rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  .px-6 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .py-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .flex.gap-3 button {
+    font-size: 0.8125rem;
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+  }
+
+  .w-12 {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+}
 </style>
 

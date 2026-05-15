@@ -177,3 +177,81 @@ const handleFollowToggle = async (follower: SafeFollow) => {
   }
 };
 </script>
+
+<style scoped>
+@media (max-width: 768px) {
+  .rounded-2xl {
+    border-radius: 1rem;
+  }
+
+  .p-6 {
+    padding: 1rem;
+  }
+
+  .text-xl {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+
+  /* Make list items more compact */
+  .flex.items-center.gap-3 {
+    gap: 0.625rem;
+    padding: 0.5rem;
+  }
+
+  /* Adjust avatar size */
+  .w-10 {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .h-10 {
+    height: 2.25rem;
+  }
+
+  /* Adjust button size and padding */
+  .px-4 {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+
+  .py-1\.5 {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+
+  .text-sm {
+    font-size: 0.75rem;
+  }
+
+  /* Adjust text sizes */
+  .font-semibold {
+    font-size: 0.875rem;
+  }
+
+  .text-xs {
+    font-size: 0.6875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .p-6 {
+    padding: 0.875rem;
+  }
+
+  .px-4 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  /* Even smaller buttons on very small screens */
+  button {
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+}
+</style>

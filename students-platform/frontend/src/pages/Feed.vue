@@ -78,3 +78,72 @@ const handleStatusChange = (status: UserStatus) => {
   postFeedStore.setStatus(status);
 };
 </script>
+
+<style scoped>
+@media (max-width: 768px) {
+  .max-w-6xl.mx-auto.px-4.py-12 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .text-5xl {
+    font-size: 2rem !important;
+    line-height: 2.5rem !important;
+  }
+
+  .text-xl {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  .inline-block.bg-blue-100 {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.875rem !important;
+  }
+
+  .bg-white.rounded-xl.shadow-lg.p-6 {
+    padding: 1rem !important;
+  }
+
+  .bg-white.rounded-xl.shadow-lg.p-6 h3 {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .max-w-6xl.mx-auto.px-4 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .max-w-6xl.mx-auto.px-4.mb-8 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .max-w-6xl.mx-auto.px-4.mb-10 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .space-y-4 {
+    gap: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-5xl {
+    font-size: 1.75rem !important;
+    line-height: 2.25rem !important;
+  }
+
+  .text-xl {
+    font-size: 0.9375rem !important;
+    line-height: 1.375rem !important;
+  }
+
+  .bg-white.rounded-xl.shadow-lg.p-6 {
+    padding: 0.875rem !important;
+    border-radius: 0.75rem !important;
+  }
+}
+</style>

@@ -142,4 +142,41 @@ const selectFilter = (filter: VisibilityFilter) => {
   border-color: #3b82f6;
   color: #3b82f6;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .visibility-filter {
+    gap: 0.625rem;
+    justify-content: center;
+  }
+
+  .filter-button {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    gap: 0.5rem;
+  }
+
+  .filter-button .w-4 {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .visibility-filter {
+    gap: 0.5rem;
+  }
+
+  .filter-button {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+    gap: 0.375rem;
+  }
+
+  .filter-button .w-4 {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
 </style>
+

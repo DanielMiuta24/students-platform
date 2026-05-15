@@ -617,4 +617,99 @@ defineExpose({
   border-radius: 1rem;
   border: 2px dashed #e5e7eb;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Make request cards stack vertically on mobile */
+  .bg-white.border.border-gray-200.rounded-lg.p-4 > div {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Adjust avatar size on mobile */
+  .w-12.h-12 {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  /* Make action buttons full width on mobile */
+  .flex.gap-2.flex-shrink-0 {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .flex.gap-2.flex-shrink-0 button {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Adjust request info text */
+  .text-sm.text-gray-700 {
+    font-size: 0.8125rem;
+  }
+
+  /* Make the request items more compact */
+  .bg-white.border.border-gray-200.rounded-lg {
+    padding: 0.875rem;
+  }
+
+  /* Adjust spacing between sections */
+  .space-y-8 > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .space-y-3 > * + * {
+    margin-top: 0.625rem;
+  }
+
+  /* Adjust heading sizes */
+  .text-xl {
+    font-size: 1rem;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem;
+  }
+
+  /* Empty state adjustments */
+  .empty-state-small {
+    padding: 1.5rem 1rem;
+  }
+
+  .empty-state-small .w-16 {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .empty-state-small .text-lg {
+    font-size: 1rem;
+  }
+
+  .empty-state-small .text-sm {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Even more compact for very small screens */
+  .bg-white.border.border-gray-200.rounded-lg {
+    padding: 0.75rem;
+  }
+
+  .text-xs {
+    font-size: 0.6875rem;
+  }
+
+  .px-4 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
 </style>

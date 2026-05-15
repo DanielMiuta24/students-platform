@@ -1,33 +1,34 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
-    <!-- Mobile Menu Button -->
-    <div class="lg:hidden fixed top-20 left-4 z-40">
-      <button
-        @click="toggleMobileSidebar"
-        class="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-white/20 hover:bg-white transition-all"
-        aria-label="Toggle menu"
-      >
-        <svg v-if="!isMobileSidebarOpen" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-        <svg v-else class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
+  <div>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
+      <!-- Mobile Menu Button -->
+      <div class="lg:hidden fixed top-24 left-4 z-40">
+        <button
+          @click="toggleMobileSidebar"
+          class="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-white/20 hover:bg-white transition-all"
+          aria-label="Toggle menu"
+        >
+          <svg v-if="!isMobileSidebarOpen" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <svg v-else class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
-    <!-- Mobile Sidebar Overlay -->
-    <Transition name="overlay">
-      <div
-        v-if="isMobileSidebarOpen"
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-        @click="closeMobileSidebar"
-      />
-    </Transition>
+      <!-- Mobile Sidebar Overlay -->
+      <Transition name="overlay">
+        <div
+          v-if="isMobileSidebarOpen"
+          class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+          @click="closeMobileSidebar"
+        />
+      </Transition>
 
-    <div class="px-4 sm:px-6 py-6 sm:py-8">
-      <div class="flex gap-6">
-        <!-- Sidebar -->
+      <div class="px-4 sm:px-6 py-6 sm:py-8">
+        <div class="flex gap-6">
+          <!-- Sidebar -->
         <Transition name="sidebar">
           <aside
             v-show="isMobileSidebarOpen || !isMobile"
@@ -37,6 +38,18 @@
               isMobileSidebarOpen ? 'fixed left-0 top-0 bottom-0 z-50 pt-20 px-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 overflow-y-auto' : ''
             ]"
           >
+            <!-- Mobile Close Button -->
+            <button
+              v-if="isMobileSidebarOpen"
+              @click="closeMobileSidebar"
+              class="lg:hidden absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-white/20 hover:bg-white transition-all"
+              aria-label="Close menu"
+            >
+              <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
             <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden lg:sticky lg:top-20">
               <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600">
                 <div class="flex items-center gap-3">
@@ -114,30 +127,31 @@
         </main>
       </div>
     </div>
+    </div>
+
+    <EditPostModal
+      v-if="showEditPostModal && selectedPost"
+      :post="selectedPost"
+      :is-open="showEditPostModal"
+      :is-community-post="!!selectedPost.community"
+      @close="handleCloseEditModal"
+      @updated="handlePostUpdated"
+    />
+
+    <ConfirmModal
+      :show="showDeleteModal"
+      title="Delete Draft"
+      message="Are you sure you want to delete this draft? This action cannot be undone."
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      @confirm="confirmDeleteDraft"
+      @cancel="cancelDeleteDraft"
+    />
   </div>
-
-  <EditPostModal
-    v-if="showEditPostModal && selectedPost"
-    :post="selectedPost"
-    :is-open="showEditPostModal"
-    :is-community-post="!!selectedPost.community"
-    @close="handleCloseEditModal"
-    @updated="handlePostUpdated"
-  />
-
-  <ConfirmModal
-    :show="showDeleteModal"
-    title="Delete Draft"
-    message="Are you sure you want to delete this draft? This action cannot be undone."
-    confirm-text="Delete"
-    cancel-text="Cancel"
-    @confirm="confirmDeleteDraft"
-    @cancel="cancelDeleteDraft"
-  />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, h, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, onBeforeUnmount, h, computed, watch } from 'vue';
 import { api } from '../services/api';
 import { deletePost } from '../api/post';
 import { useRouter, useRoute } from 'vue-router';
@@ -188,6 +202,23 @@ const closeMobileSidebar = () => {
   isMobileSidebarOpen.value = false;
   document.body.style.overflow = '';
 };
+
+// Watch for route changes and close mobile sidebar when navigating away
+watch(() => route.path, (newPath, oldPath) => {
+  // Close sidebar when route changes, especially when leaving dashboard
+  if (isMobileSidebarOpen.value && newPath !== oldPath) {
+    closeMobileSidebar();
+  }
+}, { immediate: false });
+
+// Also watch for when we're navigating away from dashboard entirely
+watch(() => route.path, (newPath) => {
+  // If we're leaving the dashboard, ensure cleanup
+  if (!newPath.startsWith('/dashboard')) {
+    isMobileSidebarOpen.value = false;
+    document.body.style.overflow = '';
+  }
+}, { immediate: true });
 
 const currentTab = computed(() => {
   const pathParts = route.path.split('/').filter(p => p);
@@ -269,7 +300,15 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile);
+  // Ensure body overflow is restored when leaving dashboard
   document.body.style.overflow = '';
+  isMobileSidebarOpen.value = false;
+});
+
+// Also use onBeforeUnmount to cleanup even earlier
+onBeforeUnmount(() => {
+  document.body.style.overflow = '';
+  isMobileSidebarOpen.value = false;
 });
 
 const navigateToTab = (tabId: string) => {

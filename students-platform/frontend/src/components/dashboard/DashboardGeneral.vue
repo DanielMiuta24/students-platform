@@ -380,4 +380,181 @@ const userTypeIcon = computed(() => {
     margin-bottom: 16px;
   }
 }
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Center profile section */
+  .bg-white\/90 .flex-col {
+    align-items: center;
+  }
+
+  /* Center user name and type badge */
+  .flex.flex-col.sm\:flex-row.items-center {
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Center description text */
+  .text-gray-600.mb-6 {
+    text-align: center !important;
+  }
+
+  /* Make info cards more compact - keep icon and text together */
+  .info-card {
+    padding: 16px;
+    gap: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+  }
+
+  .info-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .info-icon-wrapper svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .info-content {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .info-label {
+    font-size: 11px;
+  }
+
+  .info-value {
+    font-size: 14px;
+  }
+
+  /* Center stat cards content */
+  .stat-card {
+    text-align: center;
+    padding: 20px 16px;
+  }
+
+  .stat-icon {
+    margin-left: auto;
+    margin-right: auto;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 10px;
+  }
+
+  .stat-icon svg {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .stat-number {
+    font-size: 26px;
+  }
+
+  .stat-label {
+    font-size: 13px;
+  }
+
+  /* Center action cards content */
+  .action-card {
+    text-align: center;
+    padding: 20px 16px;
+  }
+
+  .action-icon {
+    margin-left: auto;
+    margin-right: auto;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 10px;
+  }
+
+  .action-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .action-card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .action-card p {
+    font-size: 0.8125rem;
+  }
+
+  /* Reduce main container padding */
+  .bg-white\/90.backdrop-blur-sm {
+    padding: 1rem !important;
+  }
+
+  /* Smaller avatar on mobile */
+  .w-20.h-20 {
+    width: 4rem !important;
+    height: 4rem !important;
+  }
+
+  /* Smaller title on mobile */
+  .text-2xl.sm\:text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+
+  /* Center Quick Actions title */
+  .text-xl.sm\:text-2xl {
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Even more compact for very small screens */
+  .info-card {
+    padding: 12px;
+    gap: 10px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .info-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+
+  .info-icon-wrapper svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .stat-card {
+    padding: 16px 12px;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stat-number {
+    font-size: 24px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+  }
+
+  .action-card {
+    padding: 16px 12px;
+  }
+
+  .action-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
 </style>

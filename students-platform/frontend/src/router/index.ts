@@ -77,6 +77,8 @@ export const router = createRouter({
 });
 
 router.beforeEach(async (to, _from, next) => {
+  document.body.style.overflow = '';
+
   const session = useSessionStore();
 
   if (!session.isAuthenticated) {

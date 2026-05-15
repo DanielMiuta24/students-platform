@@ -79,4 +79,17 @@ onUnmounted(() => {
 .fade-leave-to {
   opacity: 0;
 }
+
+/* Mobile responsive padding for main content */
+@media (max-width: 768px) {
+  main#main-content {
+    padding-top: 5.5rem !important; /* 88px for mobile navbar */
+  }
+}
+
+@media (max-width: 480px) {
+  main#main-content {
+    padding-top: 6rem !important; /* 96px for very small screens */
+  }
+}
 </style>

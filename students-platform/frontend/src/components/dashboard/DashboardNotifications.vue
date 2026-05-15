@@ -1,7 +1,12 @@
 <template>
-  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
-    <div class="notifications-header">
-      <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Notifications</h2>
+  <div class="notifications-page">
+    <button v-if="isMobile" @click="closeNotifications" class="mobile-close-button">
+      <el-icon><Close /></el-icon>
+    </button>
+
+    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
+      <div class="notifications-header">
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Notifications</h2>
 
       <div class="notifications-actions">
         <el-button
@@ -114,14 +119,15 @@
         </el-button>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationStore } from '../../stores/notification';
-import { User, Loading, Check, Delete } from '@element-plus/icons-vue';
+import { User, Loading, Check, Delete, Close } from '@element-plus/icons-vue';
 import type { Notification } from '../../api/notification';
 import { ElMessage } from 'element-plus';
 import { getAvatarUrl } from '../../utils/avatar';
@@ -132,6 +138,24 @@ const notificationStore = useNotificationStore();
 const activeTab = ref('all');
 const markingAllRead = ref(false);
 const deletingAllRead = ref(false);
+const isMobile = ref(window.innerWidth <= 768);
+
+const closeNotifications = () => {
+  router.back();
+};
+
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
+
+onMounted(() => {
+  notificationStore.fetchNotifications(1, false);
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
 
 const notifications = computed(() => notificationStore.notifications);
 const unreadCount = computed(() => notificationStore.unreadCount);
@@ -530,13 +554,18 @@ const navigateToTarget = (targetLink?: string) => {
     router.push(targetLink);
   }
 };
-
-onMounted(() => {
-  notificationStore.fetchNotifications(1, false);
-});
 </script>
 
 <style scoped>
+.notifications-page {
+  width: 100%;
+  position: relative;
+}
+
+.mobile-close-button {
+  display: none;
+}
+
 .notifications-header {
   display: flex;
   flex-direction: column;
@@ -791,5 +820,202 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   padding: 24px 0;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .notifications-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100vh;
+    min-height: 100vh;
+    z-index: 9999;
+    background: white;
+    padding-top: 0;
+    overflow-y: auto;
+  }
+
+  .mobile-close-button {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    color: white;
+    cursor: pointer;
+    z-index: 10000;
+    transition: all 0.2s ease;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  }
+
+  .mobile-close-button:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
+  }
+
+  .mobile-close-button:active {
+    transform: scale(0.95);
+  }
+
+  .bg-white\/90 {
+    height: 100vh;
+    overflow-y: auto;
+    border-radius: 0 !important;
+    border: none !important;
+    padding-top: 4rem !important;
+  }
+
+  .bg-white\/90 {
+    padding: 1rem !important;
+    padding-top: 4rem !important;
+  }
+
+  .notifications-header {
+    text-align: center;
+    align-items: center;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+    text-align: center;
+  }
+
+  .notification-tabs {
+    margin-bottom: 16px;
+  }
+
+  .notification-tabs :deep(.el-tabs__header) {
+    display: flex;
+    justify-content: center;
+  }
+
+  .notification-tabs :deep(.el-tabs__nav-wrap) {
+    display: flex;
+    justify-content: center;
+  }
+
+  .notification-tabs :deep(.el-tabs__item) {
+    font-size: 0.9375rem !important;
+    padding: 0 1.25rem !important;
+  }
+
+  .notifications-header {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .notifications-actions {
+    width: 100%;
+  }
+
+  .notifications-actions .el-button {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .notifications-tabs {
+    margin-bottom: 16px;
+  }
+
+  .notification-card {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .notification-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .notification-message {
+    font-size: 0.875rem !important;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .notification-time {
+    font-size: 0.75rem !important;
+  }
+
+  .unread-indicator {
+    font-size: 0.6875rem !important;
+    padding: 2px 6px;
+  }
+
+  .notification-actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .empty-state {
+    padding: 32px 16px;
+  }
+
+  .empty-state .w-20 {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .empty-state .w-10 {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .empty-state .text-xl {
+    font-size: 1.125rem;
+  }
+
+  .loading-container {
+    padding: 48px 16px;
+  }
+
+  .spinning-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .notifications-list {
+    gap: 8px;
+  }
+
+  .load-more-container {
+    padding: 16px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .bg-white\/90 {
+    padding: 0.75rem !important;
+  }
+
+  .notifications-header h2 {
+    font-size: 1.125rem !important;
+  }
+
+  .notification-card {
+    padding: 10px;
+  }
+
+  .notification-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .notification-message {
+    font-size: 0.8125rem !important;
+  }
 }
 </style>

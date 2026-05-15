@@ -83,3 +83,43 @@ const selectCategory = (categoryId: string | null) => {
   emit('change', categoryId);
 };
 </script>
+
+<style scoped>
+@media (max-width: 768px) {
+  /* Make buttons slightly larger and more readable */
+  button {
+    padding: 0.625rem 1rem !important;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  /* Center and add consistent spacing */
+  .flex.flex-wrap {
+    gap: 0.625rem !important;
+    justify-content: center;
+  }
+
+  /* Loading and error text */
+  .text-sm {
+    font-size: 0.8125rem;
+  }
+
+  .h-4.w-4 {
+    height: 0.875rem;
+    width: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Keep text visible on small screens */
+  button {
+    padding: 0.5rem 0.875rem !important;
+    font-size: 0.8125rem;
+  }
+
+  .flex.flex-wrap {
+    gap: 0.5rem !important;
+  }
+}
+</style>
+
