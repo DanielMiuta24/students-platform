@@ -86,6 +86,7 @@ footer{
     background-size:60%;
     background-position:Center;
     background-repeat:no-repeat;
+    aspect-ratio: 16 / 9;
 }
 .home-sec{
     width:100%;

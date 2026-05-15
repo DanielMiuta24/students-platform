@@ -60,7 +60,7 @@
       >
         <div class="avatar-container">
           <img
-            :src="getAvatarUrl(conversation.user.name, conversation.user.profilePicture)"
+            :src="getAvatarUrl(conversation.user.name, conversation.user.profilePicture ?? undefined)"
             alt="Profile"
             class="conversation-avatar"
           />

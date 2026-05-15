@@ -9,7 +9,7 @@
   >
     <div class="flex items-center min-w-0">
       <img
-        :src="getAvatarUrl(user.name, user.profilePicture)"
+        :src="getAvatarUrl(user.name, user.profilePicture ?? undefined)"
         alt="Profile Picture"
         class="w-10 h-10 rounded-full mr-3 object-cover flex-shrink-0"
       />

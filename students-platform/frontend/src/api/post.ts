@@ -1,4 +1,4 @@
-import type { CreatePostPayload, UpdatePostPayload, SafePost, CursorPostsResult } from '../types/post';
+import type { SafePost, CursorPostsResult } from '../types/post';
 import { secureApi } from '../services/secureApi';
 import { api } from '../services/api';
 
@@ -182,7 +182,7 @@ export const deletePost = async (postId: string): Promise<void> => {
 
 export const updatePostVisibility = async (
   postId: string,
-  visibility: 'public' | 'private' | 'friends'
+  visibility: 'public' | 'private' | 'friends' | 'community'
 ): Promise<SafePost> => {
   try {
     const response = await secureApi.patch<SafePost>(`/posts/${postId}/visibility`, {

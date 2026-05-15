@@ -67,9 +67,13 @@ import { reactive, watch, ref } from 'vue';
 import type { LoginForm } from '../../types/auth';
 import { useAuth } from '../../composables/useAuth';
 import { useFormErrors } from '../../composables/useFormErrors';
+import { useSEO, SEOConfigs } from '../../composables/useSEO';
 import { validateEmail } from '../../utils/validation';
 import { useRouter } from 'vue-router';
 import AuthFormShell from './AuthFormShell.vue';
+
+// SEO
+useSEO(SEOConfigs.login);
 
 const auth = useAuth();
 const { loading, error, success, isAuthenticated, user, clearMessages } = auth;

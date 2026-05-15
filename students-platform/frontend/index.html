@@ -2,16 +2,82 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/src/images/logo-2-1.png" />
-      <link rel="stylesheet"
-              href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-      <script src="//unpkg.com/@element-plus/icons-vue"></script>
-      <script src="//cdn.jsdelivr.net/npm/@element-plus/icons-vue"></script>
+
+    <!-- Primary Meta Tags -->
+    <title>International Student Compass - Connect, Learn & Grow</title>
+    <meta name="title" content="International Student Compass - Connect, Learn & Grow" />
+    <meta name="description" content="Join International Student Compass - A platform connecting students worldwide. Share experiences, find communities, and access resources for international students." />
+    <meta name="keywords" content="international students, student community, study abroad, student platform, university students, student networking, education platform" />
+    <meta name="author" content="International Student Compass" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>International Student Compass</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/src/images/logo-2-1.png" />
+    <link rel="apple-touch-icon" href="/src/images/logo-2-1.png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://students-platform.com/" />
+    <meta property="og:title" content="International Student Compass - Connect, Learn & Grow" />
+    <meta property="og:description" content="Join International Student Compass - A platform connecting students worldwide. Share experiences, find communities, and access resources for international students." />
+    <meta property="og:image" content="https://students-platform.com/og-image.jpg" />
+    <meta property="og:site_name" content="International Student Compass" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://students-platform.com/" />
+    <meta name="twitter:title" content="International Student Compass - Connect, Learn & Grow" />
+    <meta name="twitter:description" content="Join International Student Compass - A platform connecting students worldwide. Share experiences, find communities, and access resources for international students." />
+    <meta name="twitter:image" content="https://students-platform.com/og-image.jpg" />
+
+    <!-- Robots & Canonical -->
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://students-platform.com/" />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#3B82F6" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+
+    <!-- External Stylesheets - Async load for performance -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"></noscript>
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "International Student Compass",
+      "description": "A platform connecting international students worldwide",
+      "url": "https://students-platform.com",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "accessibilityAPI": "ARIA",
+      "accessibilityControl": ["fullKeyboardControl", "fullMouseControl"],
+      "accessibilityFeature": ["alternativeText", "readingOrder", "structuralNavigation"],
+      "accessibilityHazard": ["none"]
+    }
+    </script>
   </head>
   <body>
     <div id="app"></div>
+
+    <!-- Loading indicator for better UX -->
+    <noscript>
+      <div style="text-align: center; padding: 2rem; font-family: system-ui, -apple-system, sans-serif;">
+        <h1>JavaScript Required</h1>
+        <p>This application requires JavaScript to be enabled. Please enable JavaScript in your browser settings.</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

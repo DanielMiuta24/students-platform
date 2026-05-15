@@ -648,6 +648,10 @@ const formData = ref({
 // Store user data for invited users (id -> {name, username})
 const invitedUsersData = ref<Map<string, { name: string; username: string }>>(new Map());
 
+// Variables for unused invite functionality (kept for compatibility)
+const friendSearchQuery = ref('');
+const inviteEmail = ref('');
+
 const fileInput = ref<HTMLInputElement | null>(null);
 
 onMounted(async () => {

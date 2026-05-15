@@ -78,7 +78,7 @@ export const useRealtimeValidation = (
 
   const setupWatchers = () => {
     Object.keys(fieldValidators).forEach((fieldName) => {
-      let debounceTimer: NodeJS.Timeout | null = null;
+      let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
       watch(
         () => formData[fieldName],

@@ -6,7 +6,7 @@
 import type { LexicalEditorState } from './lexical';
 
 export type PostStatus = 'draft' | 'published' | 'archived';
-export type PostVisibility = 'public' | 'private' | 'friends';
+export type PostVisibility = 'public' | 'private' | 'friends' | 'community';
 
 export interface ImageMetadata {
   url: string;
@@ -100,4 +100,5 @@ export const POST_VISIBILITY = {
   PUBLIC: 'public' as PostVisibility,
   PRIVATE: 'private' as PostVisibility,
   FRIENDS: 'friends' as PostVisibility,
+  COMMUNITY: 'community' as PostVisibility,
 };

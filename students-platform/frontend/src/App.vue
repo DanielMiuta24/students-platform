@@ -1,10 +1,15 @@
 <template>
   <div id="app">
-    <div class="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white shadow-md" role="banner">
       <Navbar />
-    </div>
-    <main class="pt-16">
-      <router-view />
+    </header>
+    <main id="main-content" class="pt-16" role="main" tabindex="-1">
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
     <Footer />
   </div>
@@ -50,4 +55,28 @@ onUnmounted(() => {
 </script>
 
 <style>
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>

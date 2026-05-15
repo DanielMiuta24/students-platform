@@ -1,21 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useSessionStore } from '../store/session';
+
+// Eager load critical pages
 import Home from '../pages/Home.vue';
 import Login from '../pages/Auth/Login.vue';
-import Register from '../pages/Auth/Register.vue';
-import Dashboard from '../pages/Dashboard.vue';
-import Community from '../pages/Community.vue';
-import JoinCommunity from '../pages/JoinCommunity.vue';
-import CreateCommunity from '../pages/CreateCommunity.vue';
-import Universities from '../pages/Universities.vue';
-import Scholarships from '../pages/Scholarships.vue';
-import Feed from '../pages/Feed.vue';
-import UserProfile from '../pages/UserProfile.vue';
-import Messages from '../pages/Messages.vue';
-import EditProfile from '../pages/EditProfile.vue';
-import ViewCommunity from '../pages/ViewCommunity.vue';
-import EditPost from '../pages/EditPost.vue';
-import NotFound from '../pages/NotFound.vue';
-import { useSessionStore } from '../store/session';
+
+// Lazy load non-critical pages
+const Register = () => import('../pages/Auth/Register.vue');
+const Dashboard = () => import('../pages/Dashboard.vue');
+const Community = () => import('../pages/Community.vue');
+const JoinCommunity = () => import('../pages/JoinCommunity.vue');
+const CreateCommunity = () => import('../pages/CreateCommunity.vue');
+const Universities = () => import('../pages/Universities.vue');
+const Scholarships = () => import('../pages/Scholarships.vue');
+const Feed = () => import('../pages/Feed.vue');
+const UserProfile = () => import('../pages/UserProfile.vue');
+const Messages = () => import('../pages/Messages.vue');
+const EditProfile = () => import('../pages/EditProfile.vue');
+const ViewCommunity = () => import('../pages/ViewCommunity.vue');
+const EditPost = () => import('../pages/EditPost.vue');
+const NotFound = () => import('../pages/NotFound.vue');
 
 const routes = [
   { path: '/', component: Home },
@@ -67,7 +71,7 @@ const routes = [
 
 export const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes: routes as any,
 });
 
 router.beforeEach(async (to, _from, next) => {

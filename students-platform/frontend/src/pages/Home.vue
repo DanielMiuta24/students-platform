@@ -208,6 +208,7 @@ import { Search } from '@element-plus/icons-vue'
 
 .hero-illustration {
   min-height: 360px;
+  aspect-ratio: 1188 / 756;
   border-radius: 22px;
   background:
     linear-gradient(rgba(239, 246, 255, 0.2), rgba(239, 246, 255, 0.2)),
@@ -316,6 +317,7 @@ import { Search } from '@element-plus/icons-vue'
 
 .faq-image {
   min-height: 280px;
+  aspect-ratio: 800 / 628;
   background: url("../images/faq-girl.png");
   background-repeat: no-repeat;
   background-size: contain;

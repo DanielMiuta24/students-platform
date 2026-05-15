@@ -702,11 +702,11 @@
               <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border-2 border-blue-200">
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white shadow-md">
-                    <img :src="getAvatarUrl(community.founder.name, community.founder.avatar)" :alt="community.founder.name" class="w-full h-full object-cover" />
+                    <img :src="getAvatarUrl(typeof community.founder === 'string' ? '' : community.founder.name, typeof community.founder === 'string' ? undefined : community.founder.avatar)" :alt="typeof community.founder === 'string' ? 'Founder' : community.founder.name" class="w-full h-full object-cover" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-base font-semibold text-gray-900 truncate">{{ community.founder.name }}</p>
-                    <p class="text-sm text-gray-600">@{{ community.founder.username }}</p>
+                    <p class="text-base font-semibold text-gray-900 truncate">{{ typeof community.founder === 'string' ? 'Unknown' : community.founder.name }}</p>
+                    <p class="text-sm text-gray-600">@{{ typeof community.founder === 'string' ? 'unknown' : community.founder.username }}</p>
                   </div>
                 </div>
               </div>
@@ -2503,7 +2503,7 @@ import type { SafePost } from '../types/post';
 import { useCommunity } from '../composables/useCommunity';
 import { useCommunityMembers } from '../composables/useCommunityMembers';
 import { sendInvitations, getInvitations, cancelInvitation, cancelJoinRequest, deleteCommunity, requestOwnershipTransfer, removeMember, banUser, unbanUser, updateMemberRole, getJoinRequests, approveJoinRequest, rejectJoinRequest, getBannedUsers, getPendingOwnershipTransfer, acceptOwnershipTransfer, rejectOwnershipTransfer, cancelOwnershipTransfer, canViewCommunityPosts } from '../api/community';
-import type { InviteUsersPayload, SafeJoinRequest, CommunityMember } from '../types/community';
+import type { InviteUsersPayload, SafeJoinRequest, CommunityMember, SafeCommunity } from '../types/community';
 import { COMMUNITY_ROLE } from '../types/community';
 import { getAvatarUrl } from '../utils/avatar';
 

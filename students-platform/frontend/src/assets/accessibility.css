@@ -1,0 +1,152 @@
+/* ==============================================
+   ACCESSIBILITY & PERFORMANCE STYLES
+   ============================================== */
+
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 9999;
+  padding: 1em;
+  background-color: #000;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.skip-link:focus {
+  left: 0;
+  top: 0;
+}
+
+/* Focus visible for better keyboard navigation */
+*:focus-visible {
+  outline: 3px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users but keep for keyboard */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  * {
+    border-color: currentColor !important;
+  }
+}
+
+/* Reduced motion support for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Performance optimizations */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Lazy loading placeholders */
+img[loading="lazy"] {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Improved button accessibility */
+button:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Better form label association */
+label {
+  cursor: pointer;
+}
+
+/* Accessible links */
+a {
+  text-decoration-skip-ink: auto;
+}
+
+a:not([class]) {
+  text-decoration-color: currentColor;
+}
+
+/* ARIA live regions */
+[aria-live] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Loading states */
+[aria-busy="true"] {
+  cursor: progress;
+}
+
+/* Invalid states for forms */
+[aria-invalid="true"] {
+  border-color: #ef4444 !important;
+}
+
+/* Hidden but accessible */
+[hidden]:not([hidden="until-found"]) {
+  display: none !important;
+}
+
+/* Performance: GPU acceleration for animations */
+.animate,
+.transition {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Remove will-change after animation */
+.animate:not(:hover):not(:focus),
+.transition:not(:hover):not(:focus) {
+  will-change: auto;
+}

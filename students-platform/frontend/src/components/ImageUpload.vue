@@ -103,6 +103,7 @@ import { defineComponent, ref, watch, type PropType } from 'vue';
 export interface ImageUpload {
   file: File;
   preview: string;
+  alt?: string;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

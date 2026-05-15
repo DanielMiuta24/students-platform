@@ -55,16 +55,16 @@ import { ref, watch, h } from 'vue';
 
 interface Props {
   show: boolean;
-  currentVisibility: 'public' | 'private' | 'friends';
+  currentVisibility: 'public' | 'private' | 'friends' | 'community';
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   close: [];
-  save: [visibility: 'public' | 'private' | 'friends'];
+  save: [visibility: 'public' | 'private' | 'friends' | 'community'];
 }>();
 
-const selectedVisibility = ref<'public' | 'private' | 'friends'>(props.currentVisibility);
+const selectedVisibility = ref<'public' | 'private' | 'friends' | 'community'>(props.currentVisibility);
 
 watch(() => props.currentVisibility, (newValue) => {
   selectedVisibility.value = newValue;

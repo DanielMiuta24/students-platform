@@ -46,7 +46,7 @@
             class="flex items-center p-4 cursor-pointer hover:bg-gray-50 transition"
           >
             <img
-              :src="getAvatarUrl(user.name, user.profilePicture)"
+              :src="getAvatarUrl(user.name, user.profilePicture ?? undefined)"
               alt="Profile"
               class="w-12 h-12 rounded-full mr-4 object-cover"
             />
@@ -81,6 +81,7 @@ interface User {
   name: string;
   username: string;
   profilePicture: string | null;
+  hasConversation?: boolean;
 }
 
 interface Props {

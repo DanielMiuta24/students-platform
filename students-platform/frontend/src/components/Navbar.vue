@@ -11,7 +11,13 @@
       <!-- Logo -->
       <div class="navbar-logo">
         <router-link to="/">
-          <img src="../images/logo_transparent.png" alt="Logo" class="logo-img" />
+          <img
+            src="../images/logo_transparent.png"
+            alt="International Student Compass Logo"
+            class="logo-img"
+            width="300"
+            height="200"
+          />
         </router-link>
       </div>
 
@@ -64,7 +70,7 @@
             <div v-if="showMessengerPopup" class="messenger-popup" @click.stop>
               <ConversationList
                 :conversations="filteredRecentConversations"
-                :selected-conversation-id="null"
+                :selected-conversation-id="undefined"
                 :empty-message="'No conversations yet'"
                 :show-header="true"
                 :title="'Messages'"

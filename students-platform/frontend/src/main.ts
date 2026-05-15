@@ -5,6 +5,7 @@ import { router } from './router'
 import { useSessionStore } from './store/session'
 
 import './assets/styles.css'
+import './assets/accessibility.css'
 
 
 import ElementPlus from 'element-plus'

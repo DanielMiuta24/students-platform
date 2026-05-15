@@ -2,6 +2,7 @@
   <article
     class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300"
     :data-post-slug="post.slug"
+    style="min-height: 200px"
   >
     <div class="p-4">
       <div class="flex items-center justify-between">
@@ -11,6 +12,9 @@
             :alt="authorName"
             @click="navigateToAuthorProfile"
             class="w-12 h-12 rounded-full object-cover border-2 border-blue-100 hover:border-blue-300 transition cursor-pointer"
+            width="48"
+            height="48"
+            loading="lazy"
           />
 
           <div>
@@ -242,6 +246,9 @@
           :src="post.images[0].url"
           :alt="post.images[0].alt || generateImageAlt(post.images[0].url)"
           class="w-full h-[500px] object-contain bg-black"
+          width="800"
+          height="500"
+          loading="lazy"
         />
       </div>
 
@@ -802,7 +809,7 @@ const handleChangeAudience = () => {
   showAudienceModal.value = true;
 };
 
-const handleVisibilityChange = async (newVisibility: 'public' | 'private' | 'friends') => {
+const handleVisibilityChange = async (newVisibility: 'public' | 'private' | 'friends' | 'community') => {
   if (!props.isOwner) return;
 
   try {

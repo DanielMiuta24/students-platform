@@ -186,12 +186,13 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, watch, computed, ref } from 'vue';
+import { reactive, watch, computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import type { RegisterForm } from '../../types/auth';
 import { useAuth } from '../../composables/useAuth';
 import { useFormErrors } from '../../composables/useFormErrors';
 import { usePasswordValidation, usePasswordMatch } from '../../composables/usePasswordValidation';
+import { useSEO } from '../../composables/useSEO';
 import {
   validateName,
   validateUsername,
@@ -209,6 +210,11 @@ const {
   clearFieldError: clearApiFieldError,
   handleApiError,
 } = useFormErrors();
+
+// SEO
+onMounted(() => {
+  useSEO('register');
+});
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);

@@ -1,9 +1,21 @@
 <template>
   <div class="feed-listing">
-    <!-- Loading State -->
-    <div v-if="postFeedStore.isLoading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <p class="text-gray-600 mt-4">Loading posts...</p>
+    <!-- Loading State with Skeleton -->
+    <div v-if="postFeedStore.isLoading" class="loading-container space-y-6">
+      <div v-for="n in 3" :key="n" class="bg-white rounded-lg shadow border border-gray-200 p-4 animate-pulse" style="min-height: 200px">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 bg-gray-200 rounded-full"></div>
+          <div class="flex-1">
+            <div class="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+            <div class="h-3 bg-gray-200 rounded w-1/3"></div>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <div class="h-4 bg-gray-200 rounded w-full"></div>
+          <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+          <div class="h-4 bg-gray-200 rounded w-4/6"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
