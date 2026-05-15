@@ -19,6 +19,7 @@ const Messages = () => import('../pages/Messages.vue');
 const EditProfile = () => import('../pages/EditProfile.vue');
 const ViewCommunity = () => import('../pages/ViewCommunity.vue');
 const EditPost = () => import('../pages/EditPost.vue');
+const ReportProblem = () => import('../pages/ReportProblem.vue');
 const NotFound = () => import('../pages/NotFound.vue');
 
 const routes = [
@@ -53,6 +54,7 @@ const routes = [
   { path: '/community/:slug/posts/:postSlug', component: ViewCommunity, name: 'CommunityPost' },
   { path: '/universities', component: Universities },
   { path: '/scholarships', component: Scholarships },
+  { path: '/support', component: ReportProblem, name: 'ReportProblem' },
   { path: '/feed', component: Feed, name: 'Feed', meta: { requiresAuth: true } },
   { path: '/profile/:username', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
   { path: '/profile/:username/posts/:slug', component: UserProfile, name: 'ProfilePost', meta: { requiresAuth: true } },

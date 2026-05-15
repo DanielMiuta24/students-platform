@@ -29,10 +29,10 @@
         <div class="md:text-left text-center flex flex-col md:items-start items-center">
           <h3 class="font-semibold text-blue-800 mb-3">Easy Links</h3>
           <ul class="flex flex-col gap-2 md:items-start items-center" role="list">
-            <li role="listitem"><el-link href="/" class="text-blue-600 hover:underline">Home</el-link></li>
-            <li role="listitem"><el-link href="/community" class="text-blue-600 hover:underline">Feed</el-link></li>
-            <li role="listitem"><el-link href="/universities" class="text-blue-600 hover:underline">Search Universities</el-link></li>
-            <li role="listitem"><el-link href="/scholarships" class="text-blue-600 hover:underline">Search Scholarships</el-link></li>
+            <li role="listitem"><el-link href="/" class="footer-link">Home</el-link></li>
+            <li role="listitem"><el-link href="/community" class="footer-link">Feed</el-link></li>
+            <li role="listitem"><el-link href="/universities" class="footer-link">Search Universities</el-link></li>
+            <li role="listitem"><el-link href="/scholarships" class="footer-link">Search Scholarships</el-link></li>
           </ul>
         </div>
 
@@ -40,7 +40,7 @@
         <div class="md:text-left text-center flex flex-col md:items-start items-center">
           <h3 class="font-semibold text-blue-800 mb-3">Support</h3>
           <ul class="flex flex-col gap-2 md:items-start items-center" role="list">
-            <li role="listitem"><el-link href="/support" class="text-blue-600 hover:underline">Report a problem</el-link></li>
+            <li role="listitem"><router-link to="/support" class="footer-link">Report a problem</router-link></li>
           </ul>
         </div>
 
@@ -64,8 +64,65 @@
   margin: 0 !important;
 }
 
+:deep(.el-link),
+.footer-link {
+  color: #000000 !important;
+  text-decoration: none !important;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+:deep(.el-link:hover),
+:deep(.el-link:focus),
+.footer-link:hover,
+.footer-link:focus {
+  color: #409eff !important;
+  text-decoration: none !important;
+}
+
+:deep(.el-link:active),
+.footer-link:active {
+  color: #409eff !important;
+  text-decoration: none !important;
+}
+
+:deep(.el-link:visited),
+.footer-link:visited {
+  color: #000000 !important;
+  text-decoration: none !important;
+}
+
+:deep(.el-link:visited:hover),
+.footer-link:visited:hover {
+  color: #409eff !important;
+  text-decoration: none !important;
+}
+
+:deep(.el-link *),
+:deep(.el-link span),
+:deep(.el-link::before),
+:deep(.el-link::after),
+:deep(.el-link .el-link__inner),
+.footer-link *,
+.footer-link span {
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+:deep(.el-link.is-underline),
+:deep(.el-link.is-underline:hover) {
+  text-decoration: none !important;
+}
+
+:deep(.el-link:hover *),
+:deep(.el-link:hover span) {
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
 @media (max-width: 768px) {
-  :deep(.el-link) {
+  :deep(.el-link),
+  .footer-link {
     display: inline-block;
     text-align: center;
   }
