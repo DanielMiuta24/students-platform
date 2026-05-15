@@ -8,7 +8,7 @@ export default defineConfig({
     tailwindcss()
   ],
   optimizeDeps: {
-    include: ['socket.io-client']
+    include: ['socket.io-client', '@element-plus/icons-vue', 'element-plus']
   },
   server: {
     host: true,
