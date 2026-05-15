@@ -152,6 +152,14 @@
         <el-icon><Menu /></el-icon>
       </el-button>
 
+      <router-link to="/" class="mobile-logo">
+        <img
+          src="../images/logo_transparent.png"
+          alt="International Student Compass Logo"
+          class="mobile-logo-img"
+        />
+      </router-link>
+
       <el-button @click="drawerAccount = true" circle>
         <el-icon><User /></el-icon>
       </el-button>
@@ -1096,7 +1104,7 @@ const handleSelect = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 5px 20px;
   background-color: white;
 }
 
@@ -1191,5 +1199,20 @@ const handleSelect = () => {
 .user-name:hover img {
   border-color: #2563eb;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.mobile-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-decoration: none;
+}
+
+.mobile-logo-img {
+  width: 160px;
+  height: auto;
+  object-fit: contain;
+  max-width: 100%;
 }
 </style>
