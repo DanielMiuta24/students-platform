@@ -27,13 +27,16 @@ export const useSessionStore = defineStore('session', {
 
             if (saved) {
                 this.user = JSON.parse(saved);
-                return;
-            }
-
-            try {
-                const user = await getProfile();
-                this.setUser(user);
-            } catch (error) {
+                // Optionally verify session with server in background
+                try {
+                    const user = await getProfile();
+                    this.setUser(user);
+                } catch (error) {
+                    // Session expired, clear it silently
+                    this.clearUser();
+                }
+            } else {
+                // No saved session, don't make API call to avoid 401 errors in console
                 this.clearUser();
             }
         },
