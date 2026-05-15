@@ -1,18 +1,18 @@
 <template>
   <div class="space-y-6">
-    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-      <div class="flex items-start gap-6">
-        <router-link :to="`/profile/${user?.username}`" class="flex-shrink-0">
+    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
+      <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+        <router-link :to="`/profile/${user?.username}`" class="flex-shrink-0 mx-auto sm:mx-0">
           <img
             :src="getAvatarUrl(user?.name || 'User', user?.avatar)"
             :alt="user?.name || 'User'"
-            class="w-24 h-24 rounded-full object-cover shadow-lg cursor-pointer hover:opacity-80 transition-opacity"
+            class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover shadow-lg cursor-pointer hover:opacity-80 transition-opacity"
           />
         </router-link>
-        <div class="flex-1">
-          <div class="flex items-center gap-3 mb-2">
-            <router-link :to="`/profile/${user?.username}`" class="hover:opacity-80 transition-opacity">
-              <h1 class="text-3xl font-bold text-blue-900">
+        <div class="flex-1 w-full">
+          <div class="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 mb-2">
+            <router-link :to="`/profile/${user?.username}`" class="hover:opacity-80 transition-opacity text-center sm:text-left">
+              <h1 class="text-2xl sm:text-3xl font-bold text-blue-900">
                 {{ user?.name || "User" }}
               </h1>
             </router-link>
@@ -26,7 +26,7 @@
               {{ user?.type || 'StudySeeker' }}
             </span>
           </div>
-          <p class="text-gray-600 mb-8 text-lg">
+          <p class="text-gray-600 mb-6 sm:mb-8 text-base sm:text-lg text-center sm:text-left">
             Track your saved universities, scholarships, and communities.
           </p>
 
@@ -104,7 +104,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
       <div class="stat-card group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
         <div class="stat-icon bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 group-hover:scale-110 transition-all">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,14 +146,14 @@
       </div>
     </div>
 
-    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2 justify-center sm:justify-start">
+        <svg class="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
         Quick Actions
       </h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         <router-link to="/universities" class="action-card group">
           <div class="action-icon bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 group-hover:scale-110 transition-all">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,25 +292,46 @@ const userTypeIcon = computed(() => {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 1.5rem;
-  padding: 28px;
+  padding: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
+@media (min-width: 640px) {
+  .stat-card {
+    padding: 28px;
+  }
+}
+
 .stat-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 640px) {
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+  }
 }
 
 .stat-number {
   color: #111827;
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 800;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+@media (min-width: 640px) {
+  .stat-number {
+    font-size: 36px;
+    margin-bottom: 6px;
+  }
 }
 
 .stat-label {
@@ -324,10 +345,16 @@ const userTypeIcon = computed(() => {
   backdrop-filter: blur(10px);
   border: 2px solid rgba(59, 130, 246, 0.1);
   border-radius: 1.5rem;
-  padding: 28px;
+  padding: 20px;
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: block;
+}
+
+@media (min-width: 640px) {
+  .action-card {
+    padding: 28px;
+  }
 }
 
 .action-card:hover {
@@ -337,12 +364,20 @@ const userTypeIcon = computed(() => {
 }
 
 .action-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 640px) {
+  .action-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+  }
 }
 </style>

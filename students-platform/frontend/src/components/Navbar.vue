@@ -22,17 +22,17 @@
 
       <!-- Community -->
       <el-menu-item index="1">
-        <el-link href="/community" type="text">Community</el-link>
+        <router-link to="/community">Community</router-link>
       </el-menu-item>
 
       <!-- Study Opportunities -->
       <el-sub-menu index="2">
         <template #title>Study Opportunities</template>
         <el-menu-item index="2-1">
-          <el-link href="/universities" type="text">Search Universities</el-link>
+          <router-link to="/universities">Search Universities</router-link>
         </el-menu-item>
         <el-menu-item index="2-2">
-          <el-link href="/scholarships" type="text">Search Scholarships</el-link>
+          <router-link to="/scholarships">Search Scholarships</router-link>
         </el-menu-item>
       </el-sub-menu>
 

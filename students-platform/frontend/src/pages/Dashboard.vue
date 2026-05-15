@@ -1,41 +1,76 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
-    <div class="px-6 py-8">
+    <!-- Mobile Menu Button -->
+    <div class="lg:hidden fixed top-20 left-4 z-40">
+      <button
+        @click="toggleMobileSidebar"
+        class="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-white/20 hover:bg-white transition-all"
+        aria-label="Toggle menu"
+      >
+        <svg v-if="!isMobileSidebarOpen" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg v-else class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <Transition name="overlay">
+      <div
+        v-if="isMobileSidebarOpen"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+        @click="closeMobileSidebar"
+      />
+    </Transition>
+
+    <div class="px-4 sm:px-6 py-6 sm:py-8">
       <div class="flex gap-6">
-        <aside class="w-72 flex-shrink-0">
-          <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden sticky top-20">
-            <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600">
-              <div class="flex items-center gap-3">
-                <svg class="w-7 h-7 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
-                </svg>
-                <div>
-                  <h2 class="text-2xl font-bold text-white">Dashboard</h2>
-                  <p class="text-blue-100 text-sm mt-1">Manage your account</p>
+        <!-- Sidebar -->
+        <Transition name="sidebar">
+          <aside
+            v-show="isMobileSidebarOpen || !isMobile"
+            :class="[
+              'w-72 flex-shrink-0',
+              'lg:block',
+              isMobileSidebarOpen ? 'fixed left-0 top-0 bottom-0 z-50 pt-20 px-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 overflow-y-auto' : ''
+            ]"
+          >
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden lg:sticky lg:top-20">
+              <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600">
+                <div class="flex items-center gap-3">
+                  <svg class="w-7 h-7 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
+                  </svg>
+                  <div>
+                    <h2 class="text-2xl font-bold text-white">Dashboard</h2>
+                    <p class="text-blue-100 text-sm mt-1">Manage your account</p>
+                  </div>
                 </div>
               </div>
+
+              <nav class="p-4">
+                <button
+                  v-for="tab in tabs"
+                  :key="tab.id"
+                  @click="navigateToTab(tab.id)"
+                  :class="[
+                    'w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium transition-all mb-2',
+                    currentTab === tab.id
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 transform scale-[1.02]'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  ]"
+                >
+                  <component :is="tab.icon" class="w-5 h-5 flex-shrink-0" />
+                  <span>{{ tab.label }}</span>
+                </button>
+              </nav>
             </div>
+          </aside>
+        </Transition>
 
-            <nav class="p-4">
-              <button
-                v-for="tab in tabs"
-                :key="tab.id"
-                @click="navigateToTab(tab.id)"
-                :class="[
-                  'w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium transition-all mb-2',
-                  currentTab === tab.id
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 transform scale-[1.02]'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                ]"
-              >
-                <component :is="tab.icon" class="w-5 h-5 flex-shrink-0" />
-                <span>{{ tab.label }}</span>
-              </button>
-            </nav>
-          </div>
-        </aside>
-
-        <main class="flex-1 min-w-0">
+        <main class="flex-1 min-w-0 w-full">
           <DashboardGeneral
             v-if="currentTab === 'general'"
             :user="user"
@@ -102,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, h, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, h, computed, watch } from 'vue';
 import { api } from '../services/api';
 import { deletePost } from '../api/post';
 import { useRouter, useRoute } from 'vue-router';
@@ -131,6 +166,28 @@ const deleteSuccessMessage = ref('');
 const requestSuccessMessage = ref('');
 const draftsRef = ref<InstanceType<typeof DashboardDrafts> | null>(null);
 const requestsRef = ref<InstanceType<typeof DashboardRequests> | null>(null);
+
+// Mobile sidebar state
+const isMobile = ref(false);
+const isMobileSidebarOpen = ref(false);
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 1024; // lg breakpoint
+};
+
+const toggleMobileSidebar = () => {
+  isMobileSidebarOpen.value = !isMobileSidebarOpen.value;
+  if (isMobileSidebarOpen.value) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+};
+
+const closeMobileSidebar = () => {
+  isMobileSidebarOpen.value = false;
+  document.body.style.overflow = '';
+};
 
 const currentTab = computed(() => {
   const pathParts = route.path.split('/').filter(p => p);
@@ -202,14 +259,24 @@ const tabs = [
 ];
 
 onMounted(async () => {
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
   await fetchUserProfile();
-  fetchSavedUniversitiesCount();
+  // fetchSavedUniversitiesCount(); // TODO: Implement backend API
   fetchCommunitiesCount();
   fetchPostsCount();
 });
 
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile);
+  document.body.style.overflow = '';
+});
+
 const navigateToTab = (tabId: string) => {
   router.push(`/dashboard/${tabId}`);
+  if (isMobile.value) {
+    closeMobileSidebar();
+  }
 };
 
 const fetchUserProfile = async () => {
@@ -221,14 +288,15 @@ const fetchUserProfile = async () => {
   }
 };
 
-const fetchSavedUniversitiesCount = async () => {
-  try {
-    const response = await api.get('users/my-saved-universities');
-    savedUniversities.value = response.data;
-  } catch (error) {
-    console.error('Failed to fetch saved universities:', error);
-  }
-};
+// TODO: Implement saved universities backend API
+// const fetchSavedUniversitiesCount = async () => {
+//   try {
+//     const response = await api.get('users/my-saved-universities');
+//     savedUniversities.value = response.data;
+//   } catch (error) {
+//     console.error('Failed to fetch saved universities:', error);
+//   }
+// };
 
 const fetchCommunitiesCount = async () => {
   try {
@@ -476,5 +544,37 @@ const cancelSentOwnershipTransfer = async (transfer: any) => {
   background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
   border-radius: 1rem;
   border: 2px dashed #e5e7eb;
+}
+
+/* Mobile sidebar transitions */
+.sidebar-enter-active,
+.sidebar-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.sidebar-enter-from {
+  transform: translateX(-100%);
+}
+
+.sidebar-leave-to {
+  transform: translateX(-100%);
+}
+
+@media (min-width: 1024px) {
+  .sidebar-enter-from,
+  .sidebar-leave-to {
+    transform: translateX(0);
+  }
+}
+
+/* Overlay transitions */
+.overlay-enter-active,
+.overlay-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.overlay-enter-from,
+.overlay-leave-to {
+  opacity: 0;
 }
 </style>

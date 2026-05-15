@@ -14,6 +14,7 @@ import Messages from '../pages/Messages.vue';
 import EditProfile from '../pages/EditProfile.vue';
 import ViewCommunity from '../pages/ViewCommunity.vue';
 import EditPost from '../pages/EditPost.vue';
+import NotFound from '../pages/NotFound.vue';
 import { useSessionStore } from '../store/session';
 
 const routes = [
@@ -29,16 +30,16 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', redirect: '/dashboard/general' },
-      { path: 'general', name: 'DashboardGeneral' },
-      { path: 'change-password', name: 'DashboardChangePassword' },
-      { path: 'student-status', name: 'DashboardStudentStatus' },
-      { path: 'saved-universities', name: 'DashboardSavedUniversities' },
-      { path: 'saved-scholarships', name: 'DashboardSavedScholarships' },
-      { path: 'drafts', name: 'DashboardDrafts' },
-      { path: 'notifications', name: 'DashboardNotifications' },
+      { path: 'general', name: 'DashboardGeneral', component: Dashboard },
+      { path: 'change-password', name: 'DashboardChangePassword', component: Dashboard },
+      { path: 'student-status', name: 'DashboardStudentStatus', component: Dashboard },
+      { path: 'saved-universities', name: 'DashboardSavedUniversities', component: Dashboard },
+      { path: 'saved-scholarships', name: 'DashboardSavedScholarships', component: Dashboard },
+      { path: 'drafts', name: 'DashboardDrafts', component: Dashboard },
+      { path: 'notifications', name: 'DashboardNotifications', component: Dashboard },
       { path: 'requests', redirect: '/dashboard/requests/incoming' },
-      { path: 'requests/incoming', name: 'DashboardRequestsIncoming' },
-      { path: 'requests/outgoing', name: 'DashboardRequestsOutgoing' },
+      { path: 'requests/incoming', name: 'DashboardRequestsIncoming', component: Dashboard },
+      { path: 'requests/outgoing', name: 'DashboardRequestsOutgoing', component: Dashboard },
     ]
   },
   { path: '/community', component: Community, meta: { requiresAuth: true }},
@@ -57,6 +58,11 @@ const routes = [
     name: 'Messages',
     meta: { requiresAuth: true }
   },
+  {
+    path: '/:pathMatch(.*)*',
+    component: NotFound,
+    name: 'NotFound'
+  }
 ];
 
 export const router = createRouter({

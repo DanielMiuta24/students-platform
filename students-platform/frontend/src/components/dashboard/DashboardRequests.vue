@@ -1,12 +1,12 @@
 <template>
-  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-    <h2 class="text-3xl font-bold text-gray-900 mb-8">Requests</h2>
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8">
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Requests</h2>
 
-    <div v-if="successMessage" class="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-3">
-      <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div v-if="successMessage" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-2 sm:gap-3">
+      <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <p v-if="successMessage.startsWith('ownership-transfer:')" class="text-green-800 font-semibold">
+      <p v-if="successMessage.startsWith('ownership-transfer:')" class="text-sm sm:text-base text-green-800 font-semibold">
         You are now the owner of
         <button
           @click="$router.push(`/community/${successMessage.split(':')[2]}`)"
@@ -15,17 +15,17 @@
           {{ successMessage.split(':')[1] }}
         </button>!
       </p>
-      <p v-else class="text-green-800 font-semibold">{{ successMessage }}</p>
+      <p v-else class="text-sm sm:text-base text-green-800 font-semibold">{{ successMessage }}</p>
     </div>
 
-    <div class="mb-6 border-b border-gray-200">
-      <nav class="flex gap-4" aria-label="Request tabs">
+    <div class="mb-4 sm:mb-6 border-b border-gray-200 overflow-x-auto">
+      <nav class="flex gap-2 sm:gap-4 min-w-max" aria-label="Request tabs">
         <button
           v-for="tab in requestTabs"
           :key="tab.id"
           @click="navigateToSubTab(tab.id)"
           :class="[
-            'px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap',
+            'px-3 sm:px-4 py-2 sm:py-3 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap',
             activeSubTab === tab.id
               ? 'border-blue-600 text-blue-600'
               : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
@@ -35,7 +35,7 @@
           <span
             v-if="tab.count > 0"
             :class="[
-              'ml-2 px-2 py-0.5 rounded-full text-xs font-semibold',
+              'ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-semibold',
               activeSubTab === tab.id
                 ? 'bg-blue-100 text-blue-600'
                 : 'bg-gray-100 text-gray-600'

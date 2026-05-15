@@ -22,7 +22,7 @@ class UserController {
       provider: user.provider,
     };
 
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
   }
 
   private attachAuthCookie(res: Response, token: string) {
@@ -124,6 +124,9 @@ class UserController {
           next: NextFunction
         ) => {
           try {
+            if (!req.user) {
+              return res.status(401).json({ message: 'Unauthorized' });
+            }
 
             const payload: getProfile = {
                   user_id: req.user.id,
@@ -175,6 +178,10 @@ class UserController {
     next: NextFunction
   ) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
       const { currentPassword, newPassword, confirmPassword } = req.body;
 
       const payload: ChangePasswordDTO = {
@@ -207,6 +214,10 @@ class UserController {
     next: NextFunction
   ) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
       const { name, bio, location, removeAvatar } = req.body;
       let avatarUrl: string | undefined;
 
