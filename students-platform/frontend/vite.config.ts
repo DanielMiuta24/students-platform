@@ -7,8 +7,13 @@ export default defineConfig({
     vue(),
     tailwindcss()
   ],
+  resolve: {
+    alias: {
+      vue: 'vue/dist/vue.esm-bundler.js'
+    }
+  },
   optimizeDeps: {
-    include: ['socket.io-client', '@element-plus/icons-vue', 'element-plus']
+    include: ['socket.io-client', '@element-plus/icons-vue', 'element-plus', 'vue']
   },
   server: {
     host: true,
