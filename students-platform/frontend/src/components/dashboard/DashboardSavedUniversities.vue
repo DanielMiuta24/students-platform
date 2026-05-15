@@ -53,20 +53,21 @@ const universities = ref<any[]>([]);
 const isLoading = ref(false);
 
 onMounted(() => {
-  fetchSavedUniversities();
+  // fetchSavedUniversities();
 });
 
-const fetchSavedUniversities = async () => {
-  isLoading.value = true;
-  try {
-    const response = await axios.get('http://localhost:3000/api/users/my-saved-universities');
-    universities.value = response.data;
-  } catch (error) {
-    console.error('Failed to fetch saved universities:', error);
-  } finally {
-    isLoading.value = false;
-  }
-};
+// TODO: Implement saved universities backend API
+// const fetchSavedUniversities = async () => {
+//   isLoading.value = true;
+//   try {
+//     const response = await axios.get('http://localhost:3000/api/users/my-saved-universities');
+//     universities.value = response.data;
+//   } catch (error) {
+//     console.error('Failed to fetch saved universities:', error);
+//   } finally {
+//     isLoading.value = false;
+//   }
+// };
 </script>
 
 <style scoped>

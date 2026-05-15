@@ -262,7 +262,7 @@ onMounted(async () => {
   checkMobile();
   window.addEventListener('resize', checkMobile);
   await fetchUserProfile();
-  fetchSavedUniversitiesCount();
+  // fetchSavedUniversitiesCount(); // TODO: Implement backend API
   fetchCommunitiesCount();
   fetchPostsCount();
 });
@@ -288,14 +288,15 @@ const fetchUserProfile = async () => {
   }
 };
 
-const fetchSavedUniversitiesCount = async () => {
-  try {
-    const response = await api.get('users/my-saved-universities');
-    savedUniversities.value = response.data;
-  } catch (error) {
-    console.error('Failed to fetch saved universities:', error);
-  }
-};
+// TODO: Implement saved universities backend API
+// const fetchSavedUniversitiesCount = async () => {
+//   try {
+//     const response = await api.get('users/my-saved-universities');
+//     savedUniversities.value = response.data;
+//   } catch (error) {
+//     console.error('Failed to fetch saved universities:', error);
+//   }
+// };
 
 const fetchCommunitiesCount = async () => {
   try {
