@@ -138,13 +138,15 @@ import { Search } from '@element-plus/icons-vue'
 <style scoped>
 .home-page {
   background: #ffffff;
+  overflow-x: hidden;
 }
 
-/* General container */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Hero */
@@ -188,8 +190,20 @@ import { Search } from '@element-plus/icons-vue'
 
 .hero-actions {
   display: flex;
-  gap: 16px;
+  gap: 1rem;
   flex-wrap: wrap;
+  width: 100%;
+}
+
+.hero-actions a {
+  flex: 1 1 auto;
+  min-width: 200px;
+  text-decoration: none;
+}
+
+.hero-actions .el-button {
+  width: 100%;
+  white-space: nowrap;
 }
 
 .secondary-button {
@@ -394,7 +408,7 @@ import { Search } from '@element-plus/icons-vue'
   }
 
   .hero-content h1 {
-    font-size: 40px;
+    font-size: 2.5rem;
   }
 
   .quick-links-grid {
@@ -404,21 +418,48 @@ import { Search } from '@element-plus/icons-vue'
   .hero-image-card {
     order: -1;
   }
+
+  .faq-image {
+    display: none;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 900px) {
+  .quick-links-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-content h1 {
+    font-size: 1.875rem;
+  }
+
+  .hero-text {
+    font-size: 0.9375rem;
+  }
+
+  .quick-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .quick-card span {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
-  /* Container adjustments for mobile */
   .container {
-    padding: 0 16px;
+    padding: 0 1rem;
   }
 
-  /* Hero section mobile adjustments */
   .hero-section {
-    padding: 60px 0 50px;
+    padding: 3rem 0 2.5rem;
   }
 
   .hero-container {
-    gap: 32px;
+    gap: 2rem;
     text-align: center;
   }
 
@@ -429,24 +470,27 @@ import { Search } from '@element-plus/icons-vue'
   }
 
   .hero-badge {
-    font-size: 14px;
-    padding: 6px 14px;
+    font-size: 0.875rem;
+    padding: 0.375rem 0.875rem;
   }
 
   .hero-content h1 {
-    font-size: 32px;
+    font-size: 2rem;
     text-align: center;
+    line-height: 1.2;
   }
 
   .hero-text {
-    font-size: 16px;
+    font-size: 1rem;
     text-align: center;
     max-width: 100%;
+    line-height: 1.6;
   }
 
   .hero-actions {
     justify-content: center;
     width: 100%;
+    flex-direction: column;
   }
 
   .hero-actions a {
@@ -458,120 +502,150 @@ import { Search } from '@element-plus/icons-vue'
   }
 
   .hero-image-card {
-    padding: 16px;
+    padding: 1rem;
   }
 
   .hero-illustration {
-    min-height: 250px;
+    min-height: 15rem;
   }
 
-  /* Quick links mobile */
   .quick-links-section {
-    padding: 24px 0 50px;
-    margin-top: -32px;
+    padding: 1.5rem 0 3rem;
+    margin-top: -2rem;
   }
 
   .quick-links-grid {
-    gap: 16px;
+    gap: 1rem;
   }
 
   .quick-card {
-    padding: 20px;
-    gap: 14px;
+    padding: 1.25rem;
+    gap: 0.875rem;
+    flex-direction: row;
   }
 
   .quick-icon {
-    width: 52px;
-    height: 52px;
-    font-size: 24px;
+    width: 3.25rem;
+    height: 3.25rem;
+    font-size: 1.5rem;
   }
 
   .quick-card h3 {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 
   .quick-card p {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
-  /* FAQ mobile */
   .faq-section {
-    padding: 60px 0;
+    padding: 3.75rem 0;
   }
 
   .faq-container {
-    gap: 28px;
+    gap: 1.75rem;
     text-align: center;
   }
 
   .faq-intro h2 {
-    font-size: 28px;
+    font-size: 1.75rem;
   }
 
   .faq-intro p {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 
   .faq-card {
-    padding: 16px;
+    padding: 1rem;
   }
 
   .faq-image {
-    min-height: 200px;
+    min-height: 12.5rem;
+  }
+
+  :deep(.el-collapse-item__header) {
+    font-size: 0.9375rem;
+    padding: 1rem 1.125rem;
+  }
+
+  :deep(.el-collapse-item__content) {
+    font-size: 0.875rem;
+    padding: 1rem 1.125rem;
   }
 }
 
 @media (max-width: 375px) {
-  /* Extra small mobile devices */
   .container {
-    padding: 0 12px;
+    padding: 0 0.75rem;
   }
 
   .hero-section {
-    padding: 40px 0 40px;
+    padding: 2.5rem 0 2rem;
   }
 
   .hero-container {
-    gap: 24px;
+    gap: 1.5rem;
   }
 
   .hero-content h1 {
-    font-size: 28px;
+    font-size: 1.625rem;
+    line-height: 1.2;
   }
 
   .hero-text {
-    font-size: 15px;
+    font-size: 0.9375rem;
+    line-height: 1.5;
   }
 
   .hero-illustration {
-    min-height: 200px;
+    min-height: 12.5rem;
   }
 
   .quick-card {
-    padding: 16px;
-    gap: 12px;
+    padding: 1rem;
+    gap: 0.75rem;
   }
 
   .quick-icon {
-    width: 48px;
-    height: 48px;
-    font-size: 22px;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.375rem;
   }
 
   .quick-card h3 {
-    font-size: 16px;
+    font-size: 1rem;
   }
 
   .quick-card p {
-    font-size: 13px;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  .quick-card span {
+    font-size: 1.75rem;
   }
 
   .faq-intro h2 {
-    font-size: 24px;
+    font-size: 1.5rem;
+  }
+
+  .faq-intro p {
+    font-size: 0.875rem;
   }
 
   .faq-card {
-    padding: 12px;
+    padding: 0.75rem;
+  }
+
+  :deep(.el-collapse-item__header) {
+    font-size: 0.875rem;
+    padding: 0.875rem 1rem;
+  }
+
+  :deep(.el-collapse-item__content) {
+    font-size: 0.8125rem;
+    padding: 0.875rem 1rem;
+    line-height: 1.6;
   }
 }
 </style>
