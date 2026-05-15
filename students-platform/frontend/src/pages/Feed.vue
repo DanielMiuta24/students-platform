@@ -58,7 +58,6 @@ onMounted(async () => {
 });
 
 const handlePostSuccess = async (post: any) => {
-  console.log('[Feed] Post created successfully:', post);
   // Refresh the feed to show the new post
   await postFeedStore.refreshPosts();
 };

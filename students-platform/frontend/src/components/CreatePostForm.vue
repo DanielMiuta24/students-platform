@@ -441,7 +441,6 @@ export default defineComponent({
 
         const post = await createPost(formData);
 
-        console.log('Post created successfully, emitting success event:', post);
         successMessage.value = 'Post published successfully!';
         emit('success', post);
 
