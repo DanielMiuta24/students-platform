@@ -24,5 +24,17 @@ export type CommentDoc = HydratedDocument<Comment>;
 
 CommentSchema.index({ createdAt: 1 });
 
+CommentSchema.pre('deleteOne', { document: true, query: false }, async function() {
+  const NotificationModel = model('Notification');
+  await NotificationModel.deleteMany({ target: this._id, targetModel: 'Comment' });
+});
+
+CommentSchema.pre('findOneAndDelete', async function() {
+  const doc = await this.model.findOne(this.getQuery());
+  if (doc) {
+    const NotificationModel = model('Notification');
+    await NotificationModel.deleteMany({ target: doc._id, targetModel: 'Comment' });
+  }
+});
 
 export const CommentModel: Model<Comment> = model<Comment>('Comment', CommentSchema);
