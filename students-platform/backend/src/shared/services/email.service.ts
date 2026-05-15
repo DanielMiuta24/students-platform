@@ -27,7 +27,7 @@ export class EmailService {
       return;
     }
 
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       secure: env.SMTP_PORT === 465,
@@ -81,8 +81,12 @@ export class EmailService {
       community_invite: 'invited you to',
       community_join_request: 'requested to join',
       community_join_approved: 'approved your request to join',
+      community_join_request_rejected: 'rejected your request to join',
+      community_invite_rejected: 'rejected your invite to',
       admin_assign: 'assigned you as an admin in',
+      ownership_transfer_request: 'requested to transfer ownership to you for',
       ownership_transfer: 'transferred ownership to you for',
+      ownership_transfer_rejected: 'rejected ownership transfer for',
     };
     return actions[type] || 'interacted with';
   }
@@ -101,8 +105,12 @@ export class EmailService {
       community_invite: 'You have been invited to join a community.',
       community_join_request: 'Review their request to join your community.',
       community_join_approved: 'You can now access the community and participate.',
+      community_join_request_rejected: 'Your join request was not approved.',
+      community_invite_rejected: 'Your invitation was declined.',
       admin_assign: 'You now have admin privileges in this community.',
+      ownership_transfer_request: 'Review the ownership transfer request.',
       ownership_transfer: 'You are now the owner of this community.',
+      ownership_transfer_rejected: 'The ownership transfer was declined.',
     };
     return messages[type] || 'Check it out!';
   }

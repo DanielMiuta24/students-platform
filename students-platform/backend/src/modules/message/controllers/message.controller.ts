@@ -290,7 +290,7 @@ class MessageController {
       messageService.broadcastTypingIndicator(
         userId,
         recipientId,
-        req.user!.name,
+        'User',
         isTyping === true
       );
 

@@ -1,5 +1,5 @@
 import type { PostDoc } from '../models/post.model';
-import type { PostStatus, PostVisibility } from '../../shared/constants';
+import type { PostStatus, PostVisibility } from '../../../shared/constants';
 import type { PostContent } from './post-content.types';
 
 export interface CreatePostDTO {
