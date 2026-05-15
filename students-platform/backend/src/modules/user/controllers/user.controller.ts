@@ -53,7 +53,10 @@ class UserController {
       const { type, name, username, email, password } = req.body;
 
       if (!name || !username || !email || !password) {
-        return res.status(400).json({ message: 'Missing required fields' });
+        return res.status(200).json({
+          success: false,
+          message: 'Missing required fields'
+        });
       }
 
       const user = await userService.registerLocal({
@@ -67,13 +70,22 @@ class UserController {
 
       const safeUser = userService.toSafeUser(user);
 
-      return res.status(201).json({ message: 'Account created successfully ' });
+      return res.status(200).json({
+        success: true,
+        message: 'Account created successfully '
+      });
     } catch (err: any) {
       if (err.message === 'EMAIL_ALREADY_EXISTS') {
-        return res.status(409).json({ message: 'Email already in use' });
+        return res.status(200).json({
+          success: false,
+          message: 'Email already in use'
+        });
       }
       if (err.message === 'USERNAME_ALREADY_EXISTS') {
-        return res.status(409).json({ message: 'Username already in use' });
+        return res.status(200).json({
+          success: false,
+          message: 'Username already in use'
+        });
       }
       return next(err);
     }
@@ -87,9 +99,10 @@ class UserController {
         const { email, password } = req.body;
 
         if (!email || !password) {
-          return res
-            .status(400)
-            .json({ message: 'Email and password are required' });
+          return res.status(200).json({
+            success: false,
+            message: 'Email and password are required'
+          });
         }
 
         const user = await userService.validateLocalLogin({ email, password });
@@ -98,10 +111,16 @@ class UserController {
         this.attachAuthCookie(res,token);
         const safeUser = userService.toSafeUser(user);
 
-        return res.status(200).json({ message: 'Successfully' });
+        return res.status(200).json({
+          success: true,
+          message: 'Successfully'
+        });
       } catch (err: any) {
         if (err.message === 'INVALID_CREDENTIALS') {
-          return res.status(401).json({ message: 'Invalid email or password' });
+          return res.status(200).json({
+            success: false,
+            message: 'Invalid email or password'
+          });
         }
         return next(err);
       }

@@ -3,23 +3,10 @@ import axios from 'axios';
 export const api = axios.create({
     baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/`,
     withCredentials: true,
-    timeout: 10000, // 10 second timeout
+    timeout: 10000,
+    validateStatus: function (status) {
+        // Accept all status codes to prevent axios from throwing errors
+        // We'll handle error responses manually in our code
+        return status >= 200 && status < 600;
+    },
 });
-
-// Response interceptor to handle network errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Network error (no response from server)
-    if (!error.response) {
-      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        error.message = 'Request timeout. Please check your connection and try again.';
-      } else if (error.message === 'Network Error') {
-        error.message = 'Unable to connect to server. Please check your internet connection.';
-      } else {
-        error.message = 'Unable to connect to server. Please try again later.';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
