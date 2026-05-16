@@ -457,7 +457,6 @@ const isOnMessagesPage = computed(() => route.path.startsWith('/messages'));
 const filteredRecentConversations = computed(() => {
   let filtered = conversations.value;
 
-  // Filter by search query
   if (navbarSearchQuery.value.trim()) {
     const query = navbarSearchQuery.value.toLowerCase();
     filtered = filtered.filter(c =>
@@ -466,12 +465,17 @@ const filteredRecentConversations = computed(() => {
     );
   }
 
-  // Filter by unread status
   if (navbarConversationFilter.value === 'unread') {
     filtered = filtered.filter(c => c.unreadCount > 0);
   }
 
-  return filtered.slice(0, 10); // Show top 10
+  return filtered
+    .sort((a, b) => {
+      const aTime = new Date(a.lastActivity).getTime();
+      const bTime = new Date(b.lastActivity).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, 10);
 });
 
 const displayUnreadCount = computed(() => {
