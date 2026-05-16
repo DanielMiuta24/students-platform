@@ -753,10 +753,13 @@ onUnmounted(() => {
     right: 0;
     bottom: 0;
     height: 100vh;
+    height: 100dvh;
     min-height: 100vh;
+    min-height: 100dvh;
     z-index: 9999;
     background: white;
     padding-top: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .mobile-close-button {
@@ -764,7 +767,7 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     position: fixed;
-    top: 10px;
+    top: max(10px, env(safe-area-inset-top, 0px) + 10px);
     right: 16px;
     width: 40px;
     height: 40px;
@@ -790,22 +793,26 @@ onUnmounted(() => {
   }
 
   .messages-container {
-    height: 100vh;
+    height: 100%;
+    height: 100dvh;
   }
 
   .messages-content {
-    height: 100vh;
+    height: 100%;
+    height: 100dvh;
   }
 
   .conversation-sidebar {
     width: 100%;
     border-right: none;
-    height: 100vh;
+    height: 100%;
+    height: 100dvh;
   }
 
   .chat-main {
     width: 100%;
-    height: 100vh;
+    height: 100%;
+    height: 100dvh;
   }
 
   .mobile-hidden {

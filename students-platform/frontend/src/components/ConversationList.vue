@@ -354,8 +354,8 @@ defineEmits<{
 
   .new-conversation-button-floating {
     display: flex;
-    position: absolute;
-    bottom: 80px;
+    position: fixed;
+    bottom: calc(120px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: 120px;
@@ -376,6 +376,10 @@ defineEmits<{
     background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     transform: translateX(-50%) scale(1.05);
     box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6);
+  }
+
+  .new-conversation-button-floating:active {
+    transform: translateX(-50%) scale(0.95);
   }
 
   .new-conversation-button-floating .icon-plus {
