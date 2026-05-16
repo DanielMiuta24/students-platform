@@ -510,6 +510,7 @@ const handleNewMessage = async (payload: any) => {
   const conv = conversations.value.find(c =>
     c.userId === message.sender?.id || c.userId === message.recipient?.id
   );
+
   if (conv) {
     conv.latestMessage = message;
     conv.lastActivity = message.createdAt;
@@ -517,6 +518,21 @@ const handleNewMessage = async (payload: any) => {
     if (isForMe && (!selectedConversation.value || message.sender.id !== selectedConversation.value.userId)) {
       conv.unreadCount = (conv.unreadCount || 0) + 1;
     }
+  } else if (isForMe) {
+    const newConversation: Conversation = {
+      userId: message.sender.id,
+      user: {
+        id: message.sender.id,
+        name: message.sender.name,
+        username: message.sender.username,
+        email: message.sender.email,
+        profilePicture: message.sender.profilePicture
+      },
+      latestMessage: message,
+      unreadCount: 1,
+      lastActivity: message.createdAt
+    };
+    conversations.value.unshift(newConversation);
   }
 };
 
