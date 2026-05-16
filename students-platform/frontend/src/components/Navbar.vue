@@ -1070,10 +1070,26 @@ onBeforeUnmount(() => {
   }
 });
 
-// Watch for route changes to close chat boxes on messages page
 watch(() => route.path, (newPath) => {
   if (newPath.startsWith('/messages')) {
     showMessengerPopup.value = false;
+  }
+});
+
+watch(() => session.isAuthenticated, async (isAuthenticated, wasAuthenticated) => {
+  if (isAuthenticated && !wasAuthenticated) {
+    await Promise.all([
+      loadConversations(),
+      loadUnreadCount(),
+      loadAvailableUsers()
+    ]);
+    setupWebSocket();
+  } else if (!isAuthenticated && wasAuthenticated) {
+    conversations.value = [];
+    unreadCount.value = 0;
+    availableUsers.value = [];
+    openChatBoxes.value = [];
+    cleanupWebSocket();
   }
 });
 
