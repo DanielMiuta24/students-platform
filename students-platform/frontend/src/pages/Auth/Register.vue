@@ -174,13 +174,14 @@
       {{ loading ? 'Registering...' : 'Register' }}
     </button>
 
-    <SuccessModal
-      :isOpen="showSuccessModal"
+    <Toast
+      :show="showSuccessToast"
       title="Account Created Successfully!"
       :message="`Welcome ${form.name}! Your account has been created. You can now log in with your credentials.`"
-      primaryActionText="Go to Login"
-      @close="handleModalClose"
-      @primaryAction="handleGoToLogin"
+      type="success"
+      :duration="4000"
+      position="center"
+      @close="handleToastClose"
     />
   </AuthFormShell>
 </template>
@@ -200,7 +201,7 @@ import {
   validatePassword,
 } from '../../utils/validation';
 import AuthFormShell from './AuthFormShell.vue';
-import SuccessModal from '../../components/common/SuccessModal.vue';
+import Toast from '../../components/Toast.vue';
 
 const router = useRouter();
 const { register, loading, error, success, clearMessages } = useAuth();
@@ -218,7 +219,7 @@ onMounted(() => {
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
-const showSuccessModal = ref(false);
+const showSuccessToast = ref(false);
 
 const form = reactive<RegisterForm>({
   name: '',
@@ -343,7 +344,10 @@ const handleRegister = async () => {
   try {
     const { confirmPassword, ...registerData } = form;
     await register(registerData);
-    showSuccessModal.value = true;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+      router.push('/login');
+    }, 4000);
   } catch (err: unknown) {
     handleApiError(err);
     Object.keys(form).forEach((key) => {
@@ -354,11 +358,8 @@ const handleRegister = async () => {
   }
 };
 
-const handleModalClose = () => {
-  showSuccessModal.value = false;
-};
-
-const handleGoToLogin = () => {
+const handleToastClose = () => {
+  showSuccessToast.value = false;
   router.push('/login');
 };
 </script>

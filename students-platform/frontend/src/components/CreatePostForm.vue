@@ -45,13 +45,6 @@
         </button>
       </div>
       <div class="p-6">
-        <div v-if="successMessage" class="success-banner">
-          <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-          </svg>
-          {{ successMessage }}
-        </div>
-
         <div v-if="generalError" class="error-banner">
           <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
@@ -169,6 +162,14 @@
     </form>
       </div>
     </div>
+
+    <Toast
+      :show="showSuccessToast"
+      title="Success!"
+      :message="successMessage"
+      type="success"
+      @close="showSuccessToast = false"
+    />
   </div>
 </template>
 
@@ -177,6 +178,7 @@ import { defineComponent, ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import RichTextEditor from './RichTextEditor.vue';
 import ImageUpload, { type ImageUpload as ImageUploadType } from './ImageUpload.vue';
+import Toast from './Toast.vue';
 import { createPost } from '../api/post';
 import { getActiveCategories } from '../api/category';
 import type { Category } from '../types/category';
@@ -198,6 +200,7 @@ export default defineComponent({
   components: {
     RichTextEditor,
     ImageUpload,
+    Toast,
   },
 
   props: {
@@ -259,6 +262,7 @@ export default defineComponent({
     const isDraftSaving = ref(false);
     const generalError = ref('');
     const successMessage = ref('');
+    const showSuccessToast = ref(false);
 
     // Watch for changes in communityId and update category accordingly
     watch(() => props.communityId, (newCommunityId) => {
@@ -442,11 +446,13 @@ export default defineComponent({
         const post = await createPost(formData);
 
         successMessage.value = 'Post published successfully!';
+        showSuccessToast.value = true;
         emit('success', post);
 
         setTimeout(() => {
           resetForm();
           successMessage.value = '';
+          showSuccessToast.value = false;
         }, 2000);
       } catch (error: any) {
         const errorMessage = error.message || 'Failed to publish post. Please try again.';
@@ -486,11 +492,13 @@ export default defineComponent({
         const post = await createPost(formData);
 
         successMessage.value = 'Draft saved successfully!';
+        showSuccessToast.value = true;
         emit('success', post);
 
         setTimeout(() => {
           resetForm();
           successMessage.value = '';
+          showSuccessToast.value = false;
         }, 2000);
       } catch (error: any) {
         const errorMessage = error.message || 'Failed to save draft. Please try again.';
@@ -542,6 +550,7 @@ export default defineComponent({
       isDraftSaving,
       generalError,
       successMessage,
+      showSuccessToast,
       POST_VALIDATION,
 
       validateTitle,
