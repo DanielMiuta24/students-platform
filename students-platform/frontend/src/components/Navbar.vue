@@ -672,6 +672,12 @@ const sendMessageInChatBox = async (userId: string) => {
       content
     });
 
+    // Add message to chatBox messages array immediately
+    const messageExists = chatBox.conversation.messages.some(m => m.id === message.id);
+    if (!messageExists) {
+      chatBox.conversation.messages.push(message);
+    }
+
     const conv = conversations.value.find(c => c.userId === userId);
     if (conv) {
       conv.latestMessage = message;
