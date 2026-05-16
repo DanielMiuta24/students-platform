@@ -206,7 +206,6 @@ const canDeleteForEveryone = computed(() =>
 const filteredConversations = computed(() => {
   let filtered = conversations.value;
 
-  // Filter by search query
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(c =>
@@ -215,12 +214,15 @@ const filteredConversations = computed(() => {
     );
   }
 
-  // Filter by unread status
   if (conversationFilter.value === 'unread') {
     filtered = filtered.filter(c => c.unreadCount > 0);
   }
 
-  return filtered;
+  return filtered.sort((a, b) => {
+    const aTime = new Date(a.lastActivity).getTime();
+    const bTime = new Date(b.lastActivity).getTime();
+    return bTime - aTime;
+  });
 });
 
 let typingTimeout: number | null = null;
@@ -480,9 +482,10 @@ const handleNewMessage = async (payload: any) => {
     return;
   }
 
+  const isSentByMe = message.sender.id === currentUserId.value;
+  const isForMe = message.recipient.id === currentUserId.value;
+
   if (selectedConversation.value) {
-    const isSentByMe = message.sender.id === currentUserId.value;
-    const isForMe = message.recipient.id === currentUserId.value;
     const isSentToSelectedUser = message.recipient.id === selectedConversation.value.userId;
     const isFromSelectedUser = message.sender.id === selectedConversation.value.userId;
 
@@ -509,6 +512,11 @@ const handleNewMessage = async (payload: any) => {
   );
   if (conv) {
     conv.latestMessage = message;
+    conv.lastActivity = message.createdAt;
+
+    if (isForMe && (!selectedConversation.value || message.sender.id !== selectedConversation.value.userId)) {
+      conv.unreadCount = (conv.unreadCount || 0) + 1;
+    }
   }
 };
 
