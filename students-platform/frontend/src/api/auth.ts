@@ -7,9 +7,10 @@ export const registerUser = async (data: RegisterForm): Promise<AuthResponse> =>
     const response = await api.post('/users/register', data);
 
     if (!response.data.success) {
-        // Create a proper AxiosError-like structure
         const error: any = new Error(response.data.message || 'Registration failed');
         error.isAxiosError = true;
+        error.code = 'ERR_BAD_REQUEST';
+        error.message = response.data.message || 'Registration failed';
         error.response = {
             status: 400,
             statusText: 'Bad Request',
@@ -21,6 +22,7 @@ export const registerUser = async (data: RegisterForm): Promise<AuthResponse> =>
             config: response.config
         };
         error.config = response.config;
+        error.request = response.request;
         throw error;
     }
 
@@ -31,9 +33,10 @@ export const loginUser = async (data: LoginForm): Promise<AuthResponse> => {
     const response = await api.post('/users/login', data);
 
     if (!response.data.success) {
-        // Create a proper AxiosError-like structure
         const error: any = new Error(response.data.message || 'Login failed');
         error.isAxiosError = true;
+        error.code = 'ERR_BAD_REQUEST';
+        error.message = response.data.message || 'Login failed';
         error.response = {
             status: 401,
             statusText: 'Unauthorized',
@@ -45,6 +48,7 @@ export const loginUser = async (data: LoginForm): Promise<AuthResponse> => {
             config: response.config
         };
         error.config = response.config;
+        error.request = response.request;
         throw error;
     }
 

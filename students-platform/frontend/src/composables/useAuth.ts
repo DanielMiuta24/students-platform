@@ -35,7 +35,7 @@ export const useAuth = () => {
             const parsed = parseApiError(err);
             parsedError.value = parsed;
             error.value = parsed.message;
-            throw parsed;
+            throw err;
         } finally {
             loading.value = false;
         }
@@ -56,7 +56,7 @@ export const useAuth = () => {
             const parsed = parseApiError(err);
             parsedError.value = parsed;
             error.value = parsed.message;
-            throw parsed;
+            throw err;
         } finally {
             loading.value = false;
         }
