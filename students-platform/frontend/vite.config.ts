@@ -32,9 +32,6 @@ export default defineConfig({
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
   },
-  esbuild: {
-    drop: ['console', 'debugger'],
-  },
   server: {
     host: true,
     port: 5173,

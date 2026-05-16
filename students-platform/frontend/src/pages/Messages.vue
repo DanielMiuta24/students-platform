@@ -274,7 +274,7 @@ const selectConversation = async (conversation: Conversation) => {
 
   try {
     const result = await messageService.getConversation(conversation.userId);
-    messages.value = result.messages.reverse();
+    messages.value = result.messages;
     await messageService.markConversationAsRead(conversation.userId);
 
     // Update conversation unread count
