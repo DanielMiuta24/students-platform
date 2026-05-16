@@ -164,7 +164,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import axios from "axios";
+import { api } from "../services/api";
 
 const universities = ref<any[]>([]);
 const countryInput = ref("");
@@ -186,7 +186,7 @@ const fetchUniversities = async () => {
   }
 
   try {
-    const response = await axios.get("http://localhost:3000/api/universities", {
+    const response = await api.get("universities", {
       params: {
         country: countryInput.value,
         page: currentPage.value,
