@@ -328,6 +328,12 @@ const sendMessage = async () => {
       content,
     });
 
+    // Add message to messages array immediately
+    const messageExists = messages.value.some(m => m.id === message.id);
+    if (!messageExists) {
+      messages.value.push(message);
+    }
+
     const conv = conversations.value.find(c => c.userId === selectedConversation.value?.userId);
     if (conv) {
       conv.latestMessage = message;
