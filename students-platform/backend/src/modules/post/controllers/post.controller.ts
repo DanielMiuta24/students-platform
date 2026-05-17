@@ -272,7 +272,7 @@ class PostController {
         ? POST_VALIDATION.DEFAULT_PAGINATION_LIMIT
         : limit;
 
-      const userId = req.user!.id;
+      const userId = req.user?.id;
 
       const result = await postService.getCommunityScoredFeed(
         communityId,

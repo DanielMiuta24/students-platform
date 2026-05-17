@@ -252,21 +252,32 @@ export class CommunityService {
         ? resultCommunities[resultCommunities.length - 1]._id.toString()
         : null;
 
-    // Fetch pending join requests for the user
     let pendingRequestCommunityIds: string[] = [];
+    let pendingInvitationCommunityIds: string[] = [];
     if (userId) {
-      const pendingRequests = await CommunityJoinRequestModel.find({
-        user: userId,
-        status: 'pending',
-      }).select('community').exec();
+      const [pendingRequests, pendingInvitations] = await Promise.all([
+        CommunityJoinRequestModel.find({
+          user: userId,
+          status: 'pending',
+        }).select('community').exec(),
+        CommunityInvitationModel.find({
+          recipientUser: userId,
+          status: 'pending',
+          expiresAt: { $gt: new Date() },
+        }).select('community').exec()
+      ]);
 
       pendingRequestCommunityIds = pendingRequests
         .filter(req => req.community)
         .map(req => req.community!.toString());
+
+      pendingInvitationCommunityIds = pendingInvitations
+        .filter(inv => inv.community)
+        .map(inv => inv.community!.toString());
     }
 
     return {
-      communities: CommunityMapper.toSafeCommunities(resultCommunities, userId, pendingRequestCommunityIds),
+      communities: CommunityMapper.toSafeCommunities(resultCommunities, userId, pendingRequestCommunityIds, pendingInvitationCommunityIds),
       nextCursor,
       hasMore,
     };

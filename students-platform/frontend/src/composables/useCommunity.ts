@@ -53,21 +53,12 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
   const toggleJoin = async () => {
     if (!community.value) return;
 
-    console.log('toggleJoin called with community:', {
-      name: community.value.name,
-      requiresApproval: community.value.requiresApproval,
-      joined: community.value.joined,
-      hasPendingRequest: community.value.hasPendingRequest
-    });
-
     // Handle cancel pending request
     if (community.value.hasPendingRequest) {
       try {
-        console.log('Canceling pending request...');
         await cancelJoinRequest(community.value.id);
         // Update local state
         community.value.hasPendingRequest = false;
-        console.log('Pending request canceled');
       } catch (err: any) {
         console.error('Error canceling request:', err);
         throw err;
@@ -83,37 +74,27 @@ export const useCommunity = (communityIdOrSlug: string | Ref<string>) => {
     try {
       if (community.value.joined) {
         // User is already a member - leave the community
-        console.log('Leaving community...');
-
         await leaveCommunity(community.value.id);
 
         // Update state after successful leave
         community.value.joined = false;
         community.value.memberCount -= 1;
         community.value.role = undefined;
-        console.log('Successfully left community');
       } else if (community.value.hasPendingInvitation) {
         // User has a pending invitation - join directly (bypass approval)
-        console.log('User has pending invitation, joining directly...');
         const result = await joinCommunity(community.value.id);
         community.value = result.community;
-        console.log('Successfully joined community via invitation');
       } else if (community.value.requiresApproval) {
         // Community requires approval - create a join request
-        console.log('Creating join request (requires approval)...');
         await createJoinRequest(community.value.id, { message: '' });
 
         // Update to show pending request status
         community.value.hasPendingRequest = true;
         community.value.joined = false;
-        console.log('Join request created, hasPendingRequest:', community.value.hasPendingRequest);
       } else {
         // Community doesn't require approval - join directly
-        console.log('Joining directly (no approval required)...');
-
         const result = await joinCommunity(community.value.id);
         community.value = result.community;
-        console.log('Successfully joined community');
       }
     } catch (err: any) {
       console.error('Error in toggleJoin:', err);

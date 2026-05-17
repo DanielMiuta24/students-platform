@@ -92,11 +92,9 @@ export const useCommunities = () => {
     const community = communities.value.find((c) => c.id === communityId);
     if (!community) return;
 
-    // Handle cancel pending request
     if (community.hasPendingRequest) {
       try {
         await cancelJoinRequest(communityId);
-        // Update local state
         community.hasPendingRequest = false;
       } catch (err: any) {
         throw err;
@@ -110,34 +108,35 @@ export const useCommunities = () => {
 
     try {
       if (community.joined) {
-        // Leave community
         await leaveCommunity(communityId);
         community.joined = false;
         community.memberCount -= 1;
         community.role = undefined;
       } else {
-        // Try to join community
-        try {
+        if (community.hasPendingInvitation) {
           const result = await joinCommunity(communityId);
-          // Update with server response
           const index = communities.value.findIndex((c) => c.id === communityId);
-          if (index !== -1) {
+          if (index !== -1 && result && result.community) {
             communities.value[index] = result.community;
           }
-        } catch (err: any) {
-          // Check if community requires approval
-          if (err.message && err.message.includes('requires approval')) {
-            // Create join request instead
-            await createJoinRequest(communityId, { message: '' });
-            // Update local state to show pending request
-            community.hasPendingRequest = true;
-          } else {
-            throw err;
+        } else if (community.requiresApproval) {
+          await createJoinRequest(communityId, { message: '' });
+          const index = communities.value.findIndex((c) => c.id === communityId);
+          if (index !== -1) {
+            communities.value[index] = {
+              ...communities.value[index],
+              hasPendingRequest: true
+            };
+          }
+        } else {
+          const result = await joinCommunity(communityId);
+          const index = communities.value.findIndex((c) => c.id === communityId);
+          if (index !== -1 && result && result.community) {
+            communities.value[index] = result.community;
           }
         }
       }
     } catch (err: any) {
-      // Revert optimistic update on error
       community.joined = previousJoinedState;
       community.memberCount = previousMemberCount;
       community.hasPendingRequest = previousPendingState;

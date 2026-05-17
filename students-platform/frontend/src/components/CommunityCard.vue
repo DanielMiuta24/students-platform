@@ -80,8 +80,11 @@
           @mouseenter="isHovered = true"
           @mouseleave="isHovered = false"
           :disabled="isFounder"
-          :class="['flex-1 font-bold px-5 py-2.5 rounded-xl transition-all shadow-md', getButtonClass()]"
+          :class="['flex-1 font-bold px-5 py-2.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2', getButtonClass()]"
         >
+          <svg v-if="hasPendingRequest && !isHovered" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           {{ getButtonText() }}
         </button>
 
@@ -125,7 +128,10 @@ const getInitial = (name: string) => {
   return name.charAt(0).toUpperCase();
 };
 
-const getCategoryName = (category: string | { id: string; name: string; slug: string }) => {
+const getCategoryName = (category: string | { id: string; name: string; slug: string } | undefined) => {
+  if (!category) {
+    return 'Uncategorized';
+  }
   if (typeof category === 'string') {
     return category;
   }

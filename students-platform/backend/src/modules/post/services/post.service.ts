@@ -488,7 +488,7 @@ export class PostService {
     };
   }
 
-  async getCommunityScoredFeed(communityId: string, userId: string, cursor?: string, limit?: number): Promise<ScoredFeedResult> {
+  async getCommunityScoredFeed(communityId: string, userId?: string, cursor?: string, limit?: number): Promise<ScoredFeedResult> {
     const safeLimit = limit && limit > 0 && limit <= 100 ? limit : this.DEFAULT_LIMIT;
 
     // Check access - userId can be undefined for non-authenticated users viewing public communities

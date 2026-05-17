@@ -151,8 +151,30 @@ export const deleteCommunity = async (communityId: string): Promise<{ message: s
 export const joinCommunity = async (communityId: string): Promise<{ message: string; community: SafeCommunity }> => {
   try {
     const response = await secureApi.post<{ message: string; community: SafeCommunity }>(`/communities/${communityId}/join`);
+
+    // Check if the response indicates an error (due to validateStatus allowing all status codes)
+    if (response.status === 400) {
+      throw new Error(response.data?.message || 'This community requires approval to join');
+    } else if (response.status === 401) {
+      throw new Error('You must be logged in to join a community');
+    } else if (response.status === 403) {
+      throw new Error('You are banned from this community');
+    } else if (response.status === 404) {
+      throw new Error('Community not found');
+    } else if (response.status === 409) {
+      throw new Error('You are already a member of this community');
+    } else if (response.status >= 400) {
+      throw new Error(response.data?.message || 'Failed to join community');
+    }
+
     return response.data;
   } catch (error: any) {
+    // If it's already an Error we threw, rethrow it
+    if (error instanceof Error && error.message) {
+      throw error;
+    }
+
+    // Handle axios errors (network errors, timeouts, etc.)
     if (error.response?.status === 401) {
       throw new Error('You must be logged in to join a community');
     } else if (error.response?.status === 403) {

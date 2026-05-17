@@ -232,9 +232,9 @@ const filteredCommunities = computed(() => {
   return communities.value.filter((community) => {
     const name = community.name.toLowerCase();
     const description = community.description?.toLowerCase() || '';
-    const categoryName = typeof community.category === 'string'
-      ? ''
-      : community.category.name.toLowerCase();
+    const categoryName = community.category && typeof community.category !== 'string'
+      ? community.category.name.toLowerCase()
+      : '';
 
     return name.includes(query) ||
            description.includes(query) ||
@@ -260,16 +260,14 @@ const handleToggleJoin = async (community: any) => {
   try {
     const wasNotMember = !community.joined && !community.hasPendingRequest;
     const requiresApproval = community.requiresApproval;
+    const hasInvitation = community.hasPendingInvitation;
 
     await toggleJoin(community.id);
 
-    // If community required approval and user just requested to join
-    if (wasNotMember && requiresApproval) {
+    // If community required approval and user just requested to join (but didn't have an invitation)
+    if (wasNotMember && requiresApproval && !hasInvitation) {
       selectedJoinedCommunity.value = community;
       showJoinRequestSuccess.value = true;
-      setTimeout(() => {
-        showJoinRequestSuccess.value = false;
-      }, 3000);
     }
   } catch (err: any) {
     alert(err.message || 'Failed to join/leave community');
@@ -294,8 +292,6 @@ const cancelLeave = () => {
 };
 
 const viewCommunity = (community: any) => {
-  console.log('viewCommunity called with:', community);
-  console.log('slug:', community.slug);
   if (community.slug) {
     router.push(`/community/${community.slug}`);
   } else {
