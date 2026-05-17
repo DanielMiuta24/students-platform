@@ -27,7 +27,7 @@
   </div>
 
   <!-- Community Content (Public or Member Access) -->
-  <div v-else class="min-h-screen bg-gray-100">
+  <div v-else class="min-h-screen bg-gray-100" :style="{ opacity: checkingAccess ? 0 : 1, transition: 'opacity 0.15s' }">
     <div class="shadow-md">
       <!-- Cover Image Section -->
       <div class="relative h-40 sm:h-48 md:h-64 overflow-hidden">

@@ -5,11 +5,7 @@
       <Navbar />
     </header>
     <main id="main-content" class="pt-16" role="main" tabindex="-1">
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <router-view />
     </main>
     <Footer />
   </div>
