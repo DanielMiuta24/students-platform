@@ -83,7 +83,7 @@ To address the missing mapping feedback, the following table organizes our syste
 | **Data** | `server/models` | `UserSchema.js`, `UniversitySchema.js`, `ThreadSchema.js` |
 
 To visualize how our application is structured, we created a Client-Server Architecture diagram. It shows the main components on the **Client Side** (the user's browser running our Vue.js app), the **Server Side** (our Node.js/Express API handling requests and logic), and the **Database** (MongoDB storing our data), along with the communication paths (HTTP/REST, WebSockets, Database Queries) between them.
-![Client server Architecture](./Visualizations/architecture_mvc.png)
+![Client server Architecture](./Visualizations/client_server.png)
 
 
 ### 5.2 Class Diagrams
