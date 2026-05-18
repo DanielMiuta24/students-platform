@@ -63,18 +63,18 @@ This view represents the functional requirements that shape the architecture.
 
 ![Overall Use Case Diagram](./Visualizations/class_diagram.png)
 
-[cite_start]**Diagram Legend:** [cite: 6]
+**Diagram Legend:** 
 * **Yellow Ovals:** Completed Core Features (e.g., UC-01, UC-02).
 * **White Ovals:** Planned Features (e.g., Scholarships, Course Curation).
 * **Boundary:** The system scope for the International Student Compass.
 
-> [cite_start]**Note:** Detailed behavioral logic and Activity Diagrams are excluded from the SAD and are located in the **Use Case Specification** documents[cite: 6].
+> **Note:** Detailed behavioral logic and Activity Diagrams are excluded from the SAD and are located in the **Use Case Specification** documents[c.
 
 ---
 
 ## 5. Logical View
 ### 5.1 Class Mapping (The "Architectural Blueprint")
-[cite_start]To address the missing mapping feedback, the following table organizes our system's code into the 3-Tier structure[cite: 6].
+To address the missing mapping feedback, the following table organizes our system's code into the 3-Tier structure[cite: 6].
 
 | Architectural Tier | Package/Folder | Significant Classes/Files |
 | :--- | :--- | :--- |
