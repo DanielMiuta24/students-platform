@@ -73,19 +73,19 @@ The following chapter provides an overview of this project with vision and Overa
 ### 2.1 Vision
 To create the one app every student needs to make their dream of studying abroad a reality,making the entire process simple, exciting, and less lonely.
 
-The Problem We’re Fixing
+# The Problem We’re Fixing
 Right now, figuring out how to study in another country is a mess. Students have to search dozens of confusing websites, forums, and social media groups. They don’t know who to trust, the information is scattered everywhere, and it feels like you’re doing it all by yourself. It’s stressful and makes people give up.
 
-What We’re Building
+# What We’re Building
 We are building one simple place for everything you need:
 
-A Student Community: A friendly place to connect with students from all over the world. You can ask for real, honest advice from people who have already done it, and make friends before you even arrive in your new country.
+# A Student Community: A friendly place to connect with students from all over the world. You can ask for real, honest advice from people who have already done it, and make friends before you even arrive in your new country.
 Easy Search Tools: Find the perfect university and scholarships without the headache. No more opening 50 browser tabs. We’ll put everything you need to know in one clean, easy-to-search list.
 Real Tips & Help: A library full of helpful short videos, guides, and advice from current international students. Learn everything from “how to pack” to “how to open a bank account.”
 
-Timezone Resilience: The system shall display all community post timestamps in the user's local timezone.
+# Timezone Resilience: The system shall display all community post timestamps in the user's local timezone.
 
-Bandwidth Optimization: The system shall implement lazy-loading for all university images to ensure page functionality on connections as slow as 1Mbps (reflecting legacy hardware/low-bandwidth constraints).
+# Bandwidth Optimization: The system shall implement lazy-loading for all university images to ensure page functionality on connections as slow as 1Mbps (reflecting legacy hardware/low-bandwidth constraints).
 
 ### 2.2 Use Cases and Diagrams
 This diagram shows all the major actions (use cases) that each type of user (actor) can perform, giving a complete "bird's-eye view" of the system's capabilities.
@@ -101,35 +101,33 @@ They are found under use_cases section.
 
 ### 2.3 Technology Stack
 Technologies we plan to use
-Frontend
+# Frontend
 
 Vue Js
 Tailwind CSS (styling)
 Axios/Fetch for API calls
 Backend
 
-Server: Node.js + Express  / FastAPI
-Auth: JWT and OAuth2
-Realtime: Socket.IO (chat, forums)
-Database & Search
+# Server: Node.js + Express  / FastAPI
+# Auth: JWT and OAuth2
+# Realtime: Socket.IO (chat, forums)
 
+# Database & Search
 Primary DB: MongoDB(structured data: users, universities, scholarships)
 Search: Elasticsearch (for fast filtering of scholarships/universities)
 
-Hosting:
-
+# Hosting:
 Frontend: dedicated vps
 Backend: dedicated vps
 DB: mongo db
 
 
-Collaboration:
+# Collaboration:
 GitHub (branches: frontend, backend, db)
 Figma (Petra + Benni for UI flow)
 youtrack (Petra for tasks)
 
-Other Tools
-
+# Other Tools
 Version Control: GitHub / GitLab
 Design: Figma (UI/UX)
 Communication: Slack / Discord
@@ -143,14 +141,12 @@ Actors represent the roles that interact with the system. For the International 
 
 A Guest is any individual who visits the web application without an account or without being logged in. Their interaction is limited to discovery and browsing.
 
-Primary Goals:
-
+# Primary Goals:
 To explore the platform's offerings without commitment.
 
 To find basic information about universities.
 
-Key Capabilities:
-
+# Key Capabilities:
 Search for universities by name or country.
 
 View public university profile pages.
@@ -161,7 +157,7 @@ Read community discussions in a read-only mode.
 
 The Student is the primary actor of the platform. This is a user who has successfully registered an account and is logged in. They have full access to all community and personalization features.
 
-Primary Goals:
+# Primary Goals:
 
 To connect with other students and seek advice.
 
@@ -169,8 +165,7 @@ To personalize their search and save information for future reference.
 
 To contribute to the community's knowledge base.
 
-Key Capabilities:
-
+# Key Capabilities:
 All capabilities of a Guest.
 
 Create and manage their personal profile.
@@ -344,13 +339,13 @@ This section describes the hardware and  architectural  decisions and constraint
 The system must be built as a Web-based application to ensure accessibility for international students who may not own a smartphone. The architecture must prioritize performance on shared desktop hardware (e.g., library or school computers) and low-bandwidth connections.
 We are building the application using a decoupled, three-tier architecture consisting of a frontend client, a backend application server, and a database. This approach provides a clear separation of concerns and enhances scalability.
 
-Frontend Architecture
+# Frontend Architecture
 We have chosen Vue.js as a design constraint for our frontend development. Its component-based structure is ideal for building a maintainable UI. To achieve strong Search Engine Optimization (SEO)—critical for a platform focused on discovery—we will use the Nuxt.js framework for its Server-Side Rendering (SSR) capabilities.
 
-Backend Architecture
+# Backend Architecture
 A custom backend using Node.js and Express.js is a core architectural constraint. This decision was made to ensure maximum flexibility, control over our business logic, and the ability to optimize performance specifically for our application's needs. Communication between the frontend and backend will be handled via a RESTful API that we will design and build. This approach allows for long-term scalability and avoids vendor lock-in associated with Backend-as-a-Service (BaaS) platforms.
 
-Supported Platforms
+# Supported Platforms
 The application is a web app and must be fully functional on the latest stable versions of modern web browsers:
 
 Google Chrome
@@ -374,9 +369,9 @@ We don't have any purchased components yet. If there will be purchased component
 The User Interface is a Responsive Web Application. It must be platform-agnostic, supporting standard input methods (keyboard/mouse) and varying screen resolutions to accommodate legacy desktop hardware.
 The User Interfaces that will be implemented are:
 
-Home Dashboard - Acts as a personalized starting point, showing recommended scholarships, trending discussions, and relevant online courses.
+# Home Dashboard - Acts as a personalized starting point, showing recommended scholarships, trending discussions, and relevant online courses.
 
-University Search Page - Allows users to search for universities by country or name and displays the results in a clear list.
+# University Search Page - Allows users to search for universities by country or name and displays the results in a clear list.
 
 University Profile Page - Shows detailed, community-enriched information about a specific university, including student reviews, photos, and a link to its dedicated discussion space.
 
