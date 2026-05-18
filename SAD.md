@@ -81,7 +81,7 @@ This view represents the functional requirements that shape the architecture.
 | **Presentation** | `src/views`, `src/components` | `HomeView.vue`, `SearchView.vue`, `ChatComponent.vue` |
 | **Application** | `server/controllers`, `server/routes` | `AuthController.js`, `SearchController.js`, `ChatHandler.js` |
 | **Data** | `server/models` | `UserSchema.js`, `UniversitySchema.js`, `ThreadSchema.js` |
-![Architecture Diagram](./Visualizations/architecture.png)
+
 ### 5.2 Class Diagrams
 This diagram shows the relationships between the Controllers in the Application Tier and the Schemas in the Data Tier.
 
