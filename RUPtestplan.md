@@ -1,97 +1,98 @@
-# 📑 ISC Master Test Plan (RUP Template)
-
-
----
+# International Student Compass - Master Test Plan
 
 ## Table of Contents
-1. [Introduction](#introduction)
-   - [Purpose](#purpose)
-   - [Scope](#scope)
-   - [Terminology and Acronyms](#terminology-and-acronyms)
-2. [Evaluation Mission and Test Motivation](#evaluation-mission-and-test-motivation)
-   - [Evaluation Mission](#evaluation-mission)
-   - [Test Motivators](#test-motivators)
-3. [Target Test Items](#target-test-items)
-4. [Outline of Planned Tests](#outline-of-planned-tests)
-   - [Outline of Test Inclusions](#outline-of-test-inclusions)
-5. [Test Approach](#test-approach)
-   - [Testing Techniques and Types](#testing-techniques-and-types)
-6. [Entry and Exit Criteria](#entry-and-exit-criteria)
-   - [Entry Criteria](#entry-criteria)
-   - [Exit Criteria](#exit-criteria)
-7. [Responsibilities and Staffing](#responsibilities-and-staffing)
-8. [Risks, Dependencies, Assumptions, and Constraints](#risks-dependencies-assumptions-and-constraints)
-9. [Appendix A: Code Quality Metrics](#appendix-a-code-quality-metrics)
-   - [Cyclomatic Complexity (CC)](#cyclomatic-complexity-cc)
-   - [Efferent Couplings (Ce)](#efferent-couplings-ce)
+1. [Introduction](#1-introduction)
+   - [1.1 Purpose](#11-purpose)
+   - [1.2 Scope](#12-scope)
+   - [1.3 Terminology and Acronyms](#13-terminology-and-acronyms)
+2. [Evaluation Mission and Test Motivation](#2-evaluation-mission-and-test-motivation)
+   - [2.1 Evaluation Mission](#21-evaluation-mission)
+   - [2.2 Test Motivators](#22-test-motivators)
+3. [Target Test Items](#3-target-test-items)
+4. [Outline of Planned Tests](#4-outline-of-planned-tests)
+   - [4.1 Outline of Test Inclusions](#41-outline-of-test-inclusions)
+5. [Test Approach](#5-test-approach)
+   - [5.1 Testing Techniques and Types](#51-testing-techniques-and-types)
+   - [5.2 Feature Files and Test Results](#52-feature-files-and-test-results)
+   - [5.3 API Integration Testing](#53-api-integration-testing)
+   - [5.4 Unit Testing Results](#54-unit-testing-results)
+6. [Entry and Exit Criteria](#6-entry-and-exit-criteria)
+   - [6.1 Entry Criteria](#61-entry-criteria)
+   - [6.2 Exit Criteria](#62-exit-criteria)
+7. [Responsibilities and Staffing](#7-responsibilities-and-staffing)
+8. [Risks, Dependencies, Assumptions, and Constraints](#8-risks-dependencies-assumptions-and-constraints)
+9. [Appendix A: Code Quality Metrics](#9-appendix-a-code-quality-metrics)
+   - [9.1 Metric 1: Cognitive Complexity](#91-metric-1-cognitive-complexity)
+   - [9.2 Metric 2: Code Duplication](#92-metric-2-code-duplication)
+   - [9.3 Additional Observation: Coupling (Madge)](#93-additional-observation-coupling-madge)
 
 ---
 
-## Introduction
+## 1. Introduction
 
-### Purpose
-The purpose of this test plan is to define the strategy for the **International Student Compass (ISC)**—a full-stack application for scholarship searches and community interaction using **Node.js, Express, Vue.js, and MongoDB**. This document outlines the objectives and resources needed to ensure students get accurate scholarship data and a secure community experience.
+### 1.1 Purpose
+The purpose of this test plan is to define the verification and quality assurance strategy for the **International Student Compass (ISC)** web application. This document outlines the test objectives, execution metrics, and continuous integration validation gates required to ensure students receive reliable university/scholarship search tracking and secure real-time community engagement capabilities.
 
-### Scope
-* **Frontend:** Vue.js components, scholarship filter logic, and responsive UI for legacy hardware.  
-* **Backend:** Express routes, JWT authentication middleware, and MongoDB controllers.  
-* **API:** Validation of the **CareerOneStop API** integration.  
-* **End-to-End:** Full user journeys (Register -> Search Scholarship -> Save to Profile).
+### 1.2 Scope
+* **Frontend:** Validation of Vue.js components, Pinia reactive state stores, multi-criteria filtering engines, and layout performance optimizations for legacy hardware.
+* **Backend:** Comprehensive coverage of Node.js and Express route controllers, custom security middleware, JWT session authentication hooks, and decoupled database transactional operations.
+* **API Layer:** Verification of JSON structural data transformations and payload limits for external data endpoints.
+* **End-to-End (E2E):** Verification of integrated user journeys, specifically tracking the sequential operations of registration, real-time message routing, and bookmarking institutional resources.
 
-### Terminology and Acronyms
-| Abbr | Meaning |
+### 1.3 Terminology and Acronyms
+| Abbreviation | Meaning |
 | :--- | :--- |
 | **ISC** | International Student Compass |
 | **FP** | Function Points |
-| **ILF** | Internal Logical File (MongoDB) |
-| **EIF** | External Interface File (CareerOneStop API) |
+| **ILF** | Internal Logical File (MongoDB Collections) |
+| **EIF** | External Interface File (External Academic Reference APIs) |
+| **BDD** | Behavior-Driven Development |
+| **CC** | Cyclomatic Complexity / Cognitive Complexity |
 
 ---
 
-## Evaluation Mission and Test Motivation
+## 2. Evaluation Mission and Test Motivation
 
-### Evaluation Mission
-* Validate the accuracy of scholarship data fetched via external API.  
-* Ensure **MongoDB** User and Post collections maintain data integrity.  
-* Verify that the UI remains functional on older hardware (Legacy Hardware optimization).
+### 2.1 Evaluation Mission
+* Verify the consistency of university and scholarship records parsed across systemic JSON payloads.
+* Enforce model schema constraints across persistent MongoDB user and discussion collections to check for data corruption vulnerabilities.
+* Confirm thin-client execution efficiency to guarantee page functionality on legacy hardware and low-bandwidth connections down to 1 Mbps.
 
-### Test Motivators
-* **Data Reliability:** Students rely on accurate scholarship deadlines.  
-* **Security:** Sensitive user data (passports/visas) must be protected via robust Auth testing.
-
----
-
-## Target Test Items
-* **Frontend (Vue.js):** Search bars, filter toggles, post creation forms.  
-* **Backend (Express):** API wrappers, auth middleware.  
-* **Database (MongoDB):** Schema validation for "User" and "Post" models.  
-* **External API:** CareerOneStop Scholarship Search endpoint.
+### 2.2 Test Motivators
+* **Data Reliability:** Prospective international students depend on strict timeline deadlines; data processing bugs risk user deployment failures.
+* **Security & Privacy Isolation:** Verification of route restrictions and validation logic to block unauthorized data boundary access.
 
 ---
 
-## Outline of Planned Tests
-
-### Outline of Test Inclusions
-* **Unit Testing:** Jest (Backend) and Vitest (Frontend).  
-* **API Testing:** Supertest to verify CareerOneStop JSON responses.  
-* **E2E Testing:** Cucumber + Playwright/Selenium for Gherkin-based "Feature Files."
+## 3. Target Test Items
+* **Frontend Architecture UI Modules:** Multi-input search elements, inline forum managers, and real-time Socket.IO direct messaging layout components.
+* **Backend Service Pipeline:** Route initialization handlers, token parsing modules, and database CRUD abstraction wrappers.
+* **Persistence Layer Models:** Configuration verification for Mongoose schemas (`UserSchema`, `UniversitySchema`, `ThreadSchema`).
 
 ---
 
-## Test Approach
+## 4. Outline of Planned Tests
 
-### Testing Techniques and Types
-* **Unit Testing:** Isolated testing of the scholarship filtering algorithm.  
-* **Behavior-Driven Development (BDD):** Using Gherkin syntax to define student interactions.  
-* **API Integration Testing:** Ensuring the backend properly handles API rate limits or downtime from CareerOneStop and university API.
+### 4.1 Outline of Test Inclusions
+* **Unit Testing:** Local execution testing utilizing Jest to isolate route and schema processing controllers.
+* **API Verification Testing:** Integration assertion execution via automated validation tooling to verify request codes, headers, and parameter mapping constraints.
+* **End-to-End System Integration Testing:** Human-readable Gherkin-syntax automated scripts mapping behavior-driven user workflows.
 
 ---
-## Feature Files and Test Results
 
-The behavior-driven test scenarios for the International Student Compass (ISC) are defined using Gherkin-based feature files, which describe key user interactions such as registration, scholarship search, and saving results to a profile. An example feature file is included below to illustrate the structure and expected system behavior. To validate the implementation, test results from unit, API, and end-to-end testing are documented through generated reports and execution outputs. A screenshot of successful test execution is provided to demonstrate that critical functionalities, including authentication and scholarship search, are working as expected. Together, these artifacts ensure transparency, traceability, and confidence in the system’s reliability.
-You can read all the feature files here:![ Feature files](../backend/features)
-## Example Feature File
-## Feature File: University Search
+## 5. Test Approach
+
+### 5.1 Testing Techniques and Types
+* **Isolated Logic Verification:** Rigorous component mock architectures to evaluate parsing algorithms independently of database connectivity availability.
+* **Behavior-Driven Specification Verification:** Explicit mapping of software behaviors using readable Given-When-Then criteria steps to track validation metrics transparently.
+* **Fault-Tolerance Network Audits:** Injection testing to assess backend container handling parameters during rate-limiting constraints or external service dropouts.
+
+### 5.2 Feature Files and Test Results
+The behavior-driven test scenarios for the International Student Compass (ISC) are defined using Gherkin-based feature files, which describe key user interactions. To validate the implementation, test results from unit, API, and end-to-end testing are documented through generated reports and execution outputs.
+
+* **Repository Reference:** [View Complete Project Feature Files on GitHub](https://github.com/DanielMiuta24/students-platform/tree/main/students-platform/backend/features)
+
+  #### 5.2.1 Example Feature File: University Search
 
 ## Feature File: University Search
 
@@ -126,6 +127,7 @@ Feature: University Search via API
 
 ### API Integration Testing
 API testing was performed using Bruno to validate the functionality of the university search endpoint. Various test cases were executed, including valid queries, invalid inputs, and edge-case scenarios. The results confirmed that the API correctly processes requests, returns appropriate HTTP status codes, and maintains a consistent response structure. The use of Bruno also enabled reproducible and organized testing, supporting transparency and reliability in the validation process.
+
 ![ API testing](./Visualizations/bruno.png)
 
 ### Unit Testing Results
