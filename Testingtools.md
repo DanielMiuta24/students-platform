@@ -1,4 +1,4 @@
-````md
+
 # ISC Testing Tools
 
 This document outlines the testing tools selected for the **International Student Compass (ISC)** project, ensuring the platform remains reliable, secure, maintainable, and performant for students worldwide.
