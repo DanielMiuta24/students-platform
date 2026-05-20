@@ -61,7 +61,7 @@ The system follows a **3-Tier Layered Architecture** pattern to guarantee clean 
 * **Application Tier:** The "brain" of the system, handling business logic, service tasks, and API routing via Node.js and Express.
 * **Data Tier:** Manages persistent storage using MongoDB and Mongoose schemas.
 
-![Overall 3-Tier Layered Architecture Diagram](./Visualizations/architecture_diagram.jpeg)
+![Overall 3-Tier Layered Architecture Diagram](./Visualizations/architecture.png)
 
 ---
 
