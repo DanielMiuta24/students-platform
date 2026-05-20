@@ -79,13 +79,16 @@ Right now, figuring out how to study in another country is a mess. Students have
 # What We’re Building
 We are building one simple place for everything you need:
 
-# A Student Community: A friendly place to connect with students from all over the world. You can ask for real, honest advice from people who have already done it, and make friends before you even arrive in your new country.
+# A Student Community:
+A friendly place to connect with students from all over the world. You can ask for real, honest advice from people who have already done it, and make friends before you even arrive in your new country.
 Easy Search Tools: Find the perfect university and scholarships without the headache. No more opening 50 browser tabs. We’ll put everything you need to know in one clean, easy-to-search list.
 Real Tips & Help: A library full of helpful short videos, guides, and advice from current international students. Learn everything from “how to pack” to “how to open a bank account.”
 
-# Timezone Resilience: The system shall display all community post timestamps in the user's local timezone.
+# Timezone Resilience: 
+The system shall display all community post timestamps in the user's local timezone.
 
-# Bandwidth Optimization: The system shall implement lazy-loading for all university images to ensure page functionality on connections as slow as 1Mbps (reflecting legacy hardware/low-bandwidth constraints).
+# Bandwidth Optimization: 
+The system shall implement lazy-loading for all university images to ensure page functionality on connections as slow as 1Mbps (reflecting legacy hardware/low-bandwidth constraints).
 
 ### 2.2 Use Cases and Diagrams
 This diagram shows all the major actions (use cases) that each type of user (actor) can perform, giving a complete "bird's-eye view" of the system's capabilities.
