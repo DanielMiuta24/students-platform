@@ -1,28 +1,26 @@
-
 name: ISC Quality Assurance Pipeline
-
 on:
   push:
     branches: [ main, dev ]
   pull_request:
     branches: [ main ]
-
 jobs:
-  test:
+  backend-tests:
     runs-on: ubuntu-latest
-
     steps:
       - name: 📂 Checkout Repository
         uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
+      - name:  Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
- 
-      - name: 📦 Install Dependencies
+          cache-dependency-path: students-platform/backend/package-lock.json
+      - name:  Install Backend Dependencies
+        working-directory: ./students-platform/backend
         run: npm install
+      - name:  Execute Backend Unit Tests
+        working-directory: ./students-platform/backend
+        run: npm run test:unit
 
-      - name: 🧪 Execute TypeScript Unit Tests
-        run: npm test
+
