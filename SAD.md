@@ -91,6 +91,8 @@ This diagram shows the relationships between the Controllers in the Application 
 
 ![Tool generated Diagram](./Visualizations/tool-generated-class-diagram.png)
 ![Manualy drawn Diagram](./Visualizations/conceptual-class-diagram.png)
+![New Manualy drawn Diagram](./Visualizations/class_diagram.jpeg)
+
 
 Socket.IO: Critical for the "Real-time" goal of peer-to-peer chat.
 
