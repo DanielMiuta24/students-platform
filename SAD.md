@@ -73,8 +73,15 @@ This view represents the functional requirements that shape the architecture.
 ---
 
 ## 5. Logical View
-### 5.1 Class Mapping (The "Architectural Blueprint")
-To address the missing mapping feedback, the following table organizes our system's code into the 3-Tier structure[cite: 6].
+
+### 5.1 Overview
+Our elements are categorized by model, view, and controller. 
+
+**Data Flow Sequence:**
+1. **User Interaction (View):** A user interaction triggers a function to handle form submission or navigation.
+2. **Request Handling (Controller):** The Controller receives the request, validates the data, and passes it to the model layer or services.
+3. **Database Interaction (Model):** The Model interacts with our database and performs operations.
+4. **Response:** The Controller sends back the JSON result (success or error), which is handled by the view to update the UI accordingly.
 
 | Architectural Tier | Package/Folder | Significant Classes/Files |
 | :--- | :--- | :--- |
@@ -82,11 +89,18 @@ To address the missing mapping feedback, the following table organizes our syste
 | **Application** | `server/controllers`, `server/routes` | `AuthController.js`, `SearchController.js`, `ChatHandler.js` |
 | **Data** | `server/models` | `UserSchema.js`, `UniversitySchema.js`, `ThreadSchema.js` |
 
-To visualize how our application is structured, we created a Client-Server Architecture diagram. It shows the main components on the **Client Side** (the user's browser running our Vue.js app), the **Server Side** (our Node.js/Express API handling requests and logic), and the **Database** (MongoDB storing our data), along with the communication paths (HTTP/REST, WebSockets, Database Queries) between them.
-![Client server Architecture](./Visualizations/client_server.png)
 
+To visualize how our application is structured, we created a Client-Server Architecture diagram. It shows the main components on the **Client Side** (the user’s browser running our Vue.js app), the **Server Side** (our Node.js/Express API handling requests and logic), and the **Database** (MongoDB storing our data), along with the communication paths (HTTP/REST, WebSockets, Database Queries) between them.
 
-### 5.2 Class Diagrams
+![Client server Architecture](./Visualizations/architecture_diagram.jpeg)
+
+### 5.2 Architecturally Significant Design Packages
+* **Socket.IO:** Critical for the "Real-time" goal of peer-to-peer chat.
+* **Mongoose:** Essential for enforcing strict data schemas in our NoSQL database.
+* **Axios:** The primary HTTP client handling our decoupled REST communication.
+* **Vite:** Core build tool utilized for bundle optimization to support legacy hardware performance.
+  
+### 5.3 Class Diagrams
 This diagram shows the relationships between the Controllers in the Application Tier and the Schemas in the Data Tier.
 
 ![Tool generated Diagram](./Visualizations/tool-generated-class-diagram.png)
@@ -94,11 +108,7 @@ This diagram shows the relationships between the Controllers in the Application 
 ![New Manualy drawn Diagram](./Visualizations/class_diagram.jpeg)
 
 
-Socket.IO: Critical for the "Real-time" goal of peer-to-peer chat.
 
-Mongoose: Essential for enforcing data schemas in a NoSQL environment.
-
-Axios: The primary bridge for our decoupled REST communication.
 ---
 
 ## 6. Process View
@@ -135,7 +145,8 @@ root/: Contains the docker-compose.yml and environment configurations.
 ![Overall Use Case Diagram](./Visualizations/packages1.png)
 
 ### Our database structure in a schema:
-![Database](./Visualizations/database.png)
+
+![Database](./Visualizations/database.jpeg)
 
 ---
 
