@@ -170,6 +170,7 @@ import { ref, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Message, Promotion } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
+import { api } from '../services/api';
 
 const formRef = ref<FormInstance>();
 const submitting = ref(false);
@@ -213,10 +214,13 @@ const handleSubmit = async () => {
     submitting.value = true;
 
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // TODO: Replace with actual API call
-    console.log('Problem report submitted:', form);
+    await api.post('support', {
+      problemType: form.problemType,
+      subject: form.subject,
+      description: form.description,
+      email: form.email,
+      priority: form.priority,
+    });
 
     ElMessage.success({
       message: 'Your report has been submitted successfully! We\'ll get back to you soon.',

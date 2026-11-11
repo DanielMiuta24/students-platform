@@ -17,6 +17,19 @@ router.get('/get-profile', authMiddleware, userController.getProfile);
 
 router.get('/username/:username', userController.getUserByUsername);
 
+router.get('/search', userController.searchUsers);
+
+router.get('/saved-universities', authMiddleware, userController.getSavedUniversities);
+router.post('/saved-universities', authMiddleware, userController.saveUniversity);
+router.delete('/saved-universities', authMiddleware, userController.unsaveUniversity);
+
+router.get('/saved-scholarships', authMiddleware, userController.getSavedScholarships);
+router.post('/saved-scholarships', authMiddleware, userController.saveScholarship);
+router.delete('/saved-scholarships', authMiddleware, userController.unsaveScholarship);
+
+router.get('/verify-email/:token', userController.verifyEmail);
+router.post('/resend-verification', userController.resendVerification);
+
 router.put(
   '/change-password',
   authMiddleware,

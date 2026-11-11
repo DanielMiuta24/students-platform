@@ -5,6 +5,20 @@ import { env } from '../../config/env';
 import type { NotificationType } from '../types/domain';
 import { NOTIFICATION_EMAIL_SUBJECTS } from '../../modules/notification/constants';
 
+interface SendActivationEmailDTO {
+  recipientEmail: string;
+  recipientName: string;
+  activationUrl: string;
+}
+
+interface SendSupportReportDTO {
+  problemType: string;
+  subject: string;
+  description: string;
+  email: string;
+  priority: string;
+}
+
 interface SendNotificationEmailDTO {
   recipientEmail: string;
   recipientName: string;
@@ -35,6 +49,31 @@ export class EmailService {
         user: env.SMTP_USER,
         pass: env.SMTP_PASS,
       },
+    });
+  }
+
+  async sendActivationEmail(data: SendActivationEmailDTO): Promise<void> {
+    if (!this.transporter) return;
+    const templatePath = path.join(__dirname, '../../shared/email-templates/activation.html');
+    let html = await fs.readFile(templatePath, 'utf-8');
+    html = html.replace(/\{\{name\}\}/g, data.recipientName).replace(/\{\{actionUrl\}\}/g, data.activationUrl);
+    await this.transporter.sendMail({
+      from: env.SMTP_FROM || 'ISC <noreply@iscompass.de>',
+      to: data.recipientEmail,
+      subject: 'Verify your ISC email address',
+      html,
+    });
+  }
+
+  async sendSupportReport(data: SendSupportReportDTO): Promise<void> {
+    if (!this.transporter) return;
+    const supportTo = env.SMTP_FROM || env.SMTP_USER;
+    await this.transporter.sendMail({
+      from: env.SMTP_FROM || 'ISC Support <noreply@iscompass.de>',
+      to: supportTo,
+      replyTo: data.email,
+      subject: `[ISC Support] [${data.priority.toUpperCase()}] ${data.subject}`,
+      html: `<h2>Support Report</h2><table style="border-collapse:collapse"><tr><td style="padding:4px 12px 4px 0"><b>Type:</b></td><td>${data.problemType}</td></tr><tr><td style="padding:4px 12px 4px 0"><b>Priority:</b></td><td>${data.priority}</td></tr><tr><td style="padding:4px 12px 4px 0"><b>From:</b></td><td>${data.email}</td></tr></table><br><p style="white-space:pre-wrap">${data.description}</p>`,
     });
   }
 

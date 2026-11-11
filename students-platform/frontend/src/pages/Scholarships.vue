@@ -167,14 +167,30 @@
                 </div>
               </div>
 
-              <a
-                v-if="scholarship.website"
-                :href="formatWebsiteUrl(scholarship.website)"
-                target="_blank"
-                class="inline-block mt-5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg transition"
-              >
-                Visit Website
-              </a>
+              <div class="flex items-center gap-3 mt-5 flex-wrap">
+                <a
+                  v-if="scholarship.website"
+                  :href="formatWebsiteUrl(scholarship.website)"
+                  target="_blank"
+                  class="inline-block bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg transition"
+                >
+                  Visit Website
+                </a>
+                <button
+                  v-if="session.isAuthenticated"
+                  @click="toggleSaveScholarship(scholarship)"
+                  :title="isScholarshipSaved(scholarship) ? 'Remove from saved' : 'Save scholarship'"
+                  class="save-btn"
+                  :class="{ 'save-btn-saved': isScholarshipSaved(scholarship) }"
+                >
+                  <svg v-if="isScholarshipSaved(scholarship)" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
+                  </svg>
+                </button>
+              </div>
             </li>
           </ul>
 
@@ -206,9 +222,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { api } from "../services/api";
 import { US_STATES } from "../utils/locations";
+import { useSessionStore } from "../store/session";
+import { ElMessage } from "element-plus";
+
+const session = useSessionStore();
 
 type Scholarship = {
   programName?: string;
@@ -232,6 +252,59 @@ const errorMessage = ref("");
 const showDropdown = ref(false);
 const filteredLocations = ref<string[]>([]);
 const isFieldInvalid = ref(false);
+
+const savedScholarships = ref<Set<string>>(new Set());
+
+const scholarshipKey = (s: { programName?: string; schoolName?: string }) =>
+  `${s.programName || ''}||${s.schoolName || ''}`;
+
+const isScholarshipSaved = (s: Scholarship) => savedScholarships.value.has(scholarshipKey(s));
+
+const toggleSaveScholarship = async (s: Scholarship) => {
+  const key = scholarshipKey(s);
+  try {
+    if (isScholarshipSaved(s)) {
+      await api.delete('users/saved-scholarships', {
+        data: { programName: s.programName, schoolName: s.schoolName },
+      });
+      savedScholarships.value.delete(key);
+      savedScholarships.value = new Set(savedScholarships.value);
+      ElMessage.success('Removed from saved scholarships');
+    } else {
+      await api.post('users/saved-scholarships', {
+        programName: s.programName || '',
+        schoolName: s.schoolName || '',
+        city: s.city || '',
+        state: s.state || '',
+        website: s.website || '',
+      });
+      savedScholarships.value.add(key);
+      savedScholarships.value = new Set(savedScholarships.value);
+      ElMessage.success('Scholarship saved!');
+    }
+  } catch (error: any) {
+    const msg = error?.response?.data?.message;
+    if (msg === 'Already saved') {
+      savedScholarships.value.add(key);
+      savedScholarships.value = new Set(savedScholarships.value);
+    } else {
+      ElMessage.error('Something went wrong. Please try again.');
+    }
+  }
+};
+
+const loadSavedScholarships = async () => {
+  if (!session.isAuthenticated) return;
+  try {
+    const res = await api.get('users/saved-scholarships');
+    const items: Array<{ programName: string; schoolName: string }> = res.data || [];
+    savedScholarships.value = new Set(items.map(scholarshipKey));
+  } catch {
+    // silently ignore
+  }
+};
+
+onMounted(loadSavedScholarships);
 
 const hasNoResults = computed(() => scholarships.value.length === 0);
 const hasMultiplePages = computed(() => totalPages.value > 1);
@@ -428,5 +501,38 @@ const formatWebsiteUrl = (website: string) =>
 .result-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 14px 30px rgba(15, 42, 95, 0.13);
+}
+
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  transition: 0.2s ease;
+  flex-shrink: 0;
+}
+
+.save-btn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.save-btn-saved {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: white;
+}
+
+.save-btn-saved:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: white;
 }
 </style>

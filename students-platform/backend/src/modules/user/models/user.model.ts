@@ -42,6 +42,23 @@ const UserSchema = new Schema(
 
     followers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+
+    savedUniversities: [
+      {
+        name: { type: String, required: true },
+        country: { type: String, default: '' },
+        website: { type: String, default: '' },
+      },
+    ],
+    savedScholarships: [
+      {
+        programName: { type: String, required: true },
+        schoolName: { type: String, default: '' },
+        city: { type: String, default: '' },
+        state: { type: String, default: '' },
+        website: { type: String, default: '' },
+      },
+    ],
   },
   { timestamps: true }
 );

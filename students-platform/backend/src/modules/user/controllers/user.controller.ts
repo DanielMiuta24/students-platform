@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { userService,getProfile,getUserByUsername,RegisterDTO,LoginDTO,ChangePasswordDTO,UpdateProfileDTO} from '../services';
+import { userService, getProfile, getUserByUsername, RegisterDTO, LoginDTO, ChangePasswordDTO, UpdateProfileDTO } from '../services';
 import type { UserDoc } from '../models';
 import { env } from '../../../config/env';
 import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
@@ -270,7 +270,155 @@ class UserController {
     }
   };
 
+  searchUsers = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || !query.trim()) {
+        return res.status(200).json({ users: [] });
+      }
+      const users = await userService.searchUsers(query);
+      return res.status(200).json({ users });
+    } catch (err: any) {
+      return next(err);
+    }
+  };
 
+  getSavedUniversities = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const universities = await userService.getSavedUniversities(req.user.id);
+      return res.status(200).json({ universities });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+      return next(err);
+    }
+  };
+
+  saveUniversity = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { name, country, website } = req.body;
+      if (!name) return res.status(400).json({ message: 'University name is required' });
+      await userService.saveUniversity(req.user.id, { name, country: country || '', website: website || '' });
+      return res.status(200).json({ message: 'University saved' });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+      if (err.message === 'ALREADY_SAVED') return res.status(200).json({ message: 'Already saved' });
+      return next(err);
+    }
+  };
+
+  unsaveUniversity = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { name, country } = req.body;
+      if (!name) return res.status(400).json({ message: 'University name is required' });
+      await userService.unsaveUniversity(req.user.id, name, country || '');
+      return res.status(200).json({ message: 'University removed from saved' });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+      return next(err);
+    }
+  };
+
+  getSavedScholarships = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const scholarships = await userService.getSavedScholarships(req.user.id);
+      return res.status(200).json({ scholarships });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+      return next(err);
+    }
+  };
+
+  saveScholarship = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { programName, schoolName, city, state, website } = req.body;
+      if (!programName) return res.status(400).json({ message: 'Program name is required' });
+      await userService.saveScholarship(req.user.id, {
+        programName,
+        schoolName: schoolName || '',
+        city: city || '',
+        state: state || '',
+        website: website || '',
+      });
+      return res.status(200).json({ message: 'Scholarship saved' });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+      if (err.message === 'ALREADY_SAVED') return res.status(200).json({ message: 'Already saved' });
+      return next(err);
+    }
+  };
+
+  unsaveScholarship = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { programName, schoolName } = req.body;
+      if (!programName) return res.status(400).json({ message: 'Program name is required' });
+      await userService.unsaveScholarship(req.user.id, programName, schoolName || '');
+      return res.status(200).json({ message: 'Scholarship removed from saved' });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+      return next(err);
+    }
+  };
+
+  verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token } = req.params;
+      if (!token) return res.status(400).json({ message: 'Token is required' });
+      await userService.verifyEmail(token);
+      return res.status(200).json({ success: true, message: 'Email verified successfully' });
+    } catch (err: any) {
+      if (err.message === 'INVALID_OR_EXPIRED_TOKEN') {
+        return res.status(400).json({ success: false, message: 'Verification link is invalid or has expired' });
+      }
+      return next(err);
+    }
+  };
+
+  resendVerification = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: 'Email is required' });
+      await userService.resendVerification(email);
+      return res.status(200).json({ success: true, message: 'Verification email sent' });
+    } catch (err: any) {
+      if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'No account found with that email' });
+      if (err.message === 'ALREADY_VERIFIED') return res.status(400).json({ message: 'This account is already verified' });
+      return next(err);
+    }
+  };
 
 }
 
