@@ -15,6 +15,7 @@ import { messageRoutes } from './modules/message/routes';
 import { communityRoutes } from './modules/community';
 import { notificationRoutes } from './modules/notification/routes';
 import { realtimeGateway } from './modules/realtime';
+import supportRoutes from './modules/support/support.routes';
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -41,6 +42,7 @@ app.use('/api/follow', followRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/support', supportRoutes);
 
 app.get("/api", (_req, res) => {
   res.json({ ok: true, service: "api", ts: new Date().toISOString() });

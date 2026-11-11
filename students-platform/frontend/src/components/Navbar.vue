@@ -47,6 +47,45 @@
         <router-link to="/feed">Feed</router-link>
       </el-menu-item>
 
+      <!-- Explore -->
+      <el-menu-item index="4">
+        <router-link to="/explore">Explore</router-link>
+      </el-menu-item>
+
+      <!-- Global Search -->
+      <div class="global-search-wrapper" ref="searchWrapperRef">
+        <div class="global-search-input-row">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+          <input
+            v-model="globalSearchQuery"
+            class="global-search-input"
+            placeholder="Search students..."
+            @input="onSearchInput"
+            @focus="searchFocused = true"
+            autocomplete="off"
+          />
+        </div>
+        <div v-if="searchFocused && globalSearchResults.length > 0" class="search-dropdown">
+          <div
+            v-for="user in globalSearchResults"
+            :key="user.id"
+            class="search-result-item"
+            @mousedown.prevent="goToProfile(user.username)"
+          >
+            <div v-if="user.avatar" class="search-avatar-img-wrap">
+              <img :src="user.avatar" :alt="user.name" class="search-avatar-img" />
+            </div>
+            <div v-else class="search-avatar-initial">{{ user.name?.[0]?.toUpperCase() }}</div>
+            <div class="search-result-info">
+              <span class="search-result-name">{{ user.name }}</span>
+              <span class="search-result-username">@{{ user.username }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Account Button -->
       <div class="right-desktop">
         <template v-if="!session.isAuthenticated">
@@ -192,6 +231,11 @@
         <!-- Feed -->
         <el-menu-item index="3">
           <router-link to="/feed">Feed</router-link>
+        </el-menu-item>
+
+        <!-- Explore -->
+        <el-menu-item index="4">
+          <router-link to="/explore">Explore</router-link>
         </el-menu-item>
       </el-menu>
     </el-drawer>
@@ -398,7 +442,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Menu, User, ChatDotRound, Bell } from '@element-plus/icons-vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useActiveMenu } from '../composables/useActiveMenu';
 import { useNavigation } from '../composables/useNavigation';
 import { useAuth } from '../composables/useAuth';
@@ -416,11 +460,44 @@ const { activeIndex } = useActiveMenu();
 const { navigate } = useNavigation();
 const { logout } = useAuth();
 const route = useRoute();
+const router = useRouter();
 const session = useSessionStore();
 
 const drawerMenu = ref(false);
 const drawerAccount = ref(false);
 const isMobile = ref(false);
+
+// Global search state
+const globalSearchQuery = ref('');
+const globalSearchResults = ref<any[]>([]);
+const searchFocused = ref(false);
+const searchWrapperRef = ref<HTMLElement | null>(null);
+let searchDebounceHandle: number | null = null;
+
+const onSearchInput = () => {
+  if (searchDebounceHandle) clearTimeout(searchDebounceHandle);
+  const q = globalSearchQuery.value.trim();
+  if (q.length < 2) { globalSearchResults.value = []; return; }
+  searchDebounceHandle = window.setTimeout(async () => {
+    try {
+      const res = await api.get('users/search', { params: { q } });
+      globalSearchResults.value = res.data || [];
+    } catch { globalSearchResults.value = []; }
+  }, 300);
+};
+
+const goToProfile = (username: string) => {
+  searchFocused.value = false;
+  globalSearchQuery.value = '';
+  globalSearchResults.value = [];
+  router.push(`/profile/${username}`);
+};
+
+const handleSearchClickOutside = (e: MouseEvent) => {
+  if (searchWrapperRef.value && !searchWrapperRef.value.contains(e.target as Node)) {
+    searchFocused.value = false;
+  }
+};
 
 // Messenger state
 const showMessengerPopup = ref(false);
@@ -530,12 +607,12 @@ const closeMessengerPopup = () => {
   navigate('/messages');
 };
 
-let searchDebounceTimer: number | null = null;
+let messengerSearchDebounceTimer: number | null = null;
 const handleNavbarSearchChange = (query: string) => {
-  if (searchDebounceTimer) {
-    clearTimeout(searchDebounceTimer);
+  if (messengerSearchDebounceTimer) {
+    clearTimeout(messengerSearchDebounceTimer);
   }
-  searchDebounceTimer = window.setTimeout(() => {
+  messengerSearchDebounceTimer = window.setTimeout(() => {
     navbarSearchQuery.value = query;
   }, 300);
 };
@@ -1054,6 +1131,7 @@ onMounted(async () => {
   }
 
   window.addEventListener('click', handleClickOutside);
+  window.addEventListener('click', handleSearchClickOutside);
 
   const checkMobile = () => {
     isMobile.value = window.innerWidth <= 768;
@@ -1065,6 +1143,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   cleanupWebSocket();
   window.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('click', handleSearchClickOutside);
 
   // Clear typing timeouts
   for (const chatBox of openChatBoxes.value) {
@@ -1577,5 +1656,124 @@ const handleSelect = () => {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
+/* Global Search */
+.global-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 8px;
+}
+
+.global-search-input-row {
+  display: flex;
+  align-items: center;
+  background: #f8fbff;
+  border: 1.5px solid #e5efff;
+  border-radius: 999px;
+  padding: 0 14px;
+  height: 36px;
+  width: 240px;
+  transition: border-color 0.2s;
+}
+
+.global-search-input-row:focus-within {
+  border-color: #2563eb;
+  background: white;
+}
+
+.search-icon {
+  width: 15px;
+  height: 15px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.global-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #0f2a5f;
+  width: 100%;
+}
+
+.global-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 300px;
+  background: white;
+  border: 1.5px solid #e5efff;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(15, 42, 95, 0.13);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.search-result-item:hover {
+  background: #f0f7ff;
+}
+
+.search-avatar-img-wrap {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.search-avatar-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #dbeafe;
+}
+
+.search-avatar-initial {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.search-result-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.search-result-name {
+  font-weight: 700;
+  color: #0f2a5f;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-result-username {
+  font-size: 12px;
+  color: #94a3b8;
+}
 
 </style>

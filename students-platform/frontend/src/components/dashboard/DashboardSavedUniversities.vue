@@ -32,14 +32,22 @@
           <h3 class="font-bold text-gray-900 text-lg">{{ university.name }}</h3>
           <p class="text-sm text-gray-600 mt-1">{{ university.country || "Country not listed" }}</p>
         </div>
-        <a
-          v-if="university.website"
-          :href="university.website"
-          target="_blank"
-          class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/20"
-        >
-          Visit
-        </a>
+        <div class="flex gap-2 items-center">
+          <a
+            v-if="university.website"
+            :href="university.website"
+            target="_blank"
+            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/20"
+          >
+            Visit
+          </a>
+          <button
+            @click="unsave(university)"
+            class="px-4 py-2.5 border-2 border-red-300 hover:border-red-500 text-red-500 hover:text-red-700 font-semibold rounded-xl transition"
+          >
+            Unsave
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -47,27 +55,37 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import { api } from '../../services/api';
 
 const universities = ref<any[]>([]);
 const isLoading = ref(false);
 
-onMounted(() => {
-  // fetchSavedUniversities();
-});
+const fetchSavedUniversities = async () => {
+  isLoading.value = true;
+  try {
+    const response = await api.get('users/saved-universities');
+    universities.value = response.data || [];
+  } catch (error) {
+    console.error('Failed to fetch saved universities:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
-// TODO: Implement saved universities backend API
-// const fetchSavedUniversities = async () => {
-//   isLoading.value = true;
-//   try {
-//     const response = await axios.get('http://localhost:3000/api/users/my-saved-universities');
-//     universities.value = response.data;
-//   } catch (error) {
-//     console.error('Failed to fetch saved universities:', error);
-//   } finally {
-//     isLoading.value = false;
-//   }
-// };
+const unsave = async (university: any) => {
+  try {
+    await api.delete('users/saved-universities', { data: { name: university.name, country: university.country } });
+    universities.value = universities.value.filter(
+      (u) => !(u.name === university.name && u.country === university.country)
+    );
+  } catch (error) {
+    console.error('Failed to unsave university:', error);
+  }
+};
+
+onMounted(() => {
+  fetchSavedUniversities();
+});
 </script>
 
 <style scoped>

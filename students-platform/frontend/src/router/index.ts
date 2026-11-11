@@ -14,12 +14,14 @@ const CreateCommunity = () => import('../pages/CreateCommunity.vue');
 const Universities = () => import('../pages/Universities.vue');
 const Scholarships = () => import('../pages/Scholarships.vue');
 const Feed = () => import('../pages/Feed.vue');
+const Explore = () => import('../pages/Explore.vue');
 const UserProfile = () => import('../pages/UserProfile.vue');
 const Messages = () => import('../pages/Messages.vue');
 const EditProfile = () => import('../pages/EditProfile.vue');
 const ViewCommunity = () => import('../pages/ViewCommunity.vue');
 const EditPost = () => import('../pages/EditPost.vue');
 const ReportProblem = () => import('../pages/ReportProblem.vue');
+const VerifyEmail = () => import('../pages/VerifyEmail.vue');
 const NotFound = () => import('../pages/NotFound.vue');
 
 const routes = [
@@ -55,7 +57,9 @@ const routes = [
   { path: '/universities', component: Universities },
   { path: '/scholarships', component: Scholarships },
   { path: '/support', component: ReportProblem, name: 'ReportProblem' },
+  { path: '/verify-email/:token', component: VerifyEmail, name: 'VerifyEmail' },
   { path: '/feed', component: Feed, name: 'Feed', meta: { requiresAuth: true } },
+  { path: '/explore', component: Explore, name: 'Explore', meta: { requiresAuth: true } },
   { path: '/profile/:username', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
   { path: '/profile/:username/posts/:slug', component: UserProfile, name: 'ProfilePost', meta: { requiresAuth: true } },
   {
