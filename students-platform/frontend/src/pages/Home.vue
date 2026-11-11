@@ -6,15 +6,16 @@
       <div class="container hero-container">
 
         <div class="hero-content">
-          <p class="hero-badge">Study abroad made easier</p>
+          <p class="hero-badge">🌍 Students Supporting Students — Worldwide</p>
 
           <h1>
-            Find scholarships, universities, and support in one place.
+            Your entire study abroad journey, in one place.
           </h1>
 
           <p class="hero-text">
-            International Student Compass helps you discover study opportunities,
-            compare universities, and connect with a supportive community.
+            Discover universities and scholarships, connect with students already
+            at your target destination, and get practical guidance for every step
+            of moving abroad — from visa to housing to your first day of class.
           </p>
 
           <div class="hero-actions">
@@ -30,6 +31,23 @@
                 Find Scholarships
               </el-button>
             </router-link>
+          </div>
+
+          <div class="hero-trust">
+            <div class="trust-item">
+              <span class="trust-number">20,000+</span>
+              <span class="trust-label">Students in our community</span>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-item">
+              <span class="trust-number">100+</span>
+              <span class="trust-label">Questions answered daily</span>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-item">
+              <span class="trust-number">Global</span>
+              <span class="trust-label">Every destination</span>
+            </div>
           </div>
         </div>
 
@@ -71,6 +89,47 @@
           <span>›</span>
         </router-link>
 
+        <router-link to="/feed" class="quick-card">
+          <div class="quick-icon">📖</div>
+          <div>
+            <h3>Navigate: Practical Guides</h3>
+            <p>Visas, blocked accounts, housing — guides from students who've done it.</p>
+          </div>
+          <span>›</span>
+        </router-link>
+
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-section">
+      <div class="container">
+        <div class="how-header">
+          <h2>One platform. Three steps to your future abroad.</h2>
+          <p>Everything you need from first search to first day of class.</p>
+        </div>
+        <div class="how-grid">
+          <div class="how-step">
+            <div class="how-num">01</div>
+            <div class="how-icon">🔍</div>
+            <h3>Discover</h3>
+            <p>Search universities and scholarships across countries. Filter by nationality, language, field, and deadline. Replace forty browser tabs with one clear answer.</p>
+          </div>
+          <div class="how-arrow">›</div>
+          <div class="how-step">
+            <div class="how-num">02</div>
+            <div class="how-icon">🤝</div>
+            <h3>Connect</h3>
+            <p>Join real-time communities and connect directly with students already enrolled at your target university. Get honest, first-hand guidance before you arrive.</p>
+          </div>
+          <div class="how-arrow">›</div>
+          <div class="how-step">
+            <div class="how-num">03</div>
+            <div class="how-icon">🗺️</div>
+            <h3>Navigate</h3>
+            <p>Practical guides for every step: visa applications, blocked accounts, health insurance, housing, registration. Written by students who lived it.</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -232,6 +291,114 @@ import { Search } from '@element-plus/icons-vue'
   background-position: center;
 }
 
+/* Trust bar */
+.hero-trust {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.trust-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.trust-number {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1d4ed8;
+  line-height: 1;
+}
+
+.trust-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.trust-divider {
+  width: 1px;
+  height: 36px;
+  background: #cbd5e1;
+}
+
+/* How it works */
+.how-section {
+  background: #f8fbff;
+  padding: 80px 0;
+}
+
+.how-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.how-header h2 {
+  font-size: 38px;
+  font-weight: 800;
+  color: #0f2a5f;
+  margin-bottom: 12px;
+}
+
+.how-header p {
+  font-size: 17px;
+  color: #64748b;
+}
+
+.how-grid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+}
+
+.how-step {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px 28px;
+  flex: 1;
+  max-width: 300px;
+  box-shadow: 0 10px 28px rgba(15, 42, 95, 0.09);
+  border: 1px solid #e5efff;
+  text-align: center;
+}
+
+.how-num {
+  font-size: 13px;
+  font-weight: 800;
+  color: #93c5fd;
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+}
+
+.how-icon {
+  font-size: 38px;
+  margin-bottom: 16px;
+}
+
+.how-step h3 {
+  font-size: 21px;
+  font-weight: 800;
+  color: #0f2a5f;
+  margin-bottom: 12px;
+}
+
+.how-step p {
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.how-arrow {
+  font-size: 36px;
+  color: #bfdbfe;
+  margin-top: 80px;
+  flex-shrink: 0;
+}
+
 /* Quick cards */
 .quick-links-section {
   background: #ffffff;
@@ -243,7 +410,7 @@ import { Search } from '@element-plus/icons-vue'
 
 .quick-links-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 22px;
 }
 
@@ -412,7 +579,22 @@ import { Search } from '@element-plus/icons-vue'
   }
 
   .quick-links-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .how-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .how-arrow {
+    margin-top: 0;
+    transform: rotate(90deg);
+  }
+
+  .how-step {
+    max-width: 100%;
+    width: 100%;
   }
 
   .hero-image-card {
