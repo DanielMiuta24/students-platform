@@ -23,6 +23,11 @@ const EditPost = () => import('../pages/EditPost.vue');
 const ReportProblem = () => import('../pages/ReportProblem.vue');
 const VerifyEmail = () => import('../pages/VerifyEmail.vue');
 const NotFound = () => import('../pages/NotFound.vue');
+const Events = () => import('../pages/Events.vue');
+const Jobs = () => import('../pages/Jobs.vue');
+const Housing = () => import('../pages/Housing.vue');
+const VisaGuides = () => import('../pages/VisaGuides.vue');
+const Skills = () => import('../pages/Skills.vue');
 
 const routes = [
   { path: '/', component: Home },
@@ -56,6 +61,11 @@ const routes = [
   { path: '/community/:slug/posts/:postSlug', component: ViewCommunity, name: 'CommunityPost' },
   { path: '/universities', component: Universities },
   { path: '/scholarships', component: Scholarships },
+  { path: '/events', component: Events, name: 'Events' },
+  { path: '/jobs', component: Jobs, name: 'Jobs' },
+  { path: '/housing', component: Housing, name: 'Housing' },
+  { path: '/visa', component: VisaGuides, name: 'VisaGuides' },
+  { path: '/skills', component: Skills, name: 'Skills' },
   { path: '/support', component: ReportProblem, name: 'ReportProblem' },
   { path: '/verify-email/:token', component: VerifyEmail, name: 'VerifyEmail' },
   { path: '/feed', component: Feed, name: 'Feed', meta: { requiresAuth: true } },

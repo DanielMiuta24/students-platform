@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ScholarshipService } from '../services';
 import { validateSearchParams } from '../validators';
+import { globalScholarshipService } from '../services/global-scholarship.service';
 
 class ScholarshipController {
     private scholarshipService: ScholarshipService;
@@ -38,6 +39,25 @@ class ScholarshipController {
                     return res.status(502).json({ error: 'Failed to fetch scholarships from external service' });
                 }
             }
+            next(err);
+        }
+    };
+
+    fetchGlobalScholarships = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { country, region, level, search, page, limit } = req.query;
+
+            const result = await globalScholarshipService.searchGlobal({
+                country: country as string | undefined,
+                region: region as string | undefined,
+                level: level as string | undefined,
+                search: search as string | undefined,
+                page: page ? Number(page) : undefined,
+                limit: limit ? Number(limit) : undefined,
+            });
+
+            return res.status(200).json(result);
+        } catch (err) {
             next(err);
         }
     };

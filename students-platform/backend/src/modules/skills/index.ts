@@ -1,0 +1,1 @@
+export { skillRoutes } from './routes';
