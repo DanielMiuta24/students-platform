@@ -420,6 +420,36 @@ class UserController {
     }
   };
 
+  submitStudentEmail = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { email } = req.body;
+      await userService.submitStudentEmail(req.user.id, email);
+      return res.status(200).json({ message: 'Verification email sent to your university address' });
+    } catch (err: any) {
+      if (err.message === 'INVALID_EMAIL_FORMAT') return res.status(400).json({ message: 'Invalid email format' });
+      if (err.message === 'ALREADY_STUDENT_VERIFIED') return res.status(400).json({ message: 'Student email already verified' });
+      if (err.message === 'DOMAIN_NOT_UNIVERSITY') return res.status(400).json({ message: 'Email domain is not a recognized university domain' });
+      if (err.message === 'UNIVERSITY_API_ERROR') return res.status(502).json({ message: 'Unable to verify university domain, please try again' });
+      if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+      return next(err);
+    }
+  };
+
+  verifyStudentEmail = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token } = req.params;
+      if (!token) return res.status(400).json({ message: 'Token is required' });
+      await userService.verifyStudentEmail(token);
+      return res.status(200).json({ success: true, message: 'Student email verified successfully' });
+    } catch (err: any) {
+      if (err.message === 'INVALID_OR_EXPIRED_TOKEN') {
+        return res.status(400).json({ success: false, message: 'Verification link is invalid or has expired' });
+      }
+      return next(err);
+    }
+  };
+
 }
 
 export const userController = new UserController();

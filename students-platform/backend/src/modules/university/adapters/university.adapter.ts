@@ -9,6 +9,7 @@ export class UniversityAPIAdapter {
       stateProvince: external['state-province'],
       website: external.web_pages[0] ?? null,
       domain: external.domains[0] ?? null,
+      domains: external.domains ?? [],
     };
   }
 

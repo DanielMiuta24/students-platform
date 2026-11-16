@@ -6,9 +6,9 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     'src/tests/modules/auth/',
-    'src/tests/modules/user/',
     'src/tests/shared/',
     'src/tests/integration/',
+    'src/tests/modules/user/user.controller.spec.ts',
   ],
   moduleFileExtensions: ['ts', 'js', 'json'],
   collectCoverageFrom: [

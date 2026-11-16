@@ -198,3 +198,12 @@ export const validateUpdateProfile = [
   validateOptionalLocation(),
   handleValidationErrors,
 ];
+
+export const validateStudentEmail = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Must be a valid email address')
+    .normalizeEmail(),
+  handleValidationErrors,
+];

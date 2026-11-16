@@ -40,6 +40,10 @@ const UserSchema = new Schema(
     passwordResetToken: String,
     passwordResetExpires: Date,
 
+    pendingUniversityEmail: String,
+    studentVerificationToken: String,
+    studentVerificationTokenExpires: Date,
+
     followers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 

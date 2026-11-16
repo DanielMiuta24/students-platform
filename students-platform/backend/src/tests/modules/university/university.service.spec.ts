@@ -5,6 +5,7 @@ const API_BASE_URL = process.env.UNIVERSITY_API_URL;
 describe('UniversityService', () => {
   beforeEach(() => {
     global.fetch = jest.fn();
+    (universityService as any).domainCache.clear();
   });
 
   afterEach(() => {
@@ -91,6 +92,7 @@ describe('UniversityService', () => {
           stateProvince: 'Bavaria',
           website: 'https://www.tum.de',
           domain: 'tum.de',
+          domains: ['tum.de'],
         });
       });
 
@@ -298,6 +300,169 @@ describe('UniversityService', () => {
         await expect(
           universityService.searchUniversities({ name: 'Munich' })
         ).rejects.toThrow('Invalid JSON');
+      });
+    });
+  });
+
+  describe('getUniversityDomains', () => {
+    const mockTumResponse = [
+      {
+        name: 'Technical University of Munich',
+        country: 'Germany',
+        alpha_two_code: 'DE',
+        'state-province': null,
+        web_pages: ['https://www.tum.de'],
+        domains: ['tum.de', 'mytum.de'],
+      },
+    ];
+
+    const mockDhbwMosbachResponse = [
+      {
+        name: 'DHBW Mosbach',
+        country: 'Germany',
+        alpha_two_code: 'DE',
+        'state-province': null,
+        web_pages: [],
+        domains: ['dhbw-mosbach.de', 'mosbach.dhbw.de'],
+      },
+    ];
+
+    describe('Domain hierarchy walk', () => {
+      it('should query exact domain for a 2-label domain', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: async () => mockTumResponse,
+        });
+
+        await universityService.getUniversityDomains('tum.de');
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('domain=tum.de'), expect.objectContaining({ signal: expect.any(Object) }));
+      });
+
+      it('should try exact subdomain first, then parent when empty', async () => {
+        (global.fetch as jest.Mock)
+          .mockResolvedValueOnce({ ok: true, json: async () => [] })
+          .mockResolvedValueOnce({ ok: true, json: async () => mockTumResponse });
+
+        await universityService.getUniversityDomains('cs.tum.de');
+
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+        expect(global.fetch).toHaveBeenNthCalledWith(1, expect.stringContaining('domain=cs.tum.de'), expect.objectContaining({ signal: expect.any(Object) }));
+        expect(global.fetch).toHaveBeenNthCalledWith(2, expect.stringContaining('domain=tum.de'), expect.objectContaining({ signal: expect.any(Object) }));
+      });
+
+      it('should walk up multiple levels and stop at first match', async () => {
+        (global.fetch as jest.Mock)
+          .mockResolvedValueOnce({ ok: true, json: async () => [] })
+          .mockResolvedValueOnce({ ok: true, json: async () => mockDhbwMosbachResponse });
+
+        const domains = await universityService.getUniversityDomains('lehre.mosbach.dhbw.de');
+
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+        expect(domains).toContain('mosbach.dhbw.de');
+        expect(domains).toContain('dhbw-mosbach.de');
+      });
+
+      it('should return empty array when no level matches', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: async () => [],
+        });
+
+        const domains = await universityService.getUniversityDomains('fake.xyz');
+        expect(domains).toEqual([]);
+      });
+    });
+
+    describe('Domain flattening', () => {
+      it('should return all domains from all matching universities', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: async () => [
+            { name: 'U1', country: 'DE', alpha_two_code: 'DE', 'state-province': null, web_pages: [], domains: ['uni-mannheim.de'] },
+            { name: 'U2', country: 'DE', alpha_two_code: 'DE', 'state-province': null, web_pages: [], domains: ['dhbw-mannheim.de', 'mannheim.dhbw.de'] },
+          ],
+        });
+
+        const domains = await universityService.getUniversityDomains('cs.uni-mannheim.de');
+
+        expect(domains).toContain('uni-mannheim.de');
+        expect(domains).toContain('dhbw-mannheim.de');
+        expect(domains).toContain('mannheim.dhbw.de');
+      });
+
+      it('should return lowercase domains', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: async () => [
+            { name: 'Test', country: 'DE', alpha_two_code: 'DE', 'state-province': null, web_pages: [], domains: ['TEST.EDU'] },
+          ],
+        });
+
+        const domains = await universityService.getUniversityDomains('student.test.edu');
+        expect(domains).toContain('test.edu');
+        expect(domains).not.toContain('TEST.EDU');
+      });
+    });
+
+    describe('Caching', () => {
+      it('should return cached result on second call with same email domain', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: async () => mockTumResponse,
+        });
+
+        await universityService.getUniversityDomains('cs.tum.de');
+        await universityService.getUniversityDomains('cs.tum.de');
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+      });
+
+      it('should make a new fetch call when cache is expired', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: async () => mockTumResponse,
+        });
+
+        await universityService.getUniversityDomains('cs.tum.de');
+
+        const cache = (universityService as any).domainCache;
+        const [key, entry] = [...cache.entries()][0];
+        cache.set(key, { ...entry, expires: Date.now() - 1 });
+
+        await universityService.getUniversityDomains('cs.tum.de');
+
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('Error handling', () => {
+      it('should throw UNIVERSITY_API_ERROR when API returns non-ok response', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 503 });
+
+        await expect(
+          universityService.getUniversityDomains('cs.uni-mannheim.de')
+        ).rejects.toThrow('UNIVERSITY_API_ERROR');
+      });
+
+      it('should return empty array when fetch throws (timeout or network error)', async () => {
+        (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+        const domains = await universityService.getUniversityDomains('cs.uni-mannheim.de');
+        expect(domains).toEqual([]);
+      });
+
+      it('should fall through to next level when an intermediate fetch times out', async () => {
+        (global.fetch as jest.Mock)
+          .mockRejectedValueOnce(new Error('TimeoutError'))
+          .mockResolvedValueOnce({ ok: true, json: async () => [
+            { name: 'Test', country: 'DE', alpha_two_code: 'DE', 'state-province': null, web_pages: [], domains: ['uni-mannheim.de'] },
+          ]});
+
+        const domains = await universityService.getUniversityDomains('cs.uni-mannheim.de');
+        expect(domains).toContain('uni-mannheim.de');
+        expect(global.fetch).toHaveBeenCalledTimes(2);
       });
     });
   });

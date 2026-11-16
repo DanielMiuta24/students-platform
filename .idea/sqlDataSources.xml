@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DdlMappings">
+    <mapping uuid="be88fa70-1f84-4f8c-9404-2c8d045c35a1" name="@isc.sccffkb.mongodb.net Mapping">
+      <data-sources db="cbea28dc-bc49-4c92-8fa0-ca2a71714d85" ddl="fa82c159-988b-4807-ae51-405cf94e0085" />
+    </mapping>
+  </component>
+  <component name="SqlDataSourceStorage">
+    <option name="dataSources">
+      <list>
+        <State>
+          <option name="id" value="fa82c159-988b-4807-ae51-405cf94e0085" />
+          <option name="name" value="@isc.sccffkb.mongodb.net (DDL)" />
+          <option name="dbmsName" value="MONGO" />
+          <option name="urls">
+            <array />
+          </option>
+          <option name="outLayout" value="File per object by schema.groovy" />
+        </State>
+      </list>
+    </option>
+  </component>
+</project>
