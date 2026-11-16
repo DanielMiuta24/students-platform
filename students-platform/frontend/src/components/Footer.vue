@@ -3,7 +3,7 @@
 
     <div class="w-full bg-white shadow-lg p-8">
       <div class="max-w-6xl mx-auto px-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
 
         <!-- Logo + Description -->
         <div class="flex flex-col md:items-start items-center md:text-left text-center">
@@ -30,17 +30,22 @@
           <h3 class="font-semibold text-blue-800 mb-3">Easy Links</h3>
           <ul class="flex flex-col gap-2 md:items-start items-center" role="list">
             <li role="listitem"><el-link href="/" class="footer-link">Home</el-link></li>
-            <li role="listitem"><el-link href="/community" class="footer-link">Feed</el-link></li>
+            <li role="listitem"><el-link href="/community" class="footer-link">Community</el-link></li>
             <li role="listitem"><el-link href="/universities" class="footer-link">Search Universities</el-link></li>
             <li role="listitem"><el-link href="/scholarships" class="footer-link">Search Scholarships</el-link></li>
+            <li role="listitem"><el-link href="/events" class="footer-link">Events</el-link></li>
+            <li role="listitem"><el-link href="/jobs" class="footer-link">Job Board</el-link></li>
           </ul>
         </div>
 
-        <!-- Support -->
+        <!-- Resources -->
         <div class="md:text-left text-center flex flex-col md:items-start items-center">
-          <h3 class="font-semibold text-blue-800 mb-3">Support</h3>
+          <h3 class="font-semibold text-blue-800 mb-3">Resources</h3>
           <ul class="flex flex-col gap-2 md:items-start items-center" role="list">
-            <li role="listitem"><router-link to="/support" class="footer-link">Report a problem</router-link></li>
+            <li role="listitem"><el-link href="/visa" class="footer-link">Visa Guides</el-link></li>
+            <li role="listitem"><el-link href="/housing" class="footer-link">Housing</el-link></li>
+            <li role="listitem"><el-link href="/skills" class="footer-link">Skills Profile</el-link></li>
+            <li role="listitem"><router-link to="/support" class="footer-link">Report a Problem</router-link></li>
           </ul>
         </div>
 

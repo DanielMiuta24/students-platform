@@ -89,15 +89,82 @@
           <span>›</span>
         </router-link>
 
-        <router-link to="/feed" class="quick-card">
-          <div class="quick-icon">📖</div>
+        <router-link to="/jobs" class="quick-card">
+          <div class="quick-icon">💼</div>
           <div>
-            <h3>Navigate: Practical Guides</h3>
-            <p>Visas, blocked accounts, housing — guides from students who've done it.</p>
+            <h3>Student Jobs</h3>
+            <p>Find internships, working-student and part-time roles near your campus.</p>
           </div>
           <span>›</span>
         </router-link>
 
+      </div>
+    </section>
+
+    <!-- Full Feature Grid -->
+    <section class="features-section">
+      <div class="container">
+        <div class="features-header">
+          <h2>Everything a student abroad needs</h2>
+          <p>Six tools, one platform. Built by students, for students.</p>
+        </div>
+        <div class="features-grid">
+
+          <router-link to="/events" class="feature-card">
+            <div class="feature-icon-wrap feature-icon-blue">🎪</div>
+            <div class="feature-body">
+              <h3>Events</h3>
+              <p>Career fairs, open days, visa workshops, and networking events near you or online.</p>
+            </div>
+            <span class="feature-arrow">›</span>
+          </router-link>
+
+          <router-link to="/jobs" class="feature-card">
+            <div class="feature-icon-wrap feature-icon-green">💼</div>
+            <div class="feature-body">
+              <h3>Job Board</h3>
+              <p>Internships, working-student positions, and dual-study programs for international students.</p>
+            </div>
+            <span class="feature-arrow">›</span>
+          </router-link>
+
+          <router-link to="/housing" class="feature-card">
+            <div class="feature-icon-wrap feature-icon-orange">🏠</div>
+            <div class="feature-body">
+              <h3>Housing</h3>
+              <p>Rooms, shared flats, and student apartments listed by students and landlords.</p>
+            </div>
+            <span class="feature-arrow">›</span>
+          </router-link>
+
+          <router-link to="/visa" class="feature-card">
+            <div class="feature-icon-wrap feature-icon-purple">🛂</div>
+            <div class="feature-body">
+              <h3>Visa Guides</h3>
+              <p>Step-by-step visa and residence permit guides for Germany, UK, Switzerland, Canada, and more.</p>
+            </div>
+            <span class="feature-arrow">›</span>
+          </router-link>
+
+          <router-link to="/skills" class="feature-card">
+            <div class="feature-icon-wrap feature-icon-teal">🛠️</div>
+            <div class="feature-body">
+              <h3>Skills Profile</h3>
+              <p>Build an ESCO-mapped skills and language profile to share with employers and universities.</p>
+            </div>
+            <span class="feature-arrow">›</span>
+          </router-link>
+
+          <router-link to="/scholarships" class="feature-card">
+            <div class="feature-icon-wrap feature-icon-yellow">🎓</div>
+            <div class="feature-body">
+              <h3>Global Scholarships</h3>
+              <p>DAAD, Erasmus+, Chevening, Fulbright, and 20+ more global funding opportunities.</p>
+            </div>
+            <span class="feature-arrow">›</span>
+          </router-link>
+
+        </div>
       </div>
     </section>
 
@@ -146,37 +213,37 @@
           <el-collapse expand-icon-position="right">
             <el-collapse-item title="How can I find universities in a specific country?" name="1">
               <div>
-                You can search for universities by name or country using the dedicated University Search page.
+                Use the University Search page to search by name or country. Results show the university's name and official website.
               </div>
             </el-collapse-item>
 
-            <el-collapse-item title="What information is available for each university?" name="2">
+            <el-collapse-item title="What scholarships are available?" name="2">
               <div>
-                Search results show the university's name and official website. Clicking on a result takes you to more details.
+                The platform lists global scholarships including DAAD, Erasmus+, Chevening, Fulbright, and more. Filter by country, academic level, or keyword to find what fits your profile.
               </div>
             </el-collapse-item>
 
-            <el-collapse-item title="Can I save universities to view later?" name="3">
+            <el-collapse-item title="How do visa guides work?" name="3">
               <div>
-                Yes, logged-in users can save favorite universities, scholarships, and courses to their personal profile.
+                Each visa guide is a step-by-step checklist with required documents and tips for each stage. Guides currently cover Germany, Switzerland, UK, Netherlands, and Canada.
               </div>
             </el-collapse-item>
 
-            <el-collapse-item title="How do I contact other students?" name="4">
+            <el-collapse-item title="Can I find student jobs or internships?" name="4">
               <div>
-                You can start one-on-one chats with other students to ask for advice and exchange information.
+                Yes. The Job Board lists working-student positions, internships, dual-study programs, and part-time roles. You can save listings and apply directly through the employer's link.
               </div>
             </el-collapse-item>
 
-            <el-collapse-item title="Can I post questions to the community?" name="5">
+            <el-collapse-item title="How do I contact other students?" name="5">
               <div>
-                Yes, logged-in users can post threads, questions, and replies in the community section.
+                You can start one-on-one chats or join community groups to ask for advice and exchange information with students already at your target destination.
               </div>
             </el-collapse-item>
 
             <el-collapse-item title="How do I register?" name="6">
               <div>
-                Click the Register button and create an account with your name, email, and password.
+                Click the Register button and create an account with your name, email, and password. It is free and takes less than a minute.
               </div>
             </el-collapse-item>
           </el-collapse>
@@ -462,6 +529,115 @@ import { Search } from '@element-plus/icons-vue'
   margin-left: auto;
   color: #2563eb;
   font-size: 32px;
+}
+
+/* Features grid */
+.features-section {
+  background: #ffffff;
+  padding: 80px 0 90px;
+}
+
+.features-header {
+  text-align: center;
+  margin-bottom: 52px;
+}
+
+.features-header h2 {
+  font-size: 38px;
+  font-weight: 800;
+  color: #0f2a5f;
+  margin-bottom: 12px;
+}
+
+.features-header p {
+  font-size: 17px;
+  color: #64748b;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.feature-card {
+  background: #f8fbff;
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #e5efff;
+  transition: 0.2s ease;
+  position: relative;
+}
+
+.feature-card:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(15, 42, 95, 0.1);
+}
+
+.feature-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.feature-icon-blue   { background: #dbeafe; }
+.feature-icon-green  { background: #dcfce7; }
+.feature-icon-orange { background: #ffedd5; }
+.feature-icon-purple { background: #ede9fe; }
+.feature-icon-teal   { background: #ccfbf1; }
+.feature-icon-yellow { background: #fef9c3; }
+
+.feature-body {
+  flex: 1;
+}
+
+.feature-body h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f2a5f;
+  margin-bottom: 6px;
+}
+
+.feature-body p {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.feature-arrow {
+  font-size: 24px;
+  color: #93c5fd;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-header h2 {
+    font-size: 26px;
+  }
 }
 
 /* FAQ */
