@@ -122,7 +122,7 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const submitted = ref(false);
 
-const isAlreadyVerified = computed(() => !!sessionStore.user?.universityEmail);
+const isAlreadyVerified = computed(() => sessionStore.user?.type === 'Student');
 
 const handleSubmit = async () => {
   errorMessage.value = '';
