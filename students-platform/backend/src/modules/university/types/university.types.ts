@@ -14,6 +14,7 @@ export interface UniversityDTO {
   stateProvince: string | null;
   website: string | null;
   domain: string | null;
+  domains: string[];
 }
 
 export interface SearchParams {

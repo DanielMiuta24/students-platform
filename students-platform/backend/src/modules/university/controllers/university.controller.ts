@@ -29,6 +29,23 @@ class UniversityController {
       next(err);
     }
   };
+
+  getDomains = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const domain = (req.query.domain as string | undefined)?.trim().toLowerCase();
+      if (!domain) {
+        return res.status(400).json({ message: '"domain" query parameter is required' });
+      }
+      const domains = await universityService.getUniversityDomains(domain);
+      return res.status(200).json({ domains });
+    } catch (err) {
+      if (err instanceof Error && err.message === 'UNIVERSITY_API_ERROR') {
+        return res.status(502).json({ message: 'Failed to fetch university domains' });
+      }
+      next(err);
+    }
+  };
 }
 
 export const universityController = new UniversityController();
+

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { userController } from '../controllers';
 import { authMiddleware } from '../../../shared/middleware/auth.middleware';
-import { validateRegister, validateLogin, validateChangePassword, validateUpdateProfile } from '../validators';
+import { validateRegister, validateLogin, validateChangePassword, validateUpdateProfile, validateStudentEmail } from '../validators';
 import { busboyUploadMiddleware } from '../../image/middleware';
 import { IMAGE_VALIDATION } from '../../image/services';
 
@@ -29,6 +29,9 @@ router.delete('/saved-scholarships', authMiddleware, userController.unsaveSchola
 
 router.get('/verify-email/:token', userController.verifyEmail);
 router.post('/resend-verification', userController.resendVerification);
+
+router.post('/student-verification', authMiddleware, validateStudentEmail, userController.submitStudentEmail);
+router.get('/verify-student-email/:token', userController.verifyStudentEmail);
 
 router.put(
   '/change-password',

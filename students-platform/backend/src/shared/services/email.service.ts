@@ -11,6 +11,12 @@ interface SendActivationEmailDTO {
   activationUrl: string;
 }
 
+interface SendStudentVerificationEmailDTO {
+  recipientEmail: string;
+  recipientName: string;
+  verificationUrl: string;
+}
+
 interface SendSupportReportDTO {
   problemType: string;
   subject: string;
@@ -49,6 +55,10 @@ export class EmailService {
         user: env.SMTP_USER,
         pass: env.SMTP_PASS,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+      tls: { rejectUnauthorized: false },
     });
   }
 
@@ -61,6 +71,19 @@ export class EmailService {
       from: env.SMTP_FROM || 'ISC <noreply@iscompass.de>',
       to: data.recipientEmail,
       subject: 'Verify your ISC email address',
+      html,
+    });
+  }
+
+  async sendStudentVerificationEmail(data: SendStudentVerificationEmailDTO): Promise<void> {
+    if (!this.transporter) return;
+    const templatePath = path.join(__dirname, '../../shared/email-templates/student-verification.html');
+    let html = await fs.readFile(templatePath, 'utf-8');
+    html = html.replace(/\{\{name\}\}/g, data.recipientName).replace(/\{\{actionUrl\}\}/g, data.verificationUrl);
+    await this.transporter.sendMail({
+      from: env.SMTP_FROM || 'ISC <noreply@iscompass.de>',
+      to: data.recipientEmail,
+      subject: 'Verify your student email address',
       html,
     });
   }

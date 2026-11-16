@@ -3,6 +3,7 @@ import type { UserType } from '../../../shared/types/domain';
 import crypto from 'crypto';
 import { emailService } from '../../../shared/services/email.service';
 import { env } from '../../../config/env';
+import { universityService } from '../../university/services/university.service';
 
 export interface RegisterDTO {
   type: UserType;       // 'Student' | 'StudySeeker' | 'Admin'
@@ -52,6 +53,7 @@ export type SafeUser = {
   bio: string;
   location: string;
   isVerified: boolean;
+  universityEmail: string | null;
 };
 
 export type PublicUser = {
@@ -194,6 +196,7 @@ export class UserService {
       bio: user.bio,
       location: user.location,
       isVerified: user.isVerified,
+      universityEmail: user.universityEmail ?? null,
     };
   }
 
@@ -301,6 +304,66 @@ export class UserService {
       recipientName: user.name,
       activationUrl,
     });
+  }
+
+  async submitStudentEmail(userId: string, email: string): Promise<void> {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('INVALID_EMAIL_FORMAT');
+    }
+
+    const user = await User.findById(userId);
+    if (!user) throw new Error('USER_NOT_FOUND');
+
+    if (user.universityEmail) {
+      throw new Error('ALREADY_STUDENT_VERIFIED');
+    }
+
+    const domain = email.split('@')[1].toLowerCase();
+
+    let domains: string[];
+    try {
+      domains = await universityService.getUniversityDomains(domain);
+    } catch {
+      throw new Error('UNIVERSITY_API_ERROR');
+    }
+
+    const isValid = domains.some(d => {
+      const ud = d.toLowerCase();
+      return domain === ud || domain.endsWith('.' + ud);
+    });
+
+    if (!isValid) {
+      throw new Error('DOMAIN_NOT_UNIVERSITY');
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    (user as any).pendingUniversityEmail = email.toLowerCase();
+    (user as any).studentVerificationToken = token;
+    (user as any).studentVerificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+
+    const verificationUrl = `${env.FRONTEND_URL}/verify-student-email/${token}`;
+    emailService.sendStudentVerificationEmail({
+      recipientEmail: email,
+      recipientName: user.name,
+      verificationUrl,
+    }).catch(() => {});
+  }
+
+  async verifyStudentEmail(token: string): Promise<void> {
+    const user = await User.findOne({
+      studentVerificationToken: token,
+      studentVerificationTokenExpires: { $gt: new Date() },
+    });
+    if (!user) throw new Error('INVALID_OR_EXPIRED_TOKEN');
+
+    user.universityEmail = (user as any).pendingUniversityEmail;
+    user.type = 'Student';
+    (user as any).pendingUniversityEmail = undefined;
+    (user as any).studentVerificationToken = undefined;
+    (user as any).studentVerificationTokenExpires = undefined;
+    await user.save();
   }
 }
 
