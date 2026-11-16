@@ -1,0 +1,1 @@
+export { housingRoutes } from './routes';

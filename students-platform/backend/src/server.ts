@@ -16,6 +16,11 @@ import { communityRoutes } from './modules/community';
 import { notificationRoutes } from './modules/notification/routes';
 import { realtimeGateway } from './modules/realtime';
 import supportRoutes from './modules/support/support.routes';
+import { eventRoutes } from './modules/events';
+import { jobRoutes } from './modules/jobs';
+import { skillRoutes } from './modules/skills';
+import { housingRoutes } from './modules/housing';
+import { visaRoutes } from './modules/visa';
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -43,6 +48,11 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/skills', skillRoutes);
+app.use('/api/housing', housingRoutes);
+app.use('/api/visa', visaRoutes);
 
 app.get("/api", (_req, res) => {
   res.json({ ok: true, service: "api", ts: new Date().toISOString() });
