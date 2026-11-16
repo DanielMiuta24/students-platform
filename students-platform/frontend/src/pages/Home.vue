@@ -249,8 +249,6 @@
           </el-collapse>
         </div>
 
-        <div class="faq-image"></div>
-
       </div>
     </section>
 
@@ -648,9 +646,9 @@ import { Search } from '@element-plus/icons-vue'
 
 .faq-container {
   display: grid;
-  grid-template-columns: 0.8fr 1.4fr 0.8fr;
-  gap: 40px;
-  align-items: center;
+  grid-template-columns: 0.7fr 1.3fr;
+  gap: 48px;
+  align-items: start;
 }
 
 .faq-intro h2 {
@@ -672,14 +670,6 @@ import { Search } from '@element-plus/icons-vue'
   box-shadow: 0 12px 30px rgba(15, 42, 95, 0.1);
 }
 
-.faq-image {
-  min-height: 280px;
-  aspect-ratio: 800 / 628;
-  background: url("../images/faq-girl.png");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-}
 
 /* Element Plus small polish */
 :deep(.el-button--primary) {
@@ -777,8 +767,8 @@ import { Search } from '@element-plus/icons-vue'
     order: -1;
   }
 
-  .faq-image {
-    display: none;
+  .faq-container {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -915,10 +905,6 @@ import { Search } from '@element-plus/icons-vue'
 
   .faq-card {
     padding: 1rem;
-  }
-
-  .faq-image {
-    min-height: 12.5rem;
   }
 
   :deep(.el-collapse-item__header) {
