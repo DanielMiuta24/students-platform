@@ -131,6 +131,10 @@ export class UserService {
         throw new Error('INVALID_CREDENTIALS');
       }
 
+      if (!user.isVerified) {
+        throw new Error('EMAIL_NOT_VERIFIED');
+      }
+
       return user;
     }
 

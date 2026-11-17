@@ -61,7 +61,7 @@
           <input
             v-model="globalSearchQuery"
             class="global-search-input"
-            placeholder="Search students..."
+            placeholder="Search..."
             @input="onSearchInput"
             @focus="searchFocused = true"
             autocomplete="off"

@@ -122,6 +122,12 @@ class UserController {
             message: 'Invalid email or password'
           });
         }
+        if (err.message === 'EMAIL_NOT_VERIFIED') {
+          return res.status(200).json({
+            success: false,
+            message: 'Please verify your email address before logging in.'
+          });
+        }
         return next(err);
       }
     };
@@ -281,7 +287,7 @@ class UserController {
         return res.status(200).json({ users: [] });
       }
       const users = await userService.searchUsers(query);
-      return res.status(200).json({ users });
+      return res.status(200).json(users);
     } catch (err: any) {
       return next(err);
     }
