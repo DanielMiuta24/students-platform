@@ -22,6 +22,7 @@ const ViewCommunity = () => import('../pages/ViewCommunity.vue');
 const EditPost = () => import('../pages/EditPost.vue');
 const ReportProblem = () => import('../pages/ReportProblem.vue');
 const VerifyEmail = () => import('../pages/VerifyEmail.vue');
+const VerifyStudentEmail = () => import('../pages/VerifyStudentEmail.vue');
 const NotFound = () => import('../pages/NotFound.vue');
 const Events = () => import('../pages/Events.vue');
 const Jobs = () => import('../pages/Jobs.vue');
@@ -68,6 +69,7 @@ const routes = [
   { path: '/skills', component: Skills, name: 'Skills' },
   { path: '/support', component: ReportProblem, name: 'ReportProblem' },
   { path: '/verify-email/:token', component: VerifyEmail, name: 'VerifyEmail' },
+  { path: '/verify-student-email/:token', component: VerifyStudentEmail, name: 'VerifyStudentEmail' },
   { path: '/feed', component: Feed, name: 'Feed', meta: { requiresAuth: true } },
   { path: '/explore', component: Explore, name: 'Explore', meta: { requiresAuth: true } },
   { path: '/profile/:username', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },

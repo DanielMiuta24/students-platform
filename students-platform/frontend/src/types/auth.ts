@@ -21,6 +21,7 @@ export interface SafeUser {
     bio: string;
     location: string;
     isVerified: boolean;
+    universityEmail: string | null;
 }
 
 export interface AuthResponse {
