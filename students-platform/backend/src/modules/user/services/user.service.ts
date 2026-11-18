@@ -319,7 +319,7 @@ export class UserService {
     const user = await User.findById(userId);
     if (!user) throw new Error('USER_NOT_FOUND');
 
-    if (user.type === 'Student') {
+    if (user.type === 'Student' || user.universityEmail) {
       throw new Error('ALREADY_STUDENT_VERIFIED');
     }
 
