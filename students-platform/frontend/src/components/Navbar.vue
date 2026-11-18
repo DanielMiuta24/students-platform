@@ -52,8 +52,8 @@
         <router-link to="/explore">Explore</router-link>
       </el-menu-item>
 
-      <!-- Global Search -->
-      <div class="global-search-wrapper" ref="searchWrapperRef">
+      <!-- Global Search (authenticated users only) -->
+      <div v-if="session.isAuthenticated" class="global-search-wrapper" ref="searchWrapperRef">
         <div class="global-search-input-row">
           <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
@@ -238,6 +238,40 @@
           <router-link to="/explore">Explore</router-link>
         </el-menu-item>
       </el-menu>
+
+      <!-- Mobile Search (authenticated users only) -->
+      <div v-if="session.isAuthenticated" class="mobile-drawer-search" ref="mobileSearchWrapperRef">
+        <div class="global-search-input-row">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+          <input
+            v-model="globalSearchQuery"
+            class="global-search-input"
+            placeholder="Search users..."
+            @input="onSearchInput"
+            @focus="searchFocused = true"
+            autocomplete="off"
+          />
+        </div>
+        <div v-if="searchFocused && globalSearchResults.length > 0" class="search-dropdown">
+          <div
+            v-for="user in globalSearchResults"
+            :key="user.id"
+            class="search-result-item"
+            @mousedown.prevent="goToProfile(user.username); drawerMenu = false"
+          >
+            <div v-if="user.avatar" class="search-avatar-img-wrap">
+              <img :src="user.avatar" :alt="user.name" class="search-avatar-img" />
+            </div>
+            <div v-else class="search-avatar-initial">{{ user.name?.[0]?.toUpperCase() }}</div>
+            <div class="search-result-info">
+              <span class="search-result-name">{{ user.name }}</span>
+              <span class="search-result-username">@{{ user.username }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </el-drawer>
 
     <!-- Mobile Account Drawer -->
@@ -472,6 +506,7 @@ const globalSearchQuery = ref('');
 const globalSearchResults = ref<any[]>([]);
 const searchFocused = ref(false);
 const searchWrapperRef = ref<HTMLElement | null>(null);
+const mobileSearchWrapperRef = ref<HTMLElement | null>(null);
 let searchDebounceHandle: number | null = null;
 
 const onSearchInput = () => {
@@ -494,7 +529,10 @@ const goToProfile = (username: string) => {
 };
 
 const handleSearchClickOutside = (e: MouseEvent) => {
-  if (searchWrapperRef.value && !searchWrapperRef.value.contains(e.target as Node)) {
+  const target = e.target as Node;
+  const inDesktop = searchWrapperRef.value && searchWrapperRef.value.contains(target);
+  const inMobile = mobileSearchWrapperRef.value && mobileSearchWrapperRef.value.contains(target);
+  if (!inDesktop && !inMobile) {
     searchFocused.value = false;
   }
 };
@@ -1654,6 +1692,14 @@ const handleSelect = () => {
   transform: scale(1.05);
   box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Mobile drawer search */
+.mobile-drawer-search {
+  position: relative;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 8px;
 }
 
 /* Global Search */

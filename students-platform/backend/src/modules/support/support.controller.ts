@@ -41,7 +41,7 @@ class SupportController {
 
         await transporter.sendMail({
           from: env.SMTP_FROM || env.SMTP_USER,
-          to: env.SMTP_USER,
+          to: env.SUPPORT_MAIL || env.SMTP_USER,
           replyTo: email,
           subject: `[ISC Support] [${priorityLabel}] ${subject}`,
           text: `Type: ${problemType}\nPriority: ${priority}\nFrom: ${email}\n\n${description}`,
