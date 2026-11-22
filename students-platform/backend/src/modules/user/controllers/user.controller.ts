@@ -286,11 +286,13 @@ class UserController {
     next: NextFunction
   ) => {
     try {
-      const query = req.query.q as string;
-      if (!query || !query.trim()) {
-        return res.status(200).json({ users: [] });
+      const query = (req.query.q as string) || '';
+      const country = req.query.country as string | undefined;
+      const destinationCountry = req.query.destinationCountry as string | undefined;
+      if (!query.trim() && !country && !destinationCountry) {
+        return res.status(200).json([]);
       }
-      const users = await userService.searchUsers(query);
+      const users = await userService.searchUsers(query, { country, destinationCountry });
       return res.status(200).json(users);
     } catch (err: any) {
       return next(err);
