@@ -131,7 +131,7 @@
                 </div>
               </div>
               <a :href="s.detailUrl" target="_blank" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-lg transition">
-                View on DAAD Website
+                Search on DAAD Website
               </a>
               <p class="text-xs text-gray-400 mt-2">Application status and deadlines are managed directly by DAAD.</p>
             </li>
