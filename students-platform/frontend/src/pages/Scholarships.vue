@@ -140,9 +140,21 @@
                   <span v-if="s.targetStatus.length"><strong class="text-gray-700">For:</strong> {{ s.targetStatus.join(', ') }}</span>
                 </div>
               </div>
-              <a :href="s.detailUrl" target="_blank" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-lg transition">
-                Search on DAAD Website
-              </a>
+              <div class="flex items-center gap-3 mt-4 flex-wrap">
+                <a :href="s.detailUrl" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-lg transition">
+                  Search on DAAD Website
+                </a>
+                <button v-if="session.isAuthenticated" @click="toggleSaveScholarship({ programName: s.nameEn, schoolName: 'DAAD', website: s.detailUrl })"
+                  :title="isScholarshipSaved({ programName: s.nameEn, schoolName: 'DAAD' }) ? 'Remove from saved' : 'Save scholarship'"
+                  class="save-btn" :class="{ 'save-btn-saved': isScholarshipSaved({ programName: s.nameEn, schoolName: 'DAAD' }) }">
+                  <svg v-if="isScholarshipSaved({ programName: s.nameEn, schoolName: 'DAAD' })" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
+                  </svg>
+                </button>
+              </div>
               <p class="text-xs text-gray-400 mt-2">Application status and deadlines are managed directly by DAAD.</p>
             </li>
           </ul>
@@ -283,9 +295,9 @@ const formatLocation = (s: COSScholarship) => [s.city, s.state].filter(Boolean).
 const formatWebsiteUrl = (website: string) => website.startsWith('http') ? website : `https://${website}`;
 
 const scholarshipKey = (s: { programName?: string; schoolName?: string }) => `${s.programName || ''}||${s.schoolName || ''}`;
-const isScholarshipSaved = (s: COSScholarship) => savedScholarships.value.has(scholarshipKey(s));
+const isScholarshipSaved = (s: { programName?: string; schoolName?: string }) => savedScholarships.value.has(scholarshipKey(s));
 
-const toggleSaveScholarship = async (s: COSScholarship) => {
+const toggleSaveScholarship = async (s: { programName?: string; schoolName?: string; city?: string; state?: string; website?: string }) => {
   const key = scholarshipKey(s);
   try {
     if (isScholarshipSaved(s)) {
