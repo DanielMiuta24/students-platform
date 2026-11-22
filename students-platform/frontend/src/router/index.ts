@@ -7,6 +7,9 @@ import Login from '../pages/Auth/Login.vue';
 
 // Lazy load non-critical pages
 const Register = () => import('../pages/Auth/Register.vue');
+const ForgotPassword = () => import('../pages/Auth/ForgotPassword.vue');
+const VerifyOtp = () => import('../pages/Auth/VerifyOtp.vue');
+const ResetPassword = () => import('../pages/Auth/ResetPassword.vue');
 const Dashboard = () => import('../pages/Dashboard.vue');
 const Community = () => import('../pages/Community.vue');
 const JoinCommunity = () => import('../pages/JoinCommunity.vue');
@@ -35,6 +38,9 @@ const routes = [
 
   { path: '/login', component: Login, meta: { guestOnly: true } },
   { path: '/register', component: Register, meta: { guestOnly: true } },
+  { path: '/forgot-password', component: ForgotPassword, meta: { guestOnly: true } },
+  { path: '/forgot-password/verify', component: VerifyOtp, meta: { guestOnly: true } },
+  { path: '/forgot-password/reset', component: ResetPassword, meta: { guestOnly: true } },
   { path: '/edit-profile', component: EditProfile, name: 'EditProfile', meta: { requiresAuth: true } },
   { path: '/posts/:id/edit', component: EditPost, name: 'EditPost', meta: { requiresAuth: true } },
   {

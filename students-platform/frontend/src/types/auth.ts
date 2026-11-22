@@ -11,6 +11,19 @@ export interface LoginForm {
     password: string;
 }
 
+export interface ForgotPasswordForm {
+    email: string;
+}
+
+export interface VerifyOtpForm {
+    otp: string;
+}
+
+export interface ResetPasswordForm {
+    newPassword: string;
+    confirmPassword: string;
+}
+
 export interface SafeUser {
     id: string;
     type: string;
@@ -27,4 +40,10 @@ export interface SafeUser {
 export interface AuthResponse {
     success?: boolean;
     message: string;
+}
+
+export interface VerifyOtpResponse {
+    success: boolean;
+    resetToken?: string;
+    message?: string;
 }

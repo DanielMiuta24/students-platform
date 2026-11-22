@@ -37,6 +37,8 @@ const UserSchema = new Schema(
 
     activationToken: String,
     activationTokenExpires: Date,
+    passwordResetOtp: String,
+    passwordResetOtpExpires: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
 

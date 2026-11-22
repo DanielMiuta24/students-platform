@@ -207,3 +207,34 @@ export const validateStudentEmail = [
     .normalizeEmail(),
   handleValidationErrors,
 ];
+
+export const validateForgotPassword = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Must be a valid email address')
+    .normalizeEmail(),
+  handleValidationErrors,
+];
+
+export const validateVerifyOtp = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Must be a valid email address')
+    .normalizeEmail(),
+  body('otp')
+    .trim()
+    .notEmpty().withMessage('OTP is required')
+    .matches(/^\d{6}$/).withMessage('OTP must be a 6-digit number'),
+  handleValidationErrors,
+];
+
+export const validateResetPassword = [
+  body('token')
+    .trim()
+    .notEmpty().withMessage('Reset token is required'),
+  validateNewPassword(),
+  validateConfirmPassword(),
+  handleValidationErrors,
+];

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import type Mail from 'nodemailer/lib/mailer';
 import fs from 'fs/promises';
 import path from 'path';
 import { env } from '../../config/env';
@@ -15,6 +16,12 @@ interface SendStudentVerificationEmailDTO {
   recipientEmail: string;
   recipientName: string;
   verificationUrl: string;
+}
+
+interface SendPasswordResetOtpEmailDTO {
+  recipientEmail: string;
+  recipientName: string;
+  otp: string;
 }
 
 interface SendSupportReportDTO {
@@ -36,13 +43,17 @@ interface SendNotificationEmailDTO {
 
 export class EmailService {
   private transporter: nodemailer.Transporter | null = null;
+  private readonly logoPath: string;
+  private readonly logoAttachment: Mail.Attachment;
 
   constructor() {
+    this.logoPath = path.join(__dirname, '../../shared/email-templates/logo.png');
+    this.logoAttachment = { filename: 'logo.png', path: this.logoPath, cid: 'isc-logo' };
     this.initializeTransporter();
   }
 
   private initializeTransporter() {
-    if (!env.SMTP_HOST || !env.SMTP_PORT || !env.SMTP_USER || !env.SMTP_PASS) {
+    if (!env.SMTP_HOST || !env.SMTP_PORT) {
       console.warn('Email service not configured. SMTP settings are missing.');
       return;
     }
@@ -51,10 +62,7 @@ export class EmailService {
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       secure: env.SMTP_PORT === 465,
-      auth: {
-        user: env.SMTP_USER,
-        pass: env.SMTP_PASS,
-      },
+      ...(env.SMTP_USER && env.SMTP_PASS ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASS } } : {}),
       connectionTimeout: 10000,
       greetingTimeout: 30000,
       socketTimeout: 30000,
@@ -66,12 +74,15 @@ export class EmailService {
     if (!this.transporter) return;
     const templatePath = path.join(__dirname, '../../shared/email-templates/activation.html');
     let html = await fs.readFile(templatePath, 'utf-8');
-    html = html.replace(/\{\{name\}\}/g, data.recipientName).replace(/\{\{actionUrl\}\}/g, data.activationUrl);
+    html = html
+      .replace(/\{\{name\}\}/g, data.recipientName)
+      .replace(/\{\{actionUrl\}\}/g, data.activationUrl);
     await this.transporter.sendMail({
       from: env.SMTP_FROM || 'ISC <noreply@iscompass.de>',
       to: data.recipientEmail,
       subject: 'Verify your ISC email address',
       html,
+      attachments: [this.logoAttachment],
     });
   }
 
@@ -79,24 +90,52 @@ export class EmailService {
     if (!this.transporter) return;
     const templatePath = path.join(__dirname, '../../shared/email-templates/student-verification.html');
     let html = await fs.readFile(templatePath, 'utf-8');
-    html = html.replace(/\{\{name\}\}/g, data.recipientName).replace(/\{\{actionUrl\}\}/g, data.verificationUrl);
+    html = html
+      .replace(/\{\{name\}\}/g, data.recipientName)
+      .replace(/\{\{actionUrl\}\}/g, data.verificationUrl);
     await this.transporter.sendMail({
       from: env.SMTP_FROM || 'ISC <noreply@iscompass.de>',
       to: data.recipientEmail,
       subject: 'Verify your student email address',
       html,
+      attachments: [this.logoAttachment],
+    });
+  }
+
+  async sendPasswordResetOtpEmail(data: SendPasswordResetOtpEmailDTO): Promise<void> {
+    if (!this.transporter) return;
+    const templatePath = path.join(__dirname, '../../shared/email-templates/password-reset-otp.html');
+    let html = await fs.readFile(templatePath, 'utf-8');
+    html = html
+      .replace(/\{\{name\}\}/g, data.recipientName)
+      .replace(/\{\{otp\}\}/g, data.otp);
+    await this.transporter.sendMail({
+      from: env.SMTP_FROM || 'ISC <noreply@iscompass.de>',
+      to: data.recipientEmail,
+      subject: 'Your ISC password reset code',
+      html,
+      attachments: [this.logoAttachment],
     });
   }
 
   async sendSupportReport(data: SendSupportReportDTO): Promise<void> {
     if (!this.transporter) return;
-    const supportTo = env.SMTP_FROM || env.SMTP_USER;
+    const templatePath = path.join(__dirname, '../../shared/email-templates/support.html');
+    let html = await fs.readFile(templatePath, 'utf-8');
+    html = html
+      .replace(/\{\{subject\}\}/g, data.subject)
+      .replace(/\{\{problemType\}\}/g, data.problemType)
+      .replace(/\{\{priority\}\}/g, data.priority)
+      .replace(/\{\{email\}\}/g, data.email)
+      .replace(/\{\{description\}\}/g, data.description);
+    const supportTo = env.SUPPORT_MAIL || env.SMTP_FROM || env.SMTP_USER;
     await this.transporter.sendMail({
       from: env.SMTP_FROM || 'ISC Support <noreply@iscompass.de>',
       to: supportTo,
       replyTo: data.email,
       subject: `[ISC Support] [${data.priority.toUpperCase()}] ${data.subject}`,
-      html: `<h2>Support Report</h2><table style="border-collapse:collapse"><tr><td style="padding:4px 12px 4px 0"><b>Type:</b></td><td>${data.problemType}</td></tr><tr><td style="padding:4px 12px 4px 0"><b>Priority:</b></td><td>${data.priority}</td></tr><tr><td style="padding:4px 12px 4px 0"><b>From:</b></td><td>${data.email}</td></tr></table><br><p style="white-space:pre-wrap">${data.description}</p>`,
+      html,
+      attachments: [this.logoAttachment],
     });
   }
 
@@ -122,10 +161,11 @@ export class EmailService {
       .replace('{{actionUrl}}', data.actionUrl);
 
     await this.transporter.sendMail({
-      from: env.SMTP_FROM || 'Students Platform <noreply@studentsplatform.com>',
+      from: env.SMTP_FROM || 'ISC <noreply@iscompass.de>',
       to: data.recipientEmail,
       subject,
       html: htmlTemplate,
+      attachments: [this.logoAttachment],
     });
   }
 
