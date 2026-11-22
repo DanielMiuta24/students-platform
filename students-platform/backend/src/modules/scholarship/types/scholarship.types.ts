@@ -37,3 +37,8 @@ export interface ScholarshipSearchResult {
   scholarships: ScholarshipDTO[];
   total: number;
 }
+
+export interface CombinedScholarshipResponse {
+  careeronestop: ScholarshipSearchResult;
+  daad: import('./daad.service').DAADSearchResult;
+}
