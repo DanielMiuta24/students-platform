@@ -20,13 +20,15 @@ class ScholarshipController {
             const page = parsePage(req.query.page as string);
             const subjectGroup = req.query.subjectGroup as string | undefined;
             const intention = req.query.intention as string | undefined;
+            const originId = req.query.originId ? parseInt(req.query.originId as string, 10) : undefined;
+            const nationality = req.query.nationality as string | undefined;
 
             if (!validateSearchParams(query, location)) {
                 return res.status(400).json({ error: 'Query parameter is required' });
             }
 
             if (source === 'daad') {
-                const result = await searchDAAD(query, subjectGroup, intention, page, 10);
+                const result = await searchDAAD(query, subjectGroup, intention, page, 10, originId, nationality);
                 return res.status(200).json(result);
             }
 

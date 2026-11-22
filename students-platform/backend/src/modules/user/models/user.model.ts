@@ -49,6 +49,23 @@ const UserSchema = new Schema(
     followers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 
+    country: { type: String, default: '' },
+    fieldOfStudy: { type: String, default: '' },
+    destinationCountry: { type: String, default: '' },
+    hasOnboarded: { type: Boolean, default: false },
+    isAlumni: { type: Boolean, default: false },
+
+    applicationTracker: [
+      {
+        universityName: { type: String, required: true },
+        country: { type: String, default: '' },
+        website: { type: String, default: '' },
+        status: { type: String, enum: ['Interested', 'Applied', 'Waiting', 'Accepted', 'Rejected'], default: 'Interested' },
+        notes: { type: String, default: '' },
+        addedAt: { type: Date, default: Date.now },
+      },
+    ],
+
     savedUniversities: [
       {
         name: { type: String, required: true },
