@@ -243,7 +243,7 @@ class UserController {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const { name, bio, location, removeAvatar } = req.body;
+      const { name, bio, location, removeAvatar, country, fieldOfStudy, destinationCountry, isAlumni } = req.body;
       let avatarUrl: string | undefined;
 
       if (removeAvatar === 'true' || removeAvatar === true) {
@@ -259,6 +259,10 @@ class UserController {
         bio,
         location,
         avatar: avatarUrl,
+        country,
+        fieldOfStudy,
+        destinationCountry,
+        isAlumni: isAlumni !== undefined ? isAlumni === 'true' || isAlumni === true : undefined,
       };
 
       const updatedUser = await userService.updateProfile(payload);
@@ -493,6 +497,58 @@ class UserController {
       }
       return next(err);
     }
+  };
+
+  completeOnboarding = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { country, fieldOfStudy, destinationCountry } = req.body;
+      if (!country || !fieldOfStudy || !destinationCountry) {
+        return res.status(400).json({ message: 'country, fieldOfStudy and destinationCountry are required' });
+      }
+      const user = await userService.completeOnboarding(req.user.id, { country, fieldOfStudy, destinationCountry });
+      return res.status(200).json(userService.toSafeUser(user));
+    } catch (err) { return next(err); }
+  };
+
+  getTracker = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const tracker = await userService.getApplicationTracker(req.user.id);
+      return res.status(200).json(tracker);
+    } catch (err) { return next(err); }
+  };
+
+  addToTracker = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { universityName, country, website } = req.body;
+      if (!universityName) return res.status(400).json({ message: 'universityName is required' });
+      const entry = await userService.addToTracker(req.user.id, { universityName, country, website });
+      return res.status(201).json(entry);
+    } catch (err) { return next(err); }
+  };
+
+  updateTrackerEntry = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { entryId } = req.params;
+      const { status, notes } = req.body;
+      const entry = await userService.updateTrackerStatus(req.user.id, entryId, status, notes);
+      return res.status(200).json(entry);
+    } catch (err: any) {
+      if (err.message === 'ENTRY_NOT_FOUND') return res.status(404).json({ message: 'Entry not found' });
+      return next(err);
+    }
+  };
+
+  removeFromTracker = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+      const { entryId } = req.params;
+      await userService.removeFromTracker(req.user.id, entryId);
+      return res.status(200).json({ success: true });
+    } catch (err) { return next(err); }
   };
 
 }

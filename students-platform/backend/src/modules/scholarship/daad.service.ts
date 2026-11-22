@@ -38,6 +38,8 @@ export interface DAADScholarship {
   targetStatus: string[];
   isDaad: boolean;
   detailUrl: string;
+  originIds: number[];
+  eligibleCountries: string;
   source: 'daad';
 }
 
@@ -82,6 +84,8 @@ async function loadData(): Promise<DAADScholarship[]> {
     ),
     isDaad: Boolean(item.isDaad),
     detailUrl: `https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/?q=${encodeURIComponent(item.nameEn || item.nameDe)}`,
+    originIds: (item.origin as number[]) || [],
+    eligibleCountries: (item.qEn || '').toLowerCase(),
     source: 'daad',
   }));
 
@@ -94,7 +98,9 @@ export async function searchDAAD(
   subjectGroup?: string,
   intention?: string,
   page = 1,
-  pageSize = 10
+  pageSize = 10,
+  originId?: number,
+  nationality?: string
 ): Promise<DAADSearchResult> {
   const all = await loadData();
   const q = query.toLowerCase().trim();
@@ -119,7 +125,13 @@ export async function searchDAAD(
         )
       : true;
 
-    return matchesQuery && matchesSubject && matchesIntention;
+    const matchesOrigin = originId ? s.originIds.includes(originId) : true;
+
+    const matchesNationality = nationality
+      ? s.eligibleCountries.includes(nationality.toLowerCase())
+      : true;
+
+    return matchesQuery && matchesSubject && matchesIntention && matchesOrigin && matchesNationality;
   });
 
   const total = results.length;

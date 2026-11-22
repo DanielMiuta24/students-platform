@@ -49,6 +49,16 @@
             </select>
             <button @click="newSearch" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-lg transition shadow-md">Search</button>
           </div>
+          <div class="flex items-center justify-center gap-3">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-600">
+              <div @click="toggleNationalityFilter"
+                :class="['relative w-10 h-6 rounded-full transition-colors', filterByNationality ? 'bg-blue-600' : 'bg-gray-300']">
+                <div :class="['absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform', filterByNationality ? 'translate-x-5' : 'translate-x-1']"></div>
+              </div>
+              <span v-if="session.user?.country">Show only scholarships open to {{ session.user.country }}</span>
+              <span v-else>Filter by my nationality (set in profile)</span>
+            </label>
+          </div>
           <p class="text-sm text-gray-500 text-center">Scholarships sourced from the DAAD scholarship database for international students in Germany.</p>
         </div>
 
@@ -214,6 +224,7 @@ const searchInput = ref('');
 const location = ref('');
 const daadSubjectGroup = ref('');
 const daadIntention = ref('');
+const filterByNationality = ref(false);
 const isLoading = ref(false);
 const hasSearched = ref(false);
 const isFieldInvalid = ref(false);
@@ -232,7 +243,8 @@ const resultCountText = computed(() => { const count = activeTab.value === 'daad
 const searchInputClasses = computed(() => ['px-4 py-3 border rounded-lg focus:outline-none focus:ring-2', isFieldInvalid.value ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500']);
 const shouldShowLocationDropdown = computed(() => showDropdown.value && filteredLocations.value.length > 0);
 
-const switchTab = (key: 'daad' | 'careeronestop') => { activeTab.value = key; hasSearched.value = false; daadResults.value = []; cosResults.value = []; errorMessage.value = ''; currentPage.value = 1; };
+const switchTab = (key: 'daad' | 'careeronestop') => { activeTab.value = key; hasSearched.value = false; daadResults.value = []; cosResults.value = []; errorMessage.value = ''; currentPage.value = 1; filterByNationality.value = false; };
+const toggleNationalityFilter = () => { if (!session.user?.country) return; filterByNationality.value = !filterByNationality.value; if (hasSearched.value) { currentPage.value = 1; fetchScholarships(); } };
 const clearFieldError = () => { isFieldInvalid.value = false; };
 
 const newSearch = () => {
@@ -248,6 +260,7 @@ const fetchScholarships = async () => {
       const params: Record<string, any> = { q: searchInput.value, source: 'daad', page: currentPage.value };
       if (daadSubjectGroup.value) params.subjectGroup = daadSubjectGroup.value;
       if (daadIntention.value) params.intention = daadIntention.value;
+      if (filterByNationality.value && session.user?.country) params.nationality = session.user.country;
       const res = await api.get('scholarships', { params });
       daadResults.value = res.data.scholarships || []; daadTotal.value = res.data.total || 0;
     } else {

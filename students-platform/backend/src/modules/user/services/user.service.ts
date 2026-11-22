@@ -55,6 +55,10 @@ export interface UpdateProfileDTO {
   bio?: string;
   location?: string;
   avatar?: string;
+  country?: string;
+  fieldOfStudy?: string;
+  destinationCountry?: string;
+  isAlumni?: boolean;
 }
 
 
@@ -68,6 +72,11 @@ export type SafeUser = {
   avatar: string;
   bio: string;
   location: string;
+  country: string;
+  fieldOfStudy: string;
+  destinationCountry: string;
+  hasOnboarded: boolean;
+  isAlumni: boolean;
   isVerified: boolean;
   universityEmail: string | null;
 };
@@ -189,7 +198,7 @@ export class UserService {
       await user.save();
     }
 
-    async updateProfile({ userId, name, bio, location, avatar }: UpdateProfileDTO): Promise<UserDoc> {
+    async updateProfile({ userId, name, bio, location, avatar, country, fieldOfStudy, destinationCountry, isAlumni }: UpdateProfileDTO): Promise<UserDoc> {
       const user = await User.findById(userId);
       if (!user) {
         throw new Error('USER_NOT_FOUND');
@@ -199,6 +208,10 @@ export class UserService {
       if (bio !== undefined) user.bio = bio;
       if (location !== undefined) user.location = location;
       if (avatar !== undefined) user.avatar = avatar;
+      if (country !== undefined) (user as any).country = country;
+      if (fieldOfStudy !== undefined) (user as any).fieldOfStudy = fieldOfStudy;
+      if (destinationCountry !== undefined) (user as any).destinationCountry = destinationCountry;
+      if (isAlumni !== undefined) (user as any).isAlumni = isAlumni;
 
       await user.save();
       return user;
@@ -215,6 +228,11 @@ export class UserService {
       avatar: user.avatar,
       bio: user.bio,
       location: user.location,
+      country: (user as any).country || '',
+      fieldOfStudy: (user as any).fieldOfStudy || '',
+      destinationCountry: (user as any).destinationCountry || '',
+      hasOnboarded: (user as any).hasOnboarded || false,
+      isAlumni: (user as any).isAlumni || false,
       isVerified: user.isVerified,
       universityEmail: user.universityEmail ?? null,
     };
@@ -442,6 +460,51 @@ export class UserService {
     user.password = newPassword;
     (user as any).passwordResetToken = undefined;
     (user as any).passwordResetExpires = undefined;
+    await user.save();
+  }
+
+  async completeOnboarding(userId: string, data: { country: string; fieldOfStudy: string; destinationCountry: string }): Promise<UserDoc> {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('USER_NOT_FOUND');
+    (user as any).country = data.country;
+    (user as any).fieldOfStudy = data.fieldOfStudy;
+    (user as any).destinationCountry = data.destinationCountry;
+    (user as any).hasOnboarded = true;
+    await user.save();
+    return user;
+  }
+
+  async getApplicationTracker(userId: string): Promise<any[]> {
+    const user = await User.findById(userId).select('applicationTracker');
+    if (!user) throw new Error('USER_NOT_FOUND');
+    return (user as any).applicationTracker || [];
+  }
+
+  async addToTracker(userId: string, entry: { universityName: string; country?: string; website?: string }): Promise<any> {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('USER_NOT_FOUND');
+    const item = { ...entry, status: 'Interested', notes: '', addedAt: new Date() };
+    (user as any).applicationTracker.push(item);
+    await user.save();
+    const tracker = (user as any).applicationTracker;
+    return tracker[tracker.length - 1];
+  }
+
+  async updateTrackerStatus(userId: string, entryId: string, status: string, notes?: string): Promise<any> {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('USER_NOT_FOUND');
+    const entry = (user as any).applicationTracker.id(entryId);
+    if (!entry) throw new Error('ENTRY_NOT_FOUND');
+    entry.status = status;
+    if (notes !== undefined) entry.notes = notes;
+    await user.save();
+    return entry;
+  }
+
+  async removeFromTracker(userId: string, entryId: string): Promise<void> {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('USER_NOT_FOUND');
+    (user as any).applicationTracker.pull(entryId);
     await user.save();
   }
 }

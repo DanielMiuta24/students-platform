@@ -58,4 +58,11 @@ router.put(
   userController.updateProfile
 );
 
+router.post('/onboarding', authMiddleware, userController.completeOnboarding);
+
+router.get('/tracker', authMiddleware, userController.getTracker);
+router.post('/tracker', authMiddleware, userController.addToTracker);
+router.patch('/tracker/:entryId', authMiddleware, userController.updateTrackerEntry);
+router.delete('/tracker/:entryId', authMiddleware, userController.removeFromTracker);
+
 export default router;

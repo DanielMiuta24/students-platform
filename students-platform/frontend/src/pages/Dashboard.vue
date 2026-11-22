@@ -100,6 +100,8 @@
 
           <DashboardSavedScholarships v-else-if="currentTab === 'saved-scholarships'" />
 
+          <DashboardTracker v-else-if="currentTab === 'tracker'" />
+
           <DashboardDrafts
             v-else-if="currentTab === 'drafts'"
             ref="draftsRef"

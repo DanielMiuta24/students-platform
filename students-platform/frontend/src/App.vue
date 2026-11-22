@@ -8,13 +8,15 @@
       <router-view />
     </main>
     <Footer />
+    <OnboardingModal :show="showOnboarding" @done="showOnboarding = false" />
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch } from 'vue';
+import { onMounted, onUnmounted, watch, ref, computed } from 'vue';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
+import OnboardingModal from './components/OnboardingModal.vue';
 import { socketService } from './services/socket';
 import { useSessionStore } from './store/session';
 import { useNotificationStore } from './stores/notification';
@@ -22,7 +24,12 @@ import { useNotificationStore } from './stores/notification';
 const sessionStore = useSessionStore();
 const notificationStore = useNotificationStore();
 
-// Connect socket when app mounts and user is authenticated
+const showOnboarding = computed(() =>
+  sessionStore.isAuthenticated &&
+  sessionStore.user &&
+  sessionStore.user.hasOnboarded === false
+);
+
 onMounted(() => {
   if (sessionStore.isAuthenticated) {
     socketService.connect();
@@ -31,7 +38,6 @@ onMounted(() => {
   }
 });
 
-// Watch for auth state changes
 watch(() => sessionStore.isAuthenticated, (isAuth) => {
   if (isAuth) {
     socketService.connect();
@@ -43,7 +49,6 @@ watch(() => sessionStore.isAuthenticated, (isAuth) => {
   }
 });
 
-// Disconnect socket when app unmounts
 onUnmounted(() => {
   socketService.disconnect();
   notificationStore.clearRealtimeListeners();
