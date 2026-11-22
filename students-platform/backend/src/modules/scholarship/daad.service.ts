@@ -81,7 +81,7 @@ async function loadData(): Promise<DAADScholarship[]> {
       (id) => STATUS_LABELS[id] ?? String(id)
     ),
     isDaad: Boolean(item.isDaad),
-    detailUrl: `https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/?detail=${item.id}`,
+    detailUrl: `https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/?q=${encodeURIComponent(item.nameEn || item.nameDe)}`,
     source: 'daad',
   }));
 
