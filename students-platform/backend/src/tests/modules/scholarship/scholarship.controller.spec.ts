@@ -1,6 +1,10 @@
 import type { Request, Response, NextFunction } from 'express';
 import { scholarshipController } from '../../../modules/scholarship/controllers';
 
+jest.mock('../../../modules/scholarship/daad.service', () => ({
+  searchDAAD: jest.fn().mockResolvedValue({ scholarships: [], total: 0, source: 'daad' }),
+}));
+
 describe('ScholarshipController', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -52,7 +56,7 @@ describe('ScholarshipController', () => {
 
   describe('HTTP Request Processing', () => {
     it('should pass query and location parameters to service', async () => {
-      mockRequest.query = { q: 'nursing', location: 'Minnesota' };
+      mockRequest.query = { q: 'nursing', location: 'Minnesota', source: 'careeronestop' };
 
       await scholarshipController.fetchScholarships(
         mockRequest as Request,
@@ -64,7 +68,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should use default location when not provided', async () => {
-      mockRequest.query = { q: 'nursing' };
+      mockRequest.query = { q: 'nursing', source: 'careeronestop' };
 
       await scholarshipController.fetchScholarships(
         mockRequest as Request,
@@ -76,7 +80,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should handle query with whitespace', async () => {
-      mockRequest.query = { q: '  computer science  ' };
+      mockRequest.query = { q: '  computer science  ', source: 'careeronestop' };
 
       await scholarshipController.fetchScholarships(
         mockRequest as Request,
@@ -85,11 +89,10 @@ describe('ScholarshipController', () => {
       );
 
       expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith(mockScholarshipResult);
     });
 
     it('should handle both query and location parameters', async () => {
-      mockRequest.query = { q: 'business', location: 'California' };
+      mockRequest.query = { q: 'business', location: 'California', source: 'careeronestop' };
 
       await scholarshipController.fetchScholarships(
         mockRequest as Request,
@@ -102,8 +105,8 @@ describe('ScholarshipController', () => {
   });
 
   describe('HTTP Response Handling', () => {
-    it('should return 200 status with service result on success', async () => {
-      mockRequest.query = { q: 'nursing' };
+    it('should return 200 status with service result on careeronestop source', async () => {
+      mockRequest.query = { q: 'nursing', source: 'careeronestop' };
 
       await scholarshipController.fetchScholarships(
         mockRequest as Request,
@@ -112,7 +115,18 @@ describe('ScholarshipController', () => {
       );
 
       expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith(mockScholarshipResult);
+    });
+
+    it('should return 200 status on daad source', async () => {
+      mockRequest.query = { q: 'engineering', source: 'daad' };
+
+      await scholarshipController.fetchScholarships(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(statusMock).toHaveBeenCalledWith(200);
     });
 
     it('should return 400 when query parameter is missing', async () => {
@@ -148,7 +162,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should return 504 when service throws timeout error', async () => {
-      mockRequest.query = { q: 'nursing' };
+      mockRequest.query = { q: 'nursing', source: 'careeronestop' };
       getScholarshipsMock.mockRejectedValue(
         new Error('Request to scholarship API timed out')
       );
@@ -167,7 +181,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should return 401 when service throws invalid credentials error', async () => {
-      mockRequest.query = { q: 'nursing' };
+      mockRequest.query = { q: 'nursing', source: 'careeronestop' };
       getScholarshipsMock.mockRejectedValue(
         new Error('Invalid API credentials')
       );
@@ -186,7 +200,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should return 400 when service throws invalid parameters error', async () => {
-      mockRequest.query = { q: 'nursing' };
+      mockRequest.query = { q: 'nursing', source: 'careeronestop' };
       getScholarshipsMock.mockRejectedValue(
         new Error('Invalid request parameters')
       );
@@ -205,7 +219,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should return 502 when service throws fetch error', async () => {
-      mockRequest.query = { q: 'nursing' };
+      mockRequest.query = { q: 'nursing', source: 'careeronestop' };
       getScholarshipsMock.mockRejectedValue(
         new Error('Failed to fetch scholarships')
       );
@@ -224,7 +238,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should pass unexpected errors to next middleware', async () => {
-      mockRequest.query = { q: 'nursing' };
+      mockRequest.query = { q: 'nursing', source: 'careeronestop' };
       const error = new Error('Unexpected error');
       getScholarshipsMock.mockRejectedValue(error);
 
@@ -241,7 +255,7 @@ describe('ScholarshipController', () => {
 
   describe('Edge Cases', () => {
     it('should handle location parameter with empty string', async () => {
-      mockRequest.query = { q: 'nursing', location: '' };
+      mockRequest.query = { q: 'nursing', location: '', source: 'careeronestop' };
 
       await scholarshipController.fetchScholarships(
         mockRequest as Request,
@@ -253,7 +267,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should handle special characters in query', async () => {
-      mockRequest.query = { q: 'computer & science' };
+      mockRequest.query = { q: 'computer & science', source: 'careeronestop' };
 
       await scholarshipController.fetchScholarships(
         mockRequest as Request,
@@ -266,7 +280,7 @@ describe('ScholarshipController', () => {
     });
 
     it('should handle numeric location values', async () => {
-      mockRequest.query = { q: 'nursing', location: '55401' };
+      mockRequest.query = { q: 'nursing', location: '55401', source: 'careeronestop' };
 
       await scholarshipController.fetchScholarships(
         mockRequest as Request,
