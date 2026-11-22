@@ -1,6 +1,7 @@
 import { User, type UserDoc } from '../models';
 import type { UserType } from '../../../shared/types/domain';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import { emailService } from '../../../shared/services/email.service';
 import { env } from '../../../config/env';
 import { universityService } from '../../university/services/university.service';
@@ -29,6 +30,21 @@ export interface getUserByUsername{
 export interface ChangePasswordDTO {
   userId: string;
   currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ForgotPasswordDTO {
+  email: string;
+}
+
+export interface VerifyPasswordResetOtpDTO {
+  email: string;
+  otp: string;
+}
+
+export interface ResetPasswordDTO {
+  token: string;
   newPassword: string;
   confirmPassword: string;
 }
@@ -367,6 +383,65 @@ export class UserService {
     (user as any).pendingUniversityEmail = undefined;
     (user as any).studentVerificationToken = undefined;
     (user as any).studentVerificationTokenExpires = undefined;
+    await user.save();
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await User.findByEmail(email);
+    if (!user || !user.isVerified || !user.password) {
+      return;
+    }
+
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    (user as any).passwordResetOtp = otpHash;
+    (user as any).passwordResetOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    (user as any).passwordResetToken = undefined;
+    (user as any).passwordResetExpires = undefined;
+    await user.save();
+
+    emailService.sendPasswordResetOtpEmail({
+      recipientEmail: user.email,
+      recipientName: user.name,
+      otp,
+    }).catch(() => {});
+  }
+
+  async verifyPasswordResetOtp(email: string, otp: string): Promise<string> {
+    const user = await User.findByEmail(email);
+    if (!user) throw new Error('INVALID_OTP');
+
+    const otpHash: string | undefined = (user as any).passwordResetOtp;
+    const otpExpires: Date | undefined = (user as any).passwordResetOtpExpires;
+
+    if (!otpHash || !otpExpires || otpExpires < new Date()) {
+      throw new Error('INVALID_OTP');
+    }
+
+    const isMatch = await bcrypt.compare(otp, otpHash);
+    if (!isMatch) throw new Error('INVALID_OTP');
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    (user as any).passwordResetOtp = undefined;
+    (user as any).passwordResetOtpExpires = undefined;
+    (user as any).passwordResetToken = resetToken;
+    (user as any).passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
+    await user.save();
+
+    return resetToken;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: new Date() },
+    });
+    if (!user) throw new Error('INVALID_OR_EXPIRED_TOKEN');
+
+    user.password = newPassword;
+    (user as any).passwordResetToken = undefined;
+    (user as any).passwordResetExpires = undefined;
     await user.save();
   }
 }

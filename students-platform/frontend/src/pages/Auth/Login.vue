@@ -19,7 +19,10 @@
     </div>
 
     <div class="mb-6">
-      <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+      <div class="flex items-center justify-between mb-2">
+        <label for="password" class="block text-gray-700 text-sm font-medium">Password</label>
+        <router-link to="/forgot-password" class="text-sm text-blue-500 hover:text-blue-700">Forgot password?</router-link>
+      </div>
       <div class="relative">
         <input
           id="password"

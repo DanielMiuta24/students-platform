@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { userController } from '../controllers';
 import { authMiddleware } from '../../../shared/middleware/auth.middleware';
-import { validateRegister, validateLogin, validateChangePassword, validateUpdateProfile, validateStudentEmail } from '../validators';
+import { validateRegister, validateLogin, validateChangePassword, validateUpdateProfile, validateStudentEmail, validateForgotPassword, validateVerifyOtp, validateResetPassword } from '../validators';
 import { busboyUploadMiddleware } from '../../image/middleware';
 import { IMAGE_VALIDATION } from '../../image/services';
+import { otpRequestLimiter, otpVerifyLimiter } from '../../../shared/middleware/rate-limit.middleware';
 
 const router = Router();
 
@@ -29,6 +30,10 @@ router.delete('/saved-scholarships', authMiddleware, userController.unsaveSchola
 
 router.get('/verify-email/:token', userController.verifyEmail);
 router.post('/resend-verification', userController.resendVerification);
+
+router.post('/forgot-password', otpRequestLimiter, validateForgotPassword, userController.forgotPassword);
+router.post('/verify-password-reset-otp', otpVerifyLimiter, validateVerifyOtp, userController.verifyPasswordResetOtp);
+router.post('/reset-password', validateResetPassword, userController.resetPassword);
 
 router.post('/student-verification', authMiddleware, validateStudentEmail, userController.submitStudentEmail);
 router.get('/verify-student-email/:token', userController.verifyStudentEmail);

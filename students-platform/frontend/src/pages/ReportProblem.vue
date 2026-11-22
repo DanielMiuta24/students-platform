@@ -150,8 +150,8 @@
               <h3>Alternative Contact</h3>
               <p>
                 You can also reach us directly at
-                <a href="mailto:support@iscompass.de" class="email-link">
-                  support@iscompass.de
+                <a :href="`mailto:${supportEmail}`" class="email-link">
+                  {{ supportEmail }}
                 </a>
               </p>
               <p class="help-note">
@@ -171,6 +171,8 @@ import { ElMessage } from 'element-plus';
 import { Message, Promotion } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { api } from '../services/api';
+
+const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'contact@iscompass.de';
 
 const formRef = ref<FormInstance>();
 const submitting = ref(false);

@@ -13,6 +13,7 @@ jest.mock('../../../shared/services/email.service', () => ({
   emailService: {
     sendActivationEmail: jest.fn(),
     sendStudentVerificationEmail: jest.fn(),
+    sendPasswordResetOtpEmail: jest.fn(),
   },
 }));
 jest.mock('../../../config/env', () => ({
@@ -230,6 +231,194 @@ describe('UserService', () => {
       expect(User.findOne).toHaveBeenCalledWith({
         studentVerificationToken: token,
         studentVerificationTokenExpires: { $gt: expect.any(Date) },
+      });
+    });
+  });
+
+  describe('forgotPassword', () => {
+    const email = 'user@example.com';
+
+    const mockUser = {
+      _id: 'user123',
+      name: 'Test User',
+      email,
+      isVerified: true,
+      password: 'hashedpassword',
+      save: jest.fn().mockResolvedValue(undefined),
+    };
+
+    beforeEach(() => {
+      (User.findByEmail as jest.Mock).mockResolvedValue({ ...mockUser, save: mockUser.save });
+      (emailService.sendPasswordResetOtpEmail as jest.Mock).mockResolvedValue(undefined);
+    });
+
+    it('should return silently when user not found', async () => {
+      (User.findByEmail as jest.Mock).mockResolvedValue(null);
+      await expect(userService.forgotPassword(email)).resolves.toBeUndefined();
+      expect(emailService.sendPasswordResetOtpEmail).not.toHaveBeenCalled();
+    });
+
+    it('should return silently when user is not verified', async () => {
+      (User.findByEmail as jest.Mock).mockResolvedValue({ ...mockUser, isVerified: false, save: jest.fn() });
+      await expect(userService.forgotPassword(email)).resolves.toBeUndefined();
+      expect(emailService.sendPasswordResetOtpEmail).not.toHaveBeenCalled();
+    });
+
+    it('should return silently when user has no password (OAuth)', async () => {
+      (User.findByEmail as jest.Mock).mockResolvedValue({ ...mockUser, password: undefined, save: jest.fn() });
+      await expect(userService.forgotPassword(email)).resolves.toBeUndefined();
+      expect(emailService.sendPasswordResetOtpEmail).not.toHaveBeenCalled();
+    });
+
+    it('should set passwordResetOtp and expiry on user', async () => {
+      const user: any = { ...mockUser, save: jest.fn().mockResolvedValue(undefined) };
+      (User.findByEmail as jest.Mock).mockResolvedValue(user);
+
+      await userService.forgotPassword(email);
+
+      expect(user.passwordResetOtp).toBeDefined();
+      expect(typeof user.passwordResetOtp).toBe('string');
+      expect(user.passwordResetOtpExpires).toBeInstanceOf(Date);
+      expect(user.passwordResetOtpExpires.getTime()).toBeGreaterThan(Date.now());
+      expect(user.save).toHaveBeenCalled();
+    });
+
+    it('should clear existing reset token when sending OTP', async () => {
+      const user: any = {
+        ...mockUser,
+        passwordResetToken: 'old-token',
+        passwordResetExpires: new Date(Date.now() + 100000),
+        save: jest.fn().mockResolvedValue(undefined),
+      };
+      (User.findByEmail as jest.Mock).mockResolvedValue(user);
+
+      await userService.forgotPassword(email);
+
+      expect(user.passwordResetToken).toBeUndefined();
+      expect(user.passwordResetExpires).toBeUndefined();
+    });
+
+    it('should send OTP email', async () => {
+      const user: any = { ...mockUser, save: jest.fn().mockResolvedValue(undefined) };
+      (User.findByEmail as jest.Mock).mockResolvedValue(user);
+
+      await userService.forgotPassword(email);
+
+      expect(emailService.sendPasswordResetOtpEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          recipientEmail: email,
+          recipientName: mockUser.name,
+          otp: expect.stringMatching(/^\d{6}$/),
+        })
+      );
+    });
+
+    it('should not throw when email sending fails', async () => {
+      (emailService.sendPasswordResetOtpEmail as jest.Mock).mockRejectedValue(new Error('SMTP error'));
+      const user: any = { ...mockUser, save: jest.fn().mockResolvedValue(undefined) };
+      (User.findByEmail as jest.Mock).mockResolvedValue(user);
+
+      await expect(userService.forgotPassword(email)).resolves.toBeUndefined();
+    });
+  });
+
+  describe('verifyPasswordResetOtp', () => {
+    const email = 'user@example.com';
+    const otp = '123456';
+
+    const mockUser = {
+      _id: 'user123',
+      name: 'Test User',
+      email,
+      passwordResetOtp: null as any,
+      passwordResetOtpExpires: new Date(Date.now() + 10 * 60 * 1000),
+      save: jest.fn().mockResolvedValue(undefined),
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should throw INVALID_OTP when user not found', async () => {
+      (User.findByEmail as jest.Mock).mockResolvedValue(null);
+      await expect(userService.verifyPasswordResetOtp(email, otp)).rejects.toThrow('INVALID_OTP');
+    });
+
+    it('should throw INVALID_OTP when no OTP stored', async () => {
+      (User.findByEmail as jest.Mock).mockResolvedValue({ ...mockUser, passwordResetOtp: undefined, save: jest.fn() });
+      await expect(userService.verifyPasswordResetOtp(email, otp)).rejects.toThrow('INVALID_OTP');
+    });
+
+    it('should throw INVALID_OTP when OTP is expired', async () => {
+      (User.findByEmail as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        passwordResetOtp: 'somehash',
+        passwordResetOtpExpires: new Date(Date.now() - 1000),
+        save: jest.fn(),
+      });
+      await expect(userService.verifyPasswordResetOtp(email, otp)).rejects.toThrow('INVALID_OTP');
+    });
+
+    it('should return a reset token on valid OTP and clear OTP fields', async () => {
+      const bcrypt = require('bcrypt');
+      const otpHash = await bcrypt.hash(otp, 10);
+      const user: any = {
+        ...mockUser,
+        passwordResetOtp: otpHash,
+        passwordResetOtpExpires: new Date(Date.now() + 10 * 60 * 1000),
+        save: jest.fn().mockResolvedValue(undefined),
+      };
+      (User.findByEmail as jest.Mock).mockResolvedValue(user);
+
+      const token = await userService.verifyPasswordResetOtp(email, otp);
+
+      expect(typeof token).toBe('string');
+      expect(token.length).toBeGreaterThan(0);
+      expect(user.passwordResetOtp).toBeUndefined();
+      expect(user.passwordResetOtpExpires).toBeUndefined();
+      expect(user.passwordResetToken).toBe(token);
+      expect(user.passwordResetExpires).toBeInstanceOf(Date);
+      expect(user.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('resetPassword', () => {
+    const token = 'valid-reset-token-hex';
+    const newPassword = 'NewPassword1!';
+
+    const mockUser = {
+      _id: 'user123',
+      password: 'old-hashed-password',
+      passwordResetToken: token,
+      passwordResetExpires: new Date(Date.now() + 15 * 60 * 1000),
+      save: jest.fn().mockResolvedValue(undefined),
+    };
+
+    it('should throw INVALID_OR_EXPIRED_TOKEN when token not found', async () => {
+      (User.findOne as jest.Mock).mockResolvedValue(null);
+      await expect(userService.resetPassword(token, newPassword)).rejects.toThrow('INVALID_OR_EXPIRED_TOKEN');
+    });
+
+    it('should update password and clear reset token fields', async () => {
+      const user: any = { ...mockUser, save: jest.fn().mockResolvedValue(undefined) };
+      (User.findOne as jest.Mock).mockResolvedValue(user);
+
+      await userService.resetPassword(token, newPassword);
+
+      expect(user.password).toBe(newPassword);
+      expect(user.passwordResetToken).toBeUndefined();
+      expect(user.passwordResetExpires).toBeUndefined();
+      expect(user.save).toHaveBeenCalled();
+    });
+
+    it('should query by token AND expiry date', async () => {
+      (User.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(userService.resetPassword(token, newPassword)).rejects.toThrow('INVALID_OR_EXPIRED_TOKEN');
+
+      expect(User.findOne).toHaveBeenCalledWith({
+        passwordResetToken: token,
+        passwordResetExpires: { $gt: expect.any(Date) },
       });
     });
   });

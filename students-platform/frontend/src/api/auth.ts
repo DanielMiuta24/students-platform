@@ -1,4 +1,4 @@
-import type { RegisterForm, LoginForm, AuthResponse, SafeUser } from '../types/auth';
+import type { RegisterForm, LoginForm, AuthResponse, SafeUser, VerifyOtpResponse } from '../types/auth';
 import { api } from '../services/api';
 import { secureApi } from '../services/secureApi';
 
@@ -76,5 +76,20 @@ export const getProfile = async (): Promise<SafeUser> => {
         throw error;
     }
 
+    return response.data;
+};
+
+export const forgotPassword = async (email: string): Promise<AuthResponse> => {
+    const response = await api.post('/users/forgot-password', { email });
+    return response.data;
+};
+
+export const verifyPasswordResetOtp = async (email: string, otp: string): Promise<VerifyOtpResponse> => {
+    const response = await api.post('/users/verify-password-reset-otp', { email, otp });
+    return response.data;
+};
+
+export const resetPassword = async (token: string, newPassword: string, confirmPassword: string): Promise<AuthResponse> => {
+    const response = await api.post('/users/reset-password', { token, newPassword, confirmPassword });
     return response.data;
 };

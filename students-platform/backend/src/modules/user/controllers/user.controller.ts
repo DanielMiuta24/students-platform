@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { userService, getProfile, getUserByUsername, RegisterDTO, LoginDTO, ChangePasswordDTO, UpdateProfileDTO } from '../services';
+import { userService, getProfile, getUserByUsername, RegisterDTO, LoginDTO, ChangePasswordDTO, UpdateProfileDTO, ForgotPasswordDTO, VerifyPasswordResetOtpDTO, ResetPasswordDTO } from '../services';
 import type { UserDoc } from '../models';
 import { env } from '../../../config/env';
 import type { AuthenticatedRequest } from '../../../shared/middleware/auth.middleware';
@@ -451,6 +451,45 @@ class UserController {
     } catch (err: any) {
       if (err.message === 'INVALID_OR_EXPIRED_TOKEN') {
         return res.status(400).json({ success: false, message: 'Verification link is invalid or has expired' });
+      }
+      return next(err);
+    }
+  };
+
+  forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+      await userService.forgotPassword(email);
+      return res.status(200).json({
+        success: true,
+        message: 'If an account with that email exists, a verification code has been sent.',
+      });
+    } catch (err: any) {
+      return next(err);
+    }
+  };
+
+  verifyPasswordResetOtp = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, otp } = req.body;
+      const resetToken = await userService.verifyPasswordResetOtp(email, otp);
+      return res.status(200).json({ success: true, resetToken });
+    } catch (err: any) {
+      if (err.message === 'INVALID_OTP') {
+        return res.status(200).json({ success: false, message: 'Invalid or expired verification code.' });
+      }
+      return next(err);
+    }
+  };
+
+  resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token, newPassword } = req.body;
+      await userService.resetPassword(token, newPassword);
+      return res.status(200).json({ success: true, message: 'Password reset successfully.' });
+    } catch (err: any) {
+      if (err.message === 'INVALID_OR_EXPIRED_TOKEN') {
+        return res.status(200).json({ success: false, message: 'Reset session expired. Please start over.' });
       }
       return next(err);
     }
