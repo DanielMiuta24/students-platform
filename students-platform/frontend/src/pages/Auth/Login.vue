@@ -62,6 +62,20 @@
     >
       {{ loading ? 'Logging in...' : 'Login' }}
     </button>
+
+    <div v-if="showResend" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md text-sm text-center">
+      <p class="text-gray-700 mb-3">Didn't receive a verification email or the link has expired?</p>
+      <button
+        @click="handleResend"
+        :disabled="resendLoading || resendCooldown > 0"
+        class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span v-if="resendLoading">Sending...</span>
+        <span v-else-if="resendCooldown > 0">Resend in {{ resendCooldown }}s</span>
+        <span v-else>Resend verification email</span>
+      </button>
+      <p v-if="resendMessage" class="mt-2 text-green-600 font-medium">{{ resendMessage }}</p>
+    </div>
   </AuthFormShell>
 </template>
 
@@ -74,6 +88,7 @@ import { useSEO, SEOConfigs } from '../../composables/useSEO';
 import { validateEmail } from '../../utils/validation';
 import { useRouter } from 'vue-router';
 import AuthFormShell from './AuthFormShell.vue';
+import { api } from '../../services/api';
 
 // SEO
 useSEO(SEOConfigs.login);
@@ -89,6 +104,37 @@ const {
 const router = useRouter();
 
 const showPassword = ref(false);
+const showResend = ref(false);
+const resendLoading = ref(false);
+const resendCooldown = ref(0);
+const resendMessage = ref('');
+let cooldownTimer: ReturnType<typeof setInterval> | null = null;
+
+const startCooldown = () => {
+  resendCooldown.value = 60;
+  cooldownTimer = setInterval(() => {
+    resendCooldown.value--;
+    if (resendCooldown.value <= 0 && cooldownTimer) {
+      clearInterval(cooldownTimer);
+      cooldownTimer = null;
+    }
+  }, 1000);
+};
+
+const handleResend = async () => {
+  if (!form.email || resendLoading.value || resendCooldown.value > 0) return;
+  resendLoading.value = true;
+  resendMessage.value = '';
+  try {
+    await api.post('users/resend-verification', { email: form.email });
+    resendMessage.value = 'Verification email sent. Please check your inbox.';
+    startCooldown();
+  } catch {
+    resendMessage.value = 'Could not send email. Please try again.';
+  } finally {
+    resendLoading.value = false;
+  }
+};
 
 const form = reactive<LoginForm>({
   email: '',
@@ -161,6 +207,9 @@ const handleLogin = async () => {
     return;
   }
 
+  showResend.value = false;
+  resendMessage.value = '';
+
   try {
     const loggedInUser = await auth.login(form);
     if (loggedInUser) {
@@ -173,6 +222,9 @@ const handleLogin = async () => {
         fieldErrors[key] = apiFieldErrors[key];
       }
     });
+    if (error.value?.toLowerCase().includes('verify your email')) {
+      showResend.value = true;
+    }
   }
 };
 
