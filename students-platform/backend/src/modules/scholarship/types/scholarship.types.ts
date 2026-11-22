@@ -40,5 +40,5 @@ export interface ScholarshipSearchResult {
 
 export interface CombinedScholarshipResponse {
   careeronestop: ScholarshipSearchResult;
-  daad: import('./daad.service').DAADSearchResult;
+  daad: import('../daad.service').DAADSearchResult;
 }
