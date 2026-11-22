@@ -88,6 +88,9 @@ export type PublicUser = {
   username: string;
   avatar: string;
   bio: string;
+  country: string;
+  destinationCountry: string;
+  fieldOfStudy: string;
 };
 
 export interface SavedUniversity {
@@ -246,19 +249,39 @@ export class UserService {
       username: user.username,
       avatar: user.avatar || '',
       bio: user.bio || '',
+      country: user.country || '',
+      destinationCountry: user.destinationCountry || '',
+      fieldOfStudy: user.fieldOfStudy || '',
     };
   }
 
-  async searchUsers(query: string): Promise<PublicUser[]> {
-    if (!query || !query.trim()) return [];
-    const users = await User.find({
-      $or: [
-        { name: { $regex: query.trim(), $options: 'i' } },
-        { username: { $regex: query.trim(), $options: 'i' } },
-      ],
-    })
-      .limit(20)
-      .select('_id name username avatar bio type');
+  async searchUsers(query: string, filters?: { country?: string; destinationCountry?: string }): Promise<PublicUser[]> {
+    const conditions: any[] = [];
+
+    if (query && query.trim()) {
+      conditions.push({
+        $or: [
+          { name: { $regex: query.trim(), $options: 'i' } },
+          { username: { $regex: query.trim(), $options: 'i' } },
+        ],
+      });
+    }
+
+    if (filters?.country) {
+      conditions.push({ country: { $regex: filters.country.trim(), $options: 'i' } });
+    }
+
+    if (filters?.destinationCountry) {
+      conditions.push({ destinationCountry: { $regex: filters.destinationCountry.trim(), $options: 'i' } });
+    }
+
+    if (conditions.length === 0) return [];
+
+    const mongoQuery = conditions.length === 1 ? conditions[0] : { $and: conditions };
+
+    const users = await User.find(mongoQuery)
+      .limit(30)
+      .select('_id name username avatar bio type country destinationCountry fieldOfStudy');
     return users.map((u) => this.toPublicUser(u));
   }
 

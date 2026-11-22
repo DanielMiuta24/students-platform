@@ -55,6 +55,11 @@
         <router-link to="/explore">Explore</router-link>
       </el-menu-item>
 
+      <!-- Find People -->
+      <el-menu-item index="5">
+        <router-link to="/people">Find People</router-link>
+      </el-menu-item>
+
       <!-- Global Search (authenticated users only) -->
       <div v-if="session.isAuthenticated" class="global-search-wrapper" ref="searchWrapperRef">
         <div class="global-search-input-row">
@@ -242,6 +247,11 @@
         <!-- Explore -->
         <el-menu-item index="4">
           <router-link to="/explore">Explore</router-link>
+        </el-menu-item>
+
+        <!-- Find People -->
+        <el-menu-item index="5">
+          <router-link to="/people">Find People</router-link>
         </el-menu-item>
       </el-menu>
 
