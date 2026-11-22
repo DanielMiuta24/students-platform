@@ -11,14 +11,16 @@
       <img
         :src="getAvatarUrl(user.name, user.profilePicture ?? undefined)"
         alt="Profile Picture"
-        class="w-10 h-10 rounded-full mr-3 object-cover flex-shrink-0"
+        class="w-10 h-10 rounded-full mr-3 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition"
+        @click="goToProfile"
       />
       <div class="min-w-0">
         <h2
           :class="[
-            'text-base font-semibold truncate',
+            'text-base font-semibold truncate cursor-pointer hover:underline',
             variant === 'chatbox' ? 'text-white' : 'text-blue-900'
           ]"
+          @click="goToProfile"
         >
           {{ user.name }}
         </h2>
@@ -110,6 +112,7 @@
 
 <script setup lang="ts">
 import { getAvatarUrl } from '../utils/avatar';
+import { useRouter } from 'vue-router';
 
 interface User {
   id: string;
@@ -139,6 +142,11 @@ const props = withDefaults(defineProps<{
   variant: 'page',
   isMinimized: false,
 });
+
+const router = useRouter();
+const goToProfile = () => {
+  if (props.user.username) router.push(`/profile/${props.user.username}`);
+};
 
 defineEmits<{
   (e: 'minimize'): void;
