@@ -12,7 +12,7 @@
             Find scholarships that match your goals.
           </h1>
           <p class="text-lg text-gray-700 leading-relaxed max-w-xl">
-            Search real DAAD scholarships for studying in Germany, plus US training programmes from CareerOneStop.
+            Browse scholarships listed in the DAAD scholarship database for studying in Germany, plus US training programmes from CareerOneStop.
           </p>
         </div>
         <div class="bg-white/70 rounded-2xl shadow-lg p-6">
@@ -49,7 +49,7 @@
             </select>
             <button @click="newSearch" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-lg transition shadow-md">Search</button>
           </div>
-          <p class="text-sm text-gray-500 text-center">147 real DAAD scholarships for international students studying in Germany.</p>
+          <p class="text-sm text-gray-500 text-center">Scholarships sourced from the DAAD scholarship database for international students in Germany.</p>
         </div>
 
         <!-- CareerOneStop search -->
@@ -82,7 +82,7 @@
         <div class="info-card">
           <div class="info-icon">🇩🇪</div>
           <h3>DAAD Scholarships</h3>
-          <p>Real funded scholarships for studying or researching in Germany, from DAAD and partner foundations.</p>
+          <p>Scholarships from the DAAD scholarship database for studying or researching in Germany, including programmes from partner foundations.</p>
         </div>
         <div class="info-card">
           <div class="info-icon">🎓</div>
@@ -131,8 +131,9 @@
                 </div>
               </div>
               <a :href="s.detailUrl" target="_blank" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-lg transition">
-                View on DAAD
+                View on DAAD Website
               </a>
+              <p class="text-xs text-gray-400 mt-2">Application status and deadlines are managed directly by DAAD.</p>
             </li>
           </ul>
 
