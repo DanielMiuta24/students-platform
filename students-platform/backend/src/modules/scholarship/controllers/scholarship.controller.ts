@@ -2,6 +2,8 @@ import type { Request, Response, NextFunction } from 'express';
 import { ScholarshipService } from '../services';
 import { validateSearchParams } from '../validators';
 import { globalScholarshipService } from '../services/global-scholarship.service';
+import { searchDAAD } from '../daad.service';
+import { parsePage } from '../validators/scholarship.validation';
 
 class ScholarshipController {
     private scholarshipService: ScholarshipService;
@@ -14,16 +16,39 @@ class ScholarshipController {
         try {
             const query = req.query.q as string;
             const location = req.query.location as string;
+            const source = (req.query.source as string) || 'all';
+            const page = parsePage(req.query.page as string);
+            const subjectGroup = req.query.subjectGroup as string | undefined;
+            const intention = req.query.intention as string | undefined;
 
             if (!validateSearchParams(query, location)) {
                 return res.status(400).json({ error: 'Query parameter is required' });
             }
 
-            const scholarships = await this.scholarshipService.getScholarships(
-                query,
-                location || '0'
-            );
-            return res.status(200).json(scholarships);
+            if (source === 'daad') {
+                const result = await searchDAAD(query, subjectGroup, intention, page, 10);
+                return res.status(200).json(result);
+            }
+
+            if (source === 'careeronestop') {
+                const result = await this.scholarshipService.getScholarships(query, location || '0');
+                return res.status(200).json({ ...result, source: 'careeronestop' });
+            }
+
+            // source === 'all': run both in parallel
+            const [daadResult, cosResult] = await Promise.allSettled([
+                searchDAAD(query, subjectGroup, intention, page, 10),
+                this.scholarshipService.getScholarships(query, location || '0'),
+            ]);
+
+            return res.status(200).json({
+                daad: daadResult.status === 'fulfilled'
+                    ? daadResult.value
+                    : { scholarships: [], total: 0, source: 'daad', error: 'DAAD unavailable' },
+                careeronestop: cosResult.status === 'fulfilled'
+                    ? { ...cosResult.value, source: 'careeronestop' }
+                    : { scholarships: [], total: 0, source: 'careeronestop', error: 'CareerOneStop unavailable' },
+            });
         } catch (err) {
             if (err instanceof Error) {
                 if (err.message === 'Request to scholarship API timed out') {
