@@ -305,7 +305,7 @@ class UserController {
     try {
       if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
       const universities = await userService.getSavedUniversities(req.user.id);
-      return res.status(200).json({ universities });
+      return res.status(200).json(universities);
     } catch (err: any) {
       if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
       return next(err);
@@ -355,7 +355,7 @@ class UserController {
     try {
       if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
       const scholarships = await userService.getSavedScholarships(req.user.id);
-      return res.status(200).json({ scholarships });
+      return res.status(200).json(scholarships);
     } catch (err: any) {
       if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
       return next(err);

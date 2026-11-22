@@ -333,7 +333,7 @@ const fetchUserProfile = async () => {
 const fetchSavedUniversities = async () => {
   try {
     const response = await api.get('users/saved-universities');
-    savedUniversities.value = response.data.universities || [];
+    savedUniversities.value = response.data || [];
   } catch (error) {
     console.error('Failed to fetch saved universities:', error);
   }
