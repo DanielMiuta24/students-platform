@@ -60,6 +60,11 @@
         <router-link to="/people">Find People</router-link>
       </el-menu-item>
 
+      <!-- Videos -->
+      <el-menu-item index="6">
+        <router-link to="/videos">Videos</router-link>
+      </el-menu-item>
+
       <!-- Global Search (authenticated users only) -->
       <div v-if="session.isAuthenticated" class="global-search-wrapper" ref="searchWrapperRef">
         <div class="global-search-input-row">
@@ -252,6 +257,11 @@
         <!-- Find People -->
         <el-menu-item index="5">
           <router-link to="/people">Find People</router-link>
+        </el-menu-item>
+
+        <!-- Videos -->
+        <el-menu-item index="6">
+          <router-link to="/videos">Videos</router-link>
         </el-menu-item>
       </el-menu>
 
