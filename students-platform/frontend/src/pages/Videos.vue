@@ -104,10 +104,10 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea v-model="form.description" placeholder="What is this video about?" rows="3" class="input-field resize-none"></textarea>
           </div>
-          <p class="text-xs text-gray-400">Your video will be reviewed before it goes live.</p>
+          <p class="text-xs text-gray-400">Your video will be visible immediately after submission.</p>
         </div>
         <p v-if="submitError" class="text-red-500 text-sm mt-3">{{ submitError }}</p>
-        <p v-if="submitSuccess" class="text-green-600 text-sm mt-3 font-medium">Submitted! It will appear after review.</p>
+        <p v-if="submitSuccess" class="text-green-600 text-sm mt-3 font-medium">Video submitted successfully!</p>
         <div class="flex justify-end gap-3 mt-6">
           <button @click="closeSubmit" class="px-5 py-2 text-gray-600 hover:text-gray-800 font-medium">Cancel</button>
           <button @click="submitVideo" :disabled="submitting" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-2 rounded-xl transition disabled:opacity-50">
@@ -198,8 +198,9 @@ const submitVideo = async () => {
   submitting.value = true;
   try {
     await api.post('videos', form.value);
-    submitSuccess.value = true;
-    setTimeout(closeSubmit, 2500);
+        submitSuccess.value = true;
+        await fetchVideos();
+        setTimeout(closeSubmit, 2000);
   } catch (err: any) {
     const msg = err?.response?.data?.message;
     if (msg === 'Invalid YouTube URL') urlError.value = 'Please enter a valid YouTube URL';
