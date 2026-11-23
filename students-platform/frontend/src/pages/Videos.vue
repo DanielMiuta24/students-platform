@@ -163,8 +163,8 @@ const urlError = ref('');
 const emptyForm = () => ({ youtubeUrl: '', title: '', category: 'other', country: '', description: '' });
 const form = ref(emptyForm());
 
-const fetchVideos = async () => {
-  loading.value = true;
+const fetchVideos = async (silent = false) => {
+  if (!silent) loading.value = true;
   try {
     const params: any = {};
     if (activeCategory.value !== 'all') params.category = activeCategory.value;
@@ -179,7 +179,7 @@ const fetchVideos = async () => {
 
 const toggleCategory = (val: string) => {
   activeCategory.value = val;
-  fetchVideos();
+  fetchVideos(true);
 };
 
 const closeSubmit = () => {
@@ -198,9 +198,9 @@ const submitVideo = async () => {
   submitting.value = true;
   try {
     await api.post('videos', form.value);
-        submitSuccess.value = true;
-        await fetchVideos();
-        setTimeout(closeSubmit, 2000);
+    activeCategory.value = 'all';
+    closeSubmit();
+    await fetchVideos(true);
   } catch (err: any) {
     const msg = err?.response?.data?.message;
     if (msg === 'Invalid YouTube URL') urlError.value = 'Please enter a valid YouTube URL';
