@@ -43,7 +43,7 @@ export const videoController = {
         country: country?.trim() || '',
         description: description?.trim() || '',
         submittedBy: req.user!.id,
-        approved: false,
+        approved: true,
       });
       return res.status(201).json(video);
     } catch (err) { return next(err); }
