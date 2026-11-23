@@ -21,6 +21,7 @@ import { jobRoutes } from './modules/jobs';
 import { skillRoutes } from './modules/skills';
 import { housingRoutes } from './modules/housing';
 import trackerRoutes from './modules/tracker/tracker.routes';
+import videoRoutes from './modules/video/video.routes';
 import { visaRoutes } from './modules/visa';
 import cookieParser from 'cookie-parser';
 
@@ -55,6 +56,7 @@ app.use('/api/skills', skillRoutes);
 app.use('/api/housing', housingRoutes);
 app.use('/api/visa', visaRoutes);
 app.use('/api/tracker', trackerRoutes);
+app.use('/api/videos', videoRoutes);
 
 app.get("/api", (_req, res) => {
   res.json({ ok: true, service: "api", ts: new Date().toISOString() });

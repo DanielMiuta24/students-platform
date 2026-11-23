@@ -18,6 +18,7 @@ const Universities = () => import('../pages/Universities.vue');
 const Scholarships = () => import('../pages/Scholarships.vue');
 const Tracker = () => import('../pages/Tracker.vue');
 const PeopleSearch = () => import('../pages/PeopleSearch.vue');
+const Videos = () => import('../pages/Videos.vue');
 const Feed = () => import('../pages/Feed.vue');
 const Explore = () => import('../pages/Explore.vue');
 const UserProfile = () => import('../pages/UserProfile.vue');
@@ -72,6 +73,7 @@ const routes = [
   { path: '/scholarships', component: Scholarships },
   { path: '/tracker', component: Tracker, name: 'Tracker', meta: { requiresAuth: true } },
   { path: '/people', component: PeopleSearch, name: 'PeopleSearch', meta: { requiresAuth: true } },
+  { path: '/videos', component: Videos, name: 'Videos', meta: { requiresAuth: true } },
   { path: '/events', component: Events, name: 'Events' },
   { path: '/jobs', component: Jobs, name: 'Jobs' },
   { path: '/housing', component: Housing, name: 'Housing' },
