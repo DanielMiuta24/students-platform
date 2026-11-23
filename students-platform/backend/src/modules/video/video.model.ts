@@ -28,7 +28,7 @@ const VideoSchema = new Schema<IVideo>(
     country: { type: String, default: '', trim: true },
     description: { type: String, default: '', trim: true },
     submittedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    approved: { type: Boolean, default: false },
+    approved: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
